@@ -2,140 +2,136 @@
 
 在 [`shuchkin/simplexlsx`](https://github.com/shuchkin/simplexlsx) 之上补齐三块能力：**公式计算**、**图片提取**、**合并单元格与多格式导出**，并修复原库 7 处实测确认的缺陷。
 
-纯 PHP、零依赖，PHP 7.1+ / 8.x 均可运行。
+纯 PHP、零依赖，PHP 7.1+ / 8.x 均可运行。更多说明书见html文件，所有代码,说明书,测试用例均使用AI(仅供参考)。
+
+# SimpleXLSX / SimpleXLSXPro
+
+> 纯 PHP 的 Excel xlsx 读取与多格式导出套件 · Pure-PHP xlsx reader & exporter suite · Набор PHP-библиотек для чтения и экспорта xlsx
+
+[中文](#中文) | [English](#english) | [Русский](#русский)
 
 ---
 
-## 1. 目录结构
+<a id="中文"></a>
+## 中文
 
-```
-src/
-  SimpleXLSX.php        # 原库主类（已打补丁）
-  SimpleXLSXEx.php      # 原库样式扩展（已打补丁）
-  SimpleXLSXPro.php     # ★ 增强子类：公式 / 图片 / 合并 / 导出
-  XLSXFormula.php       # ★ 公式计算引擎
-examples/
-  00-smoke_test.php           # 冒烟测试（24 项断言，全通过）
-  01-quick_start.php          # 快速上手
-  02-images.php               # 图片提取（含 WPS 内嵌图）
-  03-formulas.php             # 公式计算
-  04-export_csv_tsv_json.php  # CSV / TSV / JSON 导出
-  05-export_html_merged.php   # HTML 导出（保留合并）
-  06-cli_convert.php          # 命令行批量转换工具
-demo/
-  demo.xlsx                   # 测试文件：合并单元格 + 公式 + 浮动图片
-  demo_wps.xlsx               # 测试文件：WPS 单元格内嵌图片（DISPIMG）
-simplexlsx-fixes.patch        # 原库补丁（unified diff）
-```
+**SimpleXLSX** 是一套纯 PHP 的 Excel 2007+ `.xlsx` 解析库，无需框架、无需数据库，单文件引入即可使用，兼容 PHP 7.0+。
 
-## 2. 安装
+### 组成
 
-```bash
-# 方式 A：直接用本套件（src/ 里已是打过补丁的完整源码）
-cp -r src/* your-project/simplexlsx/
+| 文件 | 说明 |
+|---|---|
+| `src/SimpleXLSX.php` | 基础版：读取单元格数据、多工作表、日期 |
+| `src/SimpleXLSXEx.php` | 样式增强版：字体/填充/对齐/边框转 CSS |
+| `src/SimpleXLSXPro.php` | 专业版：合并单元格、图片提取、多格式导出 |
+| `src/XLSXFormula.php` | 公式引擎：60+ 函数、跨表引用实时计算 |
+| `demo.php` | 单文件在线演示台（AJAX 转换 + 预览 + 下载） |
+| `demo/` | 7 个功能样例 xlsx（合并、公式、多表、图片等） |
 
-# 方式 B：你已经在用 composer 装的 simplexlsx，只打补丁
-cd vendor/shuchkin/simplexlsx
-patch -p1 < /path/to/simplexlsx-fixes.patch
-# 然后把 SimpleXLSXPro.php + XLSXFormula.php 复制到你的类库目录
-```
+### 特性
 
-代码里引入：
+- 解析 xlsx 为 PHP 二维数组；支持多工作表、日期时间、富文本、超链接
+- 合并单元格：CSV/TSV/JSON 值复写到每格，HTML 保留 rowspan/colspan
+- 内置公式引擎，无缓存值也能实时计算（SUM/IF/VLOOKUP/跨表引用等）
+- 提取 xlsx 内嵌图片（含 WPS DISPIMG 内嵌图）到指定目录
+- 导出 CSV / TSV / JSON / HTML，支持 UTF-8/GBK/GB18030 编码
+
+### 快速上手
 
 ```php
-require 'src/SimpleXLSXPro.php';   // 会自动加载 SimpleXLSX.php 与 XLSXFormula.php
-use Shuchkin\SimpleXLSXPro;
+require_once __DIR__ . '/src/SimpleXLSXPro.php';
+$xlsx = Shuchkin\SimpleXLSXPro::parse('book.xlsx');
+foreach ($xlsx->rows() as $row) { print_r($row); }
+echo $xlsx->toHTMLMerged();   // HTML（保留合并 + 图片）
+echo $xlsx->toCSV();          // CSV / toTSV() / toJSON()
 ```
 
-## 3. 30 秒上手
+### 演示台
+
+把整个目录放到 PHP 站点（保证 `demo/` 可写），访问 `demo.php`：选择文件与格式 → AJAX 转换 → 复制 / 下载。详见 `docs/` 下三语开发文档。
+
+---
+
+<a id="english"></a>
+## English
+
+**SimpleXLSX** is a pure-PHP parser for Excel 2007+ `.xlsx` workbooks — no framework, no database, drop-in single files, PHP 7.0+ compatible.
+
+### Layout
+
+| File | Purpose |
+|---|---|
+| `src/SimpleXLSX.php` | Core: cell data, multiple sheets, dates |
+| `src/SimpleXLSXEx.php` | Styles: font/fill/alignment/border → CSS |
+| `src/SimpleXLSXPro.php` | Pro: merged cells, image extraction, exporters |
+| `src/XLSXFormula.php` | Formula engine: 60+ functions, cross-sheet evaluation |
+| `demo.php` | Single-file online demo (AJAX convert + preview + download) |
+| `demo/` | 7 sample xlsx files (merges, formulas, sheets, images…) |
+
+### Features
+
+- Parse xlsx into PHP arrays; multiple sheets, dates, rich text, hyperlinks
+- Merged cells: values copied to every cell in CSV/TSV/JSON; real rowspan/colspan in HTML
+- Built-in formula engine evaluates SUM/IF/VLOOKUP/cross-sheet refs even without cached values
+- Extract embedded images (incl. WPS DISPIMG) to a directory
+- Export to CSV / TSV / JSON / HTML with UTF-8/GBK/GB18030 encodings
+
+### Quick start
 
 ```php
-use Shuchkin\SimpleXLSXPro;
-
-$xlsx = SimpleXLSXPro::parse('demo.xlsx');
-if (!$xlsx) { exit(SimpleXLSXPro::parseError()); }
-
-$xlsx->extractImages('Img');                      // 图片 → Img/ 目录
-echo $xlsx->calculateCell('D6');                  // 745（公式算出来的）
-echo $xlsx->toCSV(0, true);                       // CSV，合并单元格已拆分复写
-echo $xlsx->toJSON(0, ['cells' => true]);         // JSON，每格带 img / merge / formula
-echo $xlsx->toHTMLMerged(0, ['images' => true]);  // HTML，真正的 colspan/rowspan
+require_once __DIR__ . '/src/SimpleXLSXPro.php';
+$xlsx = Shuchkin\SimpleXLSXPro::parse('book.xlsx');
+foreach ($xlsx->rows() as $row) { print_r($row); }
+echo $xlsx->toHTMLMerged();   // HTML (merges + images)
+echo $xlsx->toCSV();          // CSV / toTSV() / toJSON()
 ```
 
-命令行：
+### Demo
 
-```bash
-cd demo && php ../examples/06-cli_convert.php demo.xlsx --format=csv
-```
+Deploy the folder on any PHP host (make `demo/` writable) and open `demo.php`: pick a file and format → AJAX convert → copy / download. Full manuals in `docs/` (zh / en / ru).
 
-## 4. 修复的 7 个缺陷
+---
 
-| # | 位置 | 现象 |
-| --- | --- | --- |
-| 1 | `SimpleXLSXEx::readRowsEx()` | `$limit` 完全失效（`break` 应为 `return`），想取前 100 行却拿到整张表 |
-| 2 | `SimpleXLSXEx::valueEx()` | CSS 引用赋值导致字符串每次调用翻倍累加 |
-| 3 | `SimpleXLSX::toHTML()/toHTMLEx()` | README 写的 `$limit` 参数源码里根本不存在 |
-| 4 | `SimpleXLSX::parseError()` | 静态错误状态永不重置：失败一次后，后续成功仍报旧错 |
-| 5 | `SimpleXLSXEx::valueEx()` | 样式索引越界时 PHP 8 Warning |
-| 6 | `SimpleXLSXEx::readRowsEx()` | 单元格列数超出 `dimension` 时 `$cols` 未同步扩展 → Warning 洪水 |
-| 7 | `SimpleXLSXEx::readRowsEx()` | 跳列写入导致列顺序错乱（…F3 H3 G3） |
+<a id="русский"></a>
+## Русский
 
-## 5. 新增能力速查
+**SimpleXLSX** — чистый PHP-парсер книг Excel 2007+ `.xlsx`: без фреймворков и базы данных, подключается одним файлом, совместим с PHP 7.0+.
 
-### 公式
+### Состав
+
+| Файл | Назначение |
+|---|---|
+| `src/SimpleXLSX.php` | Базовая версия: данные ячеек, листы, даты |
+| `src/SimpleXLSXEx.php` | Стили: шрифт/заливка/выравнивание/границы → CSS |
+| `src/SimpleXLSXPro.php` | Pro: объединённые ячейки, извлечение изображений, экспорт |
+| `src/XLSXFormula.php` | Движок формул: 60+ функций, межлистовые ссылки |
+| `demo.php` | Онлайн-демо одним файлом (AJAX-конвертация + предпросмотр) |
+| `demo/` | 7 примеров xlsx (объединения, формулы, листы, картинки…) |
+
+### Возможности
+
+- Разбор xlsx в PHP-массивы; листы, даты, форматированный текст, гиперссылки
+- Объединённые ячейки: значение копируется в каждую ячейку (CSV/TSV/JSON); настоящие rowspan/colspan в HTML
+- Встроенный движок формул: SUM/IF/VLOOKUP/межлистовые ссылки вычисляются даже без кэша
+- Извлечение встроенных изображений (включая WPS DISPIMG) в каталог
+- Экспорт в CSV / TSV / JSON / HTML, кодировки UTF-8/GBK/GB18030
+
+### Быстрый старт
 
 ```php
-$xlsx->calculateCell('D6');                  // 算单元格
-$xlsx->calculate('SUM(A1:A5)*2');            // 算任意公式
-$xlsx->calculatedCells(0);                   // 全部公式单元格
-$xlsx->calculateFormulas = false;            // 关掉计算（最快）
+require_once __DIR__ . '/src/SimpleXLSXPro.php';
+$xlsx = Shuchkin\SimpleXLSXPro::parse('book.xlsx');
+foreach ($xlsx->rows() as $row) { print_r($row); }
+echo $xlsx->toHTMLMerged();   // HTML (объединения + картинки)
+echo $xlsx->toCSV();          // CSV / toTSV() / toJSON()
 ```
 
-60+ 函数：数学 / 统计 / 逻辑 / 文本 / 查找 / 日期，支持跨表引用（含中文表名）、区域引用、错误值传播、`#CIRC!` 循环引用检测。
+### Демо
 
-### 图片
+Разместите папку на любом PHP-хостинге (каталог `demo/` должен быть доступен для записи) и откройте `demo.php`: выбор файла и формата → AJAX-конвертация → копирование / скачивание. Полные руководства — в `docs/` (zh / en / ru).
 
-```php
-$map = $xlsx->extractImages('Img');          // [sheet][row][col] => 'Img/xxx.png'
-$xlsx->imageList();                          // 清单
-$xlsx->imageAt(0, 5, 2);                     // 按坐标取
-```
+---
 
-支持浮动图片（drawing 锚点）与 WPS 内嵌图片（`=DISPIMG("ID_xxx",1)`）。`rowsPro()` / `toJSON(['cells'=>true])` 的每个单元格都带 `img` 字段。
+## License / 许可 / Лицензия
 
-### 合并单元格
-
-```php
-$xlsx->mergeCells(0);        // [['ref'=>'A1:E1','x1'=>..,'y1'=>..,'w'=>5,'h'=>1], ...]
-$xlsx->mergeAt(0, 4, 3);     // 单格合并信息
-$xlsx->fillMerged($rows);    // 给已有二维数组做拆分复写
-```
-
-- CSV / TSV / JSON：值拆分复写到 x\*y 每个格
-- HTML：输出 `colspan` / `rowspan`，被合并的格不重复输出
-
-### 导出
-
-| 方法 | 说明 |
-| --- | --- |
-| `toArray($sheet, $fillMerged, $limit)` | 二维数组 |
-| `toCSV($sheet, $fillMerged, $bom)` / `saveCSV()` | CSV（默认带 UTF-8 BOM） |
-| `toTSV()` / `saveTSV()` | TSV |
-| `toJSON($sheet, $options)` / `saveJSON()` | JSON，选项见下 |
-| `toHTMLMerged($sheet, $options)` | 保留合并 + 图片的 HTML |
-| `SimpleXLSXPro::convert($file, $format, $opt)` | 一步到位 |
-
-`toJSON` 选项：`fill_merged` `header`（可指定行号）`cells` `meta` `pretty` `flags`。
-
-## 6. 运行测试
-
-```bash
-cd demo
-php ../examples/00-smoke_test.php     # 24 项断言，应全部 [OK]
-php ../examples/01-quick_start.php
-php ../examples/02-images.php demo_wps.xlsx
-```
-
-## 7. 许可
-
-补丁与扩展代码遵循原库许可（MIT）。
+MIT — based on [shuchkin/simplexlsx](https://github.com/shuchkin/simplexlsx)
