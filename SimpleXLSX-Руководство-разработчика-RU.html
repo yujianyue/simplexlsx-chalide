@@ -1,0 +1,3463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>SimpleXLSX — Руководство разработчика (RU)</title>
+<style>
+  :root{
+    --ink:#1a2233; --muted:#5b6472; --line:#d9dee7; --code-bg:#f5f7fa;
+    --head:#0f3d7c; --accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  html{font-size:10.5pt}
+  body{
+    font-family:"Segoe UI","Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    color:var(--ink); line-height:1.65; margin:0; background:#eef1f5;
+  }
+  .page{
+    max-width:210mm; margin:0 auto; background:#fff; padding:20mm 18mm;
+    box-shadow:0 2px 14px rgba(0,0,0,.12);
+  }
+  h1{font-size:22pt;color:var(--head);border-bottom:3px solid var(--head);padding-bottom:8px;margin:0 0 6px}
+  h2{font-size:15pt;color:var(--head);border-bottom:2px solid var(--line);padding-bottom:5px;margin:26px 0 12px;
+     page-break-after:avoid; break-after:avoid}
+  h3{font-size:12.5pt;color:#1d4ed8;margin:18px 0 8px;page-break-after:avoid}
+  h4{font-size:11pt;margin:14px 0 6px;page-break-after:avoid}
+  p{margin:.45em 0}
+  a{color:var(--accent);text-decoration:none}
+  blockquote{
+    margin:.8em 0;padding:6px 14px;border-left:4px solid var(--accent);
+    background:#f0f5ff;color:#33415c;border-radius:0 6px 6px 0;page-break-inside:avoid
+  }
+  code{
+    font-family:Consolas,"Courier New",monospace;font-size:.88em;
+    background:var(--code-bg);border:1px solid #e3e8ef;border-radius:3px;padding:0 4px;
+  }
+  pre{
+    background:var(--code-bg);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:6px;padding:10px 12px;overflow-x:auto;line-height:1.45;
+    page-break-inside:avoid;break-inside:avoid;
+  }
+  pre code{background:none;border:none;padding:0;white-space:pre-wrap;word-break:break-word}
+  table{
+    border-collapse:collapse;width:100%;margin:.8em 0;font-size:.92em;
+    page-break-inside:avoid;break-inside:avoid;
+  }
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top;word-break:break-word}
+  th{background:#eaf0fb;color:var(--head);font-weight:600}
+  tr:nth-child(even) td{background:#fafbfd}
+  hr{border:none;border-top:1px solid var(--line);margin:1.6em 0}
+  ul,ol{margin:.4em 0;padding-left:1.6em}
+  li{margin:.18em 0}
+  .toolbar{
+    position:fixed;top:14px;right:18px;z-index:9;display:flex;gap:8px;
+  }
+  .toolbar button{
+    font:13px/1 inherit;padding:9px 16px;border:none;border-radius:8px;cursor:pointer;
+    background:var(--head);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25)
+  }
+  .toolbar button:hover{background:#16407e}
+  /* ---------- A4 print ---------- */
+  @page{size:A4;margin:16mm 15mm}
+  @media print{
+    body{background:#fff}
+    .page{max-width:none;box-shadow:none;padding:0}
+    .toolbar{display:none}
+    h1{page-break-before:avoid}
+    h2{page-break-before:auto}
+    /* keep heading with at least following block */
+    h2,h3,h4{break-after:avoid-page}
+    pre,table,blockquote{break-inside:avoid}
+    a{color:inherit}
+    code,pre{font-size:9pt}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">Печать / Сохранить в PDF</button></div>
+<div class="page">
+<h1 id="simplexlsx">Документация по SimpleXLSX на русском языке</h1>
+<blockquote>
+<p>Полное русское руководство и руководство для разработчиков по <code>shuchkin/simplexlsx</code>
+Написано на основе построчного изучения исходного кода + проверки на PHP 8.3 (версия 1.1.19)</p>
+</blockquote>
+<hr />
+<h2 id="_1">Содержание</h2>
+<ul>
+<li><a href="#1-что-это-такое">1. Что это такое</a></li>
+<li><a href="#2-требования-к-окружению-и-установка">2. Требования к окружению и установка</a></li>
+<li><a href="#3-быстрый-старт-за-5-минут">3. Быстрый старт за 5 минут</a></li>
+<li><a href="#4-ключевые-концепции-как-xlsx-читается">4. Ключевые концепции: как xlsx читается</a></li>
+<li><a href="#5-полный-справочник-api">5. Полный справочник API</a></li>
+<li><a href="#6-подробное-описание-полей-ячейки-в-rowsex">6. Подробное описание полей ячейки в rowsEx()</a></li>
+<li><a href="#7-таблица-соответствия-типов-данных-проверено-на-практике">7. Таблица соответствия типов данных (проверено на практике)</a></li>
+<li><a href="#8-тема-дат-и-времени">8. Даты и время</a></li>
+<li><a href="#9-система-стилей-simplexlsxex">9. Система стилей (SimpleXLSXEx)</a></li>
+<li><a href="#10-большие-файлы-и-оптимизация-памяти">10. Большие файлы и оптимизация памяти</a></li>
+<li><a href="#11-обработка-ошибок-и-коды-ошибок">11. Обработка ошибок и коды ошибок</a></li>
+<li><a href="#12-вопросы-безопасности">12. Вопросы безопасности</a></li>
+<li><a href="#13-известные-проблемы-и-список-ловушек">13. Известные проблемы и подводные камни</a></li>
+<li><a href="#14-коллекция-практических-примеров-кода">14. Практические примеры кода</a></li>
+<li><a href="#15-сравнительный-анализ-выбора-с-другими-библиотеками">15. Сравнение с другими библиотеками</a></li>
+<li><a href="#16-эволюция-версий-и-замечания-по-обновлению">16. Эволюция версий и заметки по обновлению</a></li>
+<li><a href="#17-список-исправлений-багов-исходного-кода-с-патчами">17. Список исправлений багов исходного кода (с патчами)</a></li>
+<li><a href="#18-вычисление-формул-xlsxformula">18. Вычисление формул (XLSXFormula)</a></li>
+<li><a href="#19-объединённые-ячейки-и-экспорт-в-разные-форматы">19. Объединённые ячейки и экспорт в разные форматы</a></li>
+<li><a href="#20-извлечение-изображений-каталог-img">20. Извлечение изображений (каталог Img)</a></li>
+<li><a href="#приложение-a-шпаргалка-по-внутренней-структуре-xlsx">Приложение A: краткая справка по внутренней структуре xlsx</a></li>
+<li><a href="#приложение-b-таблица-встроенных-числовых-форматов-cf">Приложение B: таблица встроенных числовых форматов $CF</a></li>
+<li><a href="#приложение-c-шпаргалка-по-api">Приложение C: шпаргалка по API</a></li>
+<li><a href="#приложение-d-шпаргалка-по-расширенному-api-simplexlsxpro">Приложение D: шпаргалка по расширенному API SimpleXLSXPro</a></li>
+</ul>
+<hr />
+<h2 id="1">1. Что это такое</h2>
+<p>SimpleXLSX — это <strong>чистый PHP-ридер xlsx</strong>, предназначенный для разбора рабочих книг Microsoft Excel 2007+ формата <code>.xlsx</code> и получения данных ячеек в виде PHP-массива.</p>
+<p>Его главное преимущество в одном предложении: <strong>не зависит ни от каких дополнительных PHP-расширений — для чтения Excel достаточно встроенных SimpleXML + zlib</strong>.</p>
+<h3 id="_2">Что он умеет</h3>
+<table>
+<thead>
+<tr>
+<th>Возможность</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Чтение значений ячеек</td>
+<td>Текст, числа, булевы значения, даты, значения ошибок, форматированный текст</td>
+</tr>
+<tr>
+<td>Несколько листов</td>
+<td>Доступ по индексу/имени, распознавание скрытых листов, распознавание активного листа</td>
+</tr>
+<tr>
+<td>Извлечение стилей</td>
+<td>Шрифт, цвет, заливка, границы, выравнивание, высота строк и ширина столбцов</td>
+</tr>
+<tr>
+<td>Гиперссылки и примечания</td>
+<td>Внешние ссылки ячеек, внутренние переходы, текст примечаний</td>
+</tr>
+<tr>
+<td>Потоковое чтение</td>
+<td>Генератор <code>readRows()</code>, подходит для больших файлов</td>
+</tr>
+<tr>
+<td>Экспорт в HTML</td>
+<td><code>toHTML()</code> / <code>toHTMLEx()</code> — преобразование в таблицу одной командой</td>
+</tr>
+<tr>
+<td>Ноль зависимостей от расширений</td>
+<td>Ни <code>php-zip</code>, ни <code>php-excel</code>, распаковка реализована на чистом PHP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">Чего он не умеет</h3>
+<p>Этот момент важнее, чем «что он умеет»; сразу проясним, чтобы сэкономить вам полдня:</p>
+<table>
+<thead>
+<tr>
+<th>Не входит в возможности</th>
+<th>Причина</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Запись/создание xlsx</strong></td>
+<td>Библиотека только для чтения. Для записи используйте сопутствующую <a href="https://github.com/shuchkin/simplexlsxgen">SimpleXLSXGen</a></td>
+</tr>
+<tr>
+<td><strong>Чтение старого формата .xls</strong></td>
+<td>Совершенно другой бинарный формат, используйте <a href="https://github.com/shuchkin/simplexls">SimpleXLS</a></td>
+</tr>
+<tr>
+<td><strong>Вычисление формул</strong></td>
+<td>Возвращает только кэшированные результаты, сохранённые Excel на момент сохранения, без пересчёта формул</td>
+</tr>
+<tr>
+<td><strong>Информация об объединённых ячейках</strong></td>
+<td>Не разбирает <code>mergeCells</code>; в объединённой области значение имеет только левая верхняя ячейка</td>
+</tr>
+<tr>
+<td><strong>Изображения/диаграммы/сводные таблицы</strong></td>
+<td>Полностью игнорируются</td>
+</tr>
+<tr>
+<td><strong>Условное форматирование, проверка данных</strong></td>
+<td>Не разбираются</td>
+</tr>
+<tr>
+<td><strong>«Исходные фрагменты форматированного текста» ячейки</strong></td>
+<td>Форматированный текст склеивается в одну строку (см. <code>parseRichText</code>)</td>
+</tr>
+<tr>
+<td><strong>Чтение .xlsb / зашифрованных файлов</strong></td>
+<td>Ни бинарный формат, ни зашифрованный ZIP не поддерживаются</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Выбор в одном предложении</strong>: если ваша задача — «пользователь загружает Excel, я читаю таблицу и сохраняю в базу данных», SimpleXLSX — самый выгодный выбор (несколько десятков КБ, без зависимостей, достаточно быстрый). Если вам нужно «генерировать сложные отчёты с диаграммами» или «точно воспроизводить печатные стили» — берите PhpSpreadsheet.</p>
+</blockquote>
+<h3 id="_4">Основная информация</h3>
+<table>
+<thead>
+<tr>
+<th>Пункт</th>
+<th>Значение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Пространство имён</td>
+<td><code>Shuchkin\SimpleXLSX</code></td>
+</tr>
+<tr>
+<td>Файл основного класса</td>
+<td><code>src/SimpleXLSX.php</code> (около 1250 строк)</td>
+</tr>
+<tr>
+<td>Класс расширения стилей</td>
+<td><code>src/SimpleXLSXEx.php</code> (около 677 строк, загружается по требованию)</td>
+</tr>
+<tr>
+<td>Лицензия</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>Текущая версия</td>
+<td>1.1.19 (2026-09-10)</td>
+</tr>
+<tr>
+<td>Composer</td>
+<td><code>shuchkin/simplexlsx</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. Требования к окружению и установка</h2>
+<h3 id="21">2.1 Системные требования</h3>
+<table>
+<thead>
+<tr>
+<th>Требование</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PHP</td>
+<td>&gt;= 5.5 (на PHP 8.3 проверено, работает нормально; в PHP 5.5+ используется совместимый вариант с <code>Generator</code>)</td>
+</tr>
+<tr>
+<td><code>ext-simplexml</code></td>
+<td>Обязательно, разбор XML</td>
+</tr>
+<tr>
+<td><code>ext-zlib</code></td>
+<td>Обязательно, <code>gzinflate()</code> распаковывает записи ZIP</td>
+</tr>
+<tr>
+<td><code>ext-libxml</code></td>
+<td>Обязательно</td>
+</tr>
+<tr>
+<td><code>ext-mbstring</code></td>
+<td>Обязательно (заявлено в composer), для ветки совместимости func_overload</td>
+</tr>
+</tbody>
+</table>
+<p>Примечание: <strong><code>ext-zip</code> не требуется</strong>. Распаковку ZIP автор написал вручную (см. метод <code>unzip()</code>). Именно поэтому библиотека работает на различных дешёвых виртуальных хостингах.</p>
+<h3 id="22-1-composer">2.2 Способ установки 1: Composer (рекомендуется)</h3>
+<pre><code class="language-bash">composer require shuchkin/simplexlsx
+</code></pre>
+<p>Затем:</p>
+<pre><code class="language-php">require_once 'vendor/autoload.php';
+
+use Shuchkin\SimpleXLSX;
+
+if ( $xlsx = SimpleXLSX::parse('book.xlsx') ) {
+    print_r( $xlsx-&gt;rows() );
+} else {
+    echo SimpleXLSX::parseError();
+}
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>Внимание</strong>: в autoload файла <code>composer.json</code> зарегистрирован только <code>src/SimpleXLSX.php</code>:
+<code>json
+"autoload": { "classmap": ["src/SimpleXLSX.php"] }</code>
+Файл <code>SimpleXLSXEx.php</code> <strong>в classmap не зарегистрирован</strong>, он вручную загружается через <code>require_once __DIR__.'/SimpleXLSXEx.php'</code> при вызове <code>readRowsEx()</code>. Вам не нужно об этом заботиться, но и не рассчитывайте, что <code>class_exists('Shuchkin\SimpleXLSXEx')</code> вернёт true, если <code>rowsEx()</code> ни разу не вызывался.</p>
+</blockquote>
+<h3 id="23-2">2.3 Способ установки 2: подключение одного файла</h3>
+<p>Подходит для окружений, где нельзя установить Composer:</p>
+<pre><code class="language-php">require_once __DIR__ . '/src/SimpleXLSX.php';
+
+use Shuchkin\SimpleXLSX;
+</code></pre>
+<p><code>SimpleXLSX.php</code> самодостаточен и не зависит от других файлов (если только вам не нужен <code>rowsEx()</code>).</p>
+<h3 id="24">2.4 Использование во фреймворках</h3>
+<p><strong>Laravel</strong>: после установки через composer используйте напрямую, ServiceProvider не нужен.</p>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+public function import(Request $request) {
+    $request-&gt;validate(['file' =&gt; 'required|file|mimes:xlsx|max:10240']);
+    $xlsx = SimpleXLSX::parse($request-&gt;file('file')-&gt;getRealPath());
+    // ...
+}
+</code></pre>
+<p><strong>ThinkPHP / другие</strong>: подойдёт как <code>require</code> пути к файлу, так и composer autoload.</p>
+<hr />
+<h2 id="3-5">3. Быстрый старт за 5 минут</h2>
+<h3 id="31">3.1 Минимальный пример</h3>
+<pre><code class="language-php">&lt;?php
+use Shuchkin\SimpleXLSX;
+require_once __DIR__ . '/src/SimpleXLSX.php';
+
+if ( $xlsx = SimpleXLSX::parse('book.xlsx') ) {
+    print_r( $xlsx-&gt;rows() );
+} else {
+    echo SimpleXLSX::parseError();
+}
+</code></pre>
+<p>Вывод:</p>
+<pre><code>Array
+(
+    [0] =&gt; Array
+        (
+            [0] =&gt; ISBN
+            [1] =&gt; title
+            [2] =&gt; author
+            [3] =&gt; publisher
+            [4] =&gt; ctry
+        )
+
+    [1] =&gt; Array
+        (
+            [0] =&gt; 618260307
+            [1] =&gt; The Hobbit
+            [2] =&gt; J. R. R. Tolkien
+            [3] =&gt; Houghton Mifflin
+            [4] =&gt; USA
+        )
+)
+</code></pre>
+<h3 id="32">3.2 Три способа открытия</h3>
+<pre><code class="language-php">// ① Из пути к файлу (самый частый случай)
+$xlsx = SimpleXLSX::parse('/path/to/book.xlsx');
+$xlsx = SimpleXLSX::parseFile('/path/to/book.xlsx');   // эквивалентная запись
+
+// ② Из бинарных данных в памяти
+$data = file_get_contents('https://example.com/book.xlsx');
+// или извлечь из BLOB в базе данных, из кэша Redis
+$xlsx = SimpleXLSX::parseData($data);
+
+// ③ Также поддерживается прямая передача URL (внутри идёт file_get_contents, ограничено allow_url_fopen)
+$xlsx = SimpleXLSX::parse('https://www.example.com/example.xlsx');
+</code></pre>
+<p><strong>Соотношение трёх способов</strong> (правда из исходного кода):</p>
+<pre><code class="language-php">public static function parse($filename, $is_data = false, $debug = false) // ядро
+public static function parseFile($filename, $debug = false)  // → parse($filename, false, $debug)
+public static function parseData($data, $debug = false)      // → parse($data, true, $debug)
+</code></pre>
+<p>Внутри <code>parse()</code> сначала вызывается <code>unzip()</code>, затем <code>parseEntries()</code>; при успехе возвращается объект <code>SimpleXLSX</code>, <strong>при неудаче — <code>false</code></strong>.</p>
+<h3 id="33-">3.3 Классический ООП-стиль</h3>
+<p>Если вам больше нравится «создать объект + проверить состояние», а не «статическая фабрика + проверка на false»:</p>
+<pre><code class="language-php">$xlsx = new SimpleXLSX('books.xlsx');
+if ( $xlsx-&gt;success() ) {
+    foreach ( $xlsx-&gt;rows() as $r ) {
+        // ...
+    }
+} else {
+    echo 'xlsx error: ' . $xlsx-&gt;error();
+}
+</code></pre>
+<p>Сигнатура конструктора: <code>__construct($filename = null, $is_data = null, $debug = null)</code>.</p>
+<blockquote>
+<p>Разница между двумя стилями: статический <code>parse()</code> при неудаче возвращает <code>false</code> и помещает сообщение об ошибке в статическую переменную; вариант с <code>new</code> всегда возвращает объект, а успех проверяется через <code>success()</code>. Внизу оба вызывают один и тот же <code>unzip()</code>.</p>
+</blockquote>
+<h3 id="34">3.4 Режим отладки</h3>
+<pre><code class="language-php">ini_set('error_reporting', E_ALL);
+ini_set('display_errors', 1);
+
+if ( $xlsx = SimpleXLSX::parseFile('books.xlsx', true) ) {
+    echo $xlsx-&gt;toHTML();
+} else {
+    echo SimpleXLSX::parseError();
+}
+</code></pre>
+<p>После включения <code>$debug = true</code> каждый внутренний вызов <code>error()</code> дополнительно вызывает <code>trigger_error(..., E_USER_WARNING)</code>, что упрощает поиск проблем.</p>
+<hr />
+<h2 id="4-xlsx">4. Ключевые концепции: как xlsx читается</h2>
+<p>Чтобы по-настоящему эффективно использовать эту библиотеку (особенно при поиске проблем), стоит потратить 3 минуты на понимание её рабочего процесса.</p>
+<h3 id="41-xlsx-zip">4.1 xlsx по сути является ZIP</h3>
+<p><code>.xlsx</code> — это просто ZIP-архив с изменённым расширением, внутри — набор XML:</p>
+<pre><code>book.xlsx
+├── _rels/.rels                        ← входная точка, указывает, где workbook
+├── xl/
+│   ├── workbook.xml                   ← список листов, имена, порядок, активный лист
+│   ├── _rels/workbook.xml.rels        ← отображение rId → фактические файлы
+│   ├── sharedStrings.xml              ← пул общих строк
+│   ├── styles.xml                     ← шрифты/заливки/границы/числовые форматы
+│   ├── theme/theme1.xml               ← цвета темы
+│   └── worksheets/
+│       ├── sheet1.xml                 ← сами данные ячеек
+│       ├── _rels/sheet1.xml.rels      ← гиперссылки/примечания этого листа
+│       └── ...
+</code></pre>
+<h3 id="42">4.2 Процесс разбора (соответствует методам исходного кода)</h3>
+<pre><code>SimpleXLSX::parse($file)
+    │
+    ├─ unzip($filename, $is_data)      ← самописная распаковка ZIP, все записи читаются в $this-&gt;package['entries']
+    │                                     (на этом этапе не распаковываются, сохраняются только сжатые данные + заголовки)
+    │
+    └─ parseEntries()                  ← построение индексов
+         ├─ читает _rels/.rels → находит officeDocument → xl/workbook.xml
+         ├─ обходит &lt;sheet&gt; в workbook.xml → $this-&gt;sheetMetaData[i] (name/sheetId/state/id)
+         ├─ читает xl/_rels/workbook.xml.rels → распределяет по rId:
+         │     worksheet    → $this-&gt;sheets[i] = SimpleXMLElement (и запоминает sheetFiles[i])
+         │     sharedStrings→ $this-&gt;sharedstrings[] = массив строк
+         │     styles       → $this-&gt;styles + $this-&gt;nf + $this-&gt;cellFormats
+         │     theme        → $this-&gt;theme
+         └─ из &lt;bookViews&gt;&lt;workbookView activeTab=&quot;N&quot;&gt; в workbook.xml берёт $this-&gt;activeSheet
+</code></pre>
+<h3 id="43">4.3 Модель памяти (важно)</h3>
+<p>На этом многие спотыкаются:</p>
+<ol>
+<li><code>unzip()</code> одним вызовом <code>file_get_contents()</code> читает <strong>весь файл</strong> в память;</li>
+<li>Все записи ZIP (в сжатом виде) <strong>полностью сохраняются</strong> в массиве <code>$this-&gt;package['entries']</code>;</li>
+<li>Только при вызове <code>getEntryXML($name)</code> выполняется распаковка <code>gzinflate()</code>, и сразу после распаковки запись удаляется из массива через <code>deleteEntry()</code> (экономия памяти);</li>
+<li>Но <code>sheet1.xml</code>, разобранный <code>simplexml_load_string()</code> в <code>SimpleXMLElement</code>, <strong>постоянно остаётся в памяти</strong>.</li>
+</ol>
+<p><strong>Вывод</strong>: пиковое потребление памяти как минимум в 2–3 раза больше размера файла, плюс дерево объектов XML. <code>readRows()</code> экономит только уровень «массива результатов», но не уровень «DOM всего листа». Подробности в <a href="#10-большие-файлы-и-оптимизация-памяти">главе 10</a>.</p>
+<h3 id="44">4.4 Координаты ячеек</h3>
+<ul>
+<li>Взаимное преобразование стиля <code>A1</code> (запись Excel) и <code>[индекс столбца, индекс строки]</code> (0-based):</li>
+<li><code>getIndex('AB12')</code> → <code>[27, 11]</code> (проверено)</li>
+<li><code>SimpleXLSX::num2name(3)</code> → <code>'C'</code></li>
+<li><code>num2name(1) = 'A'</code>, <code>num2name(27) = 'AA'</code> (проверено)</li>
+</ul>
+<hr />
+<h2 id="5-api">5. Полный справочник API</h2>
+<blockquote>
+<p>Все приведённые ниже сигнатуры получены рефлексией из исходного кода 1.1.19, значения параметров по умолчанию полностью совпадают с исходным кодом.</p>
+</blockquote>
+<h3 id="51">5.1 Статические фабричные методы</h3>
+<h4 id="simplexlsxparsefilename-is_data-false-debug-false"><code>SimpleXLSX::parse($filename, $is_data = false, $debug = false)</code></h4>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Тип</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$filename</code></td>
+<td>string</td>
+<td>Путь к файлу, URL, а при <code>$is_data=true</code> — бинарное содержимое xlsx</td>
+</tr>
+<tr>
+<td><code>$is_data</code></td>
+<td>bool</td>
+<td>true означает, что первый параметр — данные, а не путь</td>
+</tr>
+<tr>
+<td><code>$debug</code></td>
+<td>bool</td>
+<td>При включении ошибки вызывают <code>trigger_error</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Возврат</strong>: при успехе объект <code>SimpleXLSX</code>, при неудаче <code>false</code>.</p>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('book.xlsx');          // файл
+$xlsx = SimpleXLSX::parse($binary, true);        // данные в памяти
+$xlsx = SimpleXLSX::parse('a.xlsx', false, true);// отладка
+</code></pre>
+<h4 id="simplexlsxparsefilefilename-debug-false"><code>SimpleXLSX::parseFile($filename, $debug = false)</code></h4>
+<p>Эквивалентно <code>parse($filename, false, $debug)</code>. Семантически понятнее, рекомендуется.</p>
+<h4 id="simplexlsxparsedatadata-debug-false"><code>SimpleXLSX::parseData($data, $debug = false)</code></h4>
+<p>Эквивалентно <code>parse($data, true, $debug)</code>. Для BLOB в базе данных / кэша / сетевых потоков.</p>
+<h4 id="simplexlsxparseerrorset-false-simplexlsxparseerrnoset-false"><code>SimpleXLSX::parseError($set = false)</code> / <code>SimpleXLSX::parseErrno($set = false)</code></h4>
+<p>Читает (или устанавливает) сообщение об ошибке/код ошибки последнего <code>parse()</code>.</p>
+<pre><code class="language-php">if ( !$xlsx = SimpleXLSX::parse('x.xlsx') ) {
+    echo SimpleXLSX::parseErrno() . ': ' . SimpleXLSX::parseError();
+}
+</code></pre>
+<blockquote>
+<p>⚠️ Эти два метода используют <strong>static локальные переменные</strong> — это глобальное разделяемое состояние. При последовательном разборе нескольких файлов обязательно считывайте результат сразу после каждого <code>parse()</code>, иначе он будет перезаписан следующим разбором.</p>
+</blockquote>
+<hr />
+<h3 id="52">5.2 Состояние и ошибки</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Возврат</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success()</code></td>
+<td>bool</td>
+<td>Успешен ли разбор (внутри это просто <code>!$this-&gt;error</code>)</td>
+</tr>
+<tr>
+<td><code>errno()</code></td>
+<td>int</td>
+<td>Код ошибки уровня экземпляра</td>
+</tr>
+<tr>
+<td><code>error($num = null, $str = null)</code></td>
+<td>string|false</td>
+<td>Чтение/запись сообщения об ошибке</td>
+</tr>
+<tr>
+<td><code>getPackage()</code></td>
+<td>array</td>
+<td>Информация об исходном ZIP-пакете (filename/mtime/size/entries)</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-php">$xlsx = new SimpleXLSX('books.xlsx');
+if ( $xlsx-&gt;success() ) {
+    // ...
+} else {
+    echo $xlsx-&gt;errno() . ' - ' . $xlsx-&gt;error();
+}
+</code></pre>
+<hr />
+<h3 id="53">5.3 Метаданные листов</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Возврат</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sheetsCount()</code></td>
+<td>int</td>
+<td>Количество листов</td>
+</tr>
+<tr>
+<td><code>sheetNames()</code></td>
+<td>array</td>
+<td><code>[0 =&gt; 'Sheet1', 1 =&gt; 'Sheet2', ...]</code></td>
+</tr>
+<tr>
+<td><code>sheetName($i)</code></td>
+<td>string|false</td>
+<td>Получить имя по индексу</td>
+</tr>
+<tr>
+<td><code>sheetMeta($i = null)</code></td>
+<td>array|false</td>
+<td>Все атрибуты одного листа; при <code>null</code> возвращаются все</td>
+</tr>
+<tr>
+<td><code>isHiddenSheet($i)</code></td>
+<td>bool</td>
+<td>Является ли лист скрытым</td>
+</tr>
+<tr>
+<td><code>getSheets()</code></td>
+<td>array</td>
+<td>Возвращает исходные объекты листов <code>SimpleXMLElement[]</code></td>
+</tr>
+<tr>
+<td><code>worksheet($i = 0)</code></td>
+<td>SimpleXMLElement|false</td>
+<td>Получить исходный XML-объект одного листа</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;activeSheet</code></td>
+<td>int</td>
+<td><strong>Свойство</strong>, индекс листа, активного при последнем сохранении в Excel (0-based)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Проверенный вывод</strong>:</p>
+<pre><code class="language-php">$x = SimpleXLSX::parse('types.xlsx');
+print_r($x-&gt;sheetNames());
+// Array( [0] =&gt; Тест типов [1] =&gt; Вторая страница [2] =&gt; Скрытая страница )
+
+print_r($x-&gt;sheetMeta());
+// Array(
+//   [0] =&gt; Array( [name] =&gt; Тест типов [sheetId] =&gt; 1 [state] =&gt; visible [id] =&gt; rId1 )
+//   [1] =&gt; Array( [name] =&gt; Вторая страница   [sheetId] =&gt; 2 [state] =&gt; visible [id] =&gt; rId2 )
+//   [2] =&gt; Array( [name] =&gt; Скрытая страница   [sheetId] =&gt; 3 [state] =&gt; hidden  [id] =&gt; rId3 )
+// )
+
+var_dump($x-&gt;isHiddenSheet(2)); // true
+</code></pre>
+<p><strong>Найти индекс по имени</strong> (библиотека этого не предоставляет, пишем сами):</p>
+<pre><code class="language-php">function sheetIndexByName(SimpleXLSX $xlsx, string $name): ?int {
+    $map = array_flip($xlsx-&gt;sheetNames());
+    return $map[$name] ?? null;
+}
+</code></pre>
+<blockquote>
+<p>💡 Ключи массива <code>sheets</code> отсортированы <strong>в порядке появления <code>&lt;sheet&gt;</code> в workbook.xml</strong>, и в конце <code>parseEntries()</code> выполняется <code>ksort()</code>, поэтому индексы стабильно соответствуют порядку ярлыков в Excel слева направо.</p>
+</blockquote>
+<hr />
+<h3 id="54">5.4 Чтение данных (ядро)</h3>
+<h4 id="rowsworksheetindex-0-limit-0-array"><code>rows($worksheetIndex = 0, $limit = 0): array</code></h4>
+<p>Самый часто используемый метод. Возвращает двумерный массив, каждая строка — <strong>численно индексированный массив</strong>, начиная со столбца 0.</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$worksheetIndex</code></td>
+<td>Индекс листа, <strong>0-based</strong></td>
+</tr>
+<tr>
+<td><code>$limit</code></td>
+<td>Максимальное количество возвращаемых строк; <code>0</code> — без ограничения</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-php">foreach ( $xlsx-&gt;rows() as $r ) {
+    echo $r[0] . ' | ' . $r[1] . &quot;\n&quot;;
+}
+</code></pre>
+<p>Внутренняя реализация: <code>iterator_to_array($this-&gt;readRows(...), false)</code>, то есть всё сразу разворачивается в массив.</p>
+<p><strong>Поведение дополнения пустыми строками</strong>: <code>readRows()</code> дополняет хвостовые пустые строки по количеству строк из <code>dimension()</code>. То есть если <code>&lt;dimension&gt;</code> Excel объявляет 100 строк, а данные есть только в 3, вы получите 100 строк (последние 97 — массивы пустых строк).</p>
+<h4 id="readrowsworksheetindex-0-limit-0-generator"><code>readRows($worksheetIndex = 0, $limit = 0): Generator</code></h4>
+<p>Возвращает те же данные, что и <code>rows()</code>, но это <strong>генератор</strong>, выдающий строки по одной, без расхода памяти на массив результатов.</p>
+<pre><code class="language-php">foreach ( $xlsx-&gt;readRows() as $k =&gt; $r ) {
+    fputcsv($fp, $r);
+}
+</code></pre>
+<h4 id="rowsexworksheetindex-0-limit-0-array"><code>rowsEx($worksheetIndex = 0, $limit = 0): array</code></h4>
+<p>Расширенная версия, каждая ячейка — <strong>ассоциативный массив из 16 полей</strong> (значение + стиль + гиперссылка + примечание + формула и т.д.). Подробности в <a href="#6-подробное-описание-полей-ячейки-в-rowsex">главе 6</a>.</p>
+<blockquote>
+<p>При первом вызове через <code>require_once</code> загружается <code>SimpleXLSXEx.php</code> и создаётся экземпляр <code>SimpleXLSXEx</code> (кэшируется в <code>$xlsx-&gt;rowsExReader</code>).</p>
+</blockquote>
+<h4 id="readrowsexworksheetindex-0-limit-0-generator"><code>readRowsEx($worksheetIndex = 0, $limit = 0): Generator</code></h4>
+<p>Версия <code>rowsEx()</code> на генераторе.</p>
+<blockquote>
+<p>🔴 <strong>Проверенный баг</strong>: <code>$limit</code> <strong>не работает</strong>, когда он меньше числа строк листа (возвращается полное число строк, лишние — пустые). Подробности в <strong>ловушке 1</strong>. Считайте сами и прерывайте через <code>break</code>.</p>
+</blockquote>
+<h4 id="getcellworksheetindex-0-cell-a1-mixed"><code>getCell($worksheetIndex = 0, $cell = 'A1'): mixed</code></h4>
+<p>Получает значение одной ячейки по координате Excel.</p>
+<pre><code class="language-php">echo $xlsx-&gt;getCell(0, 'B2');     // The Hobbit
+echo $xlsx-&gt;getCell(0, [1, 2]);   // эквивалентно, [индекс столбца, номер строки], столбцы 0-based, строки 1-based
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>Предупреждение о производительности</strong>: в комментарии исходного кода прямо написано <code>VERY SLOW!</code>. Внутри используется <code>$ws-&gt;sheetData-&gt;xpath("row/c[@r='B2']")</code> — полный проход по таблице XPath, каждый вызов — новый проход. <strong>Никогда не используйте в цикле</strong>. Чтобы получить несколько ячеек, один раз вызовите <code>rows()</code> и берите по индексам.</p>
+</blockquote>
+<p>Если ячейка не найдена, возвращается <code>null</code>; если лист не существует — <code>false</code>.</p>
+<h4 id="dimensionworksheetindex-0-array"><code>dimension($worksheetIndex = 0): array</code></h4>
+<p>Возвращает <code>[число столбцов, число строк]</code>.</p>
+<pre><code class="language-php">list($cols, $rows) = $xlsx-&gt;dimension(0);
+</code></pre>
+<p>Сначала читается <code>&lt;dimension ref="A1:E3"&gt;</code>; если прочитать не удаётся, <strong>происходит деградация к обходу всего sheetData с вычислением максимума</strong> (медленно).</p>
+<blockquote>
+<p>⚠️ В официальном README также написано <code>// don't trust dimension extracted from xml</code>. В xlsx, созданных некоторыми инструментами (например, отдельными библиотеками Java/Python), dimension может быть неточным. Если столбцов указано больше, вы получите кучу пустых столбцов.</p>
+</blockquote>
+<h4 id="getindexcell-a1-array"><code>getIndex($cell = 'A1'): array</code></h4>
+<p><code>'AB12'</code> → <code>[27, 11]</code> (0-based столбец, 0-based строка). При ошибке разбора возвращает <code>[-1, -1]</code>.</p>
+<h4 id="valuecell"><code>value($cell)</code></h4>
+<p>Принимает узел <code>&lt;c&gt;</code> типа SimpleXMLElement и возвращает его PHP-значение. <strong>Это ключевой метод сопоставления типов</strong> (см. <a href="#7-таблица-соответствия-типов-данных-проверено-на-практике">главу 7</a>). Обычно прикладному коду не нужно вызывать его напрямую.</p>
+<hr />
+<h3 id="55-html">5.5 Вывод HTML</h3>
+<h4 id="tohtmlworksheetindex-0-string"><code>toHTML($worksheetIndex = 0): string</code></h4>
+<pre><code class="language-php">echo SimpleXLSX::parse('book.xlsx')-&gt;toHTML();
+</code></pre>
+<p>Вывод вида:</p>
+<pre><code class="language-html">&lt;table class=excel&gt;&lt;tr&gt;&lt;td nowrap&gt;ISBN&lt;/td&gt;&lt;td nowrap&gt;title&lt;/td&gt;...&lt;/tr&gt;&lt;/table&gt;
+</code></pre>
+<ul>
+<li>Значения экранируются через <code>htmlspecialchars($c, ENT_QUOTES)</code></li>
+<li>Пустая ячейка выводится как <code>&amp;nbsp</code></li>
+</ul>
+<h4 id="tohtmlexworksheetindex-0-string"><code>toHTMLEx($worksheetIndex = 0): string</code></h4>
+<p>Версия со стилями. Первая строка — <code>&lt;th&gt;</code>, остальные — <code>&lt;td&gt;</code>, в каждой ячейке инлайн <code>style</code>:</p>
+<pre><code class="language-html">&lt;table class=excel&gt;&lt;tr&gt;&lt;th style=&quot;color: #000000;font-family: Calibri;font-size: 17px;width: 5.17em;&quot; nowrap&gt;ISBN&lt;/th&gt;...&lt;/tr&gt;&lt;/table&gt;
+</code></pre>
+<ul>
+<li>Пересчёт ширины столбца: <code>width: round($width * 0.47, 2) . 'em'</code></li>
+<li>Пересчёт высоты строки: <code>height: round($height * 1.3333) . 'px'</code> (выводится только в первом столбце каждой строки)</li>
+<li>Переводы строк преобразуются в <code>&lt;br&gt;</code></li>
+</ul>
+<blockquote>
+<p>⚠️ В официальной документации сигнатура указана как <code>toHTML($worksheetIndex = 0, $limit = 0)</code>, но <strong>в исходном коде фактически только 1 параметр</strong> (проверено рефлексией: число параметров <code>toHTML</code> = 1, <code>toHTMLEx</code> = 1). Передача второго параметра не вызовет ошибку (PHP это позволяет), но <strong>не даст эффекта</strong>. Чтобы ограничить число строк, организуйте свой цикл по <code>readRowsEx()</code> со счётчиком и прерыванием (учтите, что <code>$limit</code> у <code>readRowsEx()</code> тоже не работает, см. <strong>ловушку 1</strong>).</p>
+</blockquote>
+<hr />
+<h3 id="56">5.6 Стили</h3>
+<table>
+<thead>
+<tr>
+<th>Член</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getStyles()</code></td>
+<td>Возвращает исходный объект <code>SimpleXMLElement</code> файла <code>styles.xml</code></td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;cellFormats</code></td>
+<td><strong>Массив</strong>, каждый элемент — полное описание одного индекса стиля (см. ниже)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;nf</code></td>
+<td><strong>Массив</strong> пользовательских числовых форматов <code>[numFmtId =&gt; formatCode]</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::$CF</code></td>
+<td><strong>Статический массив</strong>, таблица встроенных числовых форматов Excel (см. Приложение B)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;rowsExReader</code></td>
+<td>Экземпляр <code>SimpleXLSXEx</code> (появляется только после вызова <code>rowsEx()</code>)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;theme</code></td>
+<td>XML-объект темы</td>
+</tr>
+</tbody>
+</table>
+<p>Проверенная структура одного элемента <code>$cellFormats</code>:</p>
+<pre><code class="language-php">[
+    'format'     =&gt; 'General',   // строка числового формата
+    'numFmtId'   =&gt; 0,
+    'fontId'     =&gt; 1,
+    'fillId'     =&gt; 2,
+    'borderId'   =&gt; 0,
+    'applyAlignment' =&gt; 1,
+    'xfId'       =&gt; 0,
+    'alignment'  =&gt; ['horizontal' =&gt; 'center', 'vertical' =&gt; 'center'],
+    'align'      =&gt; 'center',    // отображённый CSS text-align
+    'valign'     =&gt; 'middle',    // отображённый CSS vertical-align
+    'font'       =&gt; 'Calibri',
+    'color'      =&gt; 'FF0000',    // цвет шрифта (6 hex-символов, без #)
+    'f-size'     =&gt; 14,
+    'f-b'        =&gt; true,        // жирный
+    'f-i'        =&gt; true,        // курсив
+    'f-u'        =&gt; 'single',    // подчёркивание: '' | 'single' | 'double'
+    'f-strike'   =&gt; false,       // зачёркивание
+    'bgcolor'    =&gt; 'FFFF00',    // цвет фона
+    'b-left-color' =&gt; '',  'b-left-style'   =&gt; 'solid',
+    'b-right-color' =&gt; '', 'b-right-style'  =&gt; 'solid',
+    'b-top-color' =&gt; '',   'b-top-style'    =&gt; 'solid',
+    'b-bottom-color' =&gt; '', 'b-bottom-style' =&gt; 'solid',
+]
+</code></pre>
+<p>Использование: берём <code>s</code> из <code>rowsEx()</code> и ищем в таблице:</p>
+<pre><code class="language-php">$s = $cell['s'];
+$fmt = $xlsx-&gt;cellFormats[$s];
+echo $fmt['f-b'] ? 'жирный' : 'обычный';
+echo $fmt['bgcolor'] ? '#' . $fmt['bgcolor'] : 'нет заливки';
+</code></pre>
+<hr />
+<h3 id="57">5.7 Управление датой и временем</h3>
+<table>
+<thead>
+<tr>
+<th>Член</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setDateTimeFormat($value)</code></td>
+<td>Устанавливает формат вывода дат; передача <code>null</code> возвращает исходный серийный номер Excel</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;datetimeFormat</code></td>
+<td><strong>Свойство</strong>, по умолчанию <code>'Y-m-d H:i:s'</code></td>
+</tr>
+<tr>
+<td><code>unixstamp($excelDateTime)</code></td>
+<td>Серийный номер Excel → метка времени Unix (UTC)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;date1904</code></td>
+<td><strong>Свойство</strong>, 1 означает, что рабочая книга использует систему дат 1904</td>
+</tr>
+</tbody>
+</table>
+<p><code>SimpleXLSX::unixstamp()</code> использует <code>gmdate()</code>, то есть <strong>интерпретирует по UTC</strong>. Подробности в <a href="#8-тема-дат-и-времени">главе 8</a>.</p>
+<hr />
+<h3 id="58">5.8 Статические вспомогательные методы</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Назначение</th>
+<th>Проверено</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimpleXLSX::num2name($num)</code></td>
+<td>Индекс столбца → буквы (1-based)</td>
+<td><code>num2name(1)='A'</code>, <code>num2name(27)='AA'</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::parseRichText($is)</code></td>
+<td>Узел форматированного текста → склеенная строка</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::boolean($value)</code></td>
+<td>Разбор булевых значений Excel</td>
+<td><code>'true'=&gt;true</code>, <code>'1'=&gt;true</code>, <code>'0'=&gt;false</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::getTarget($base, $target)</code></td>
+<td>Нормализация относительного пути внутри ZIP</td>
+<td><code>getTarget('xl','../theme/theme1.xml')='theme/theme1.xml'</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::strlen/substr/strpos/strtoupper</code></td>
+<td>Безопасные обёртки над mbstring.func_overload</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="59">5.9 Низкоуровневые методы (обычно не нужны, полезны при поиске проблем)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unzip($filename, $is_data = false)</code></td>
+<td>Самописная распаковка ZIP, заполняет <code>$this-&gt;package['entries']</code></td>
+</tr>
+<tr>
+<td><code>parseEntries()</code></td>
+<td>Строит индексы workbook/sheets/styles</td>
+</tr>
+<tr>
+<td><code>getEntryData($name)</code></td>
+<td>Получает исходные (распакованные) данные по пути внутри пакета</td>
+</tr>
+<tr>
+<td><code>getEntryXML($name)</code></td>
+<td>Получает и разбирает в SimpleXMLElement (после использования запись удаляется для экономии памяти)</td>
+</tr>
+<tr>
+<td><code>entryExists($name)</code></td>
+<td>Проверяет существование записи в пакете</td>
+</tr>
+<tr>
+<td><code>deleteEntry($name)</code></td>
+<td>Освобождает запись из памяти</td>
+</tr>
+</tbody>
+</table>
+<p>Пример отладки — посмотреть, какие файлы на самом деле есть внутри xlsx:</p>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('book.xlsx');
+foreach ( $xlsx-&gt;getPackage()['entries'] as $e ) {
+    echo $e['path'] . '/' . $e['name'] . ' (' . $e['ucs'] . &quot; bytes)\n&quot;;
+}
+</code></pre>
+<hr />
+<h2 id="6-rowsex">6. Подробное описание полей ячейки в rowsEx()</h2>
+<p>Каждая ячейка, возвращаемая <code>rowsEx()</code> / <code>readRowsEx()</code>, представляет собой ассоциативный массив следующей структуры (16 полей, подтверждено проверкой):</p>
+<pre><code class="language-php">[
+    'type'    =&gt; 's',                 // тип данных ячейки
+    'name'    =&gt; 'A1',                // координата Excel
+    'value'   =&gt; 'ISBN',              // разобранное значение PHP
+    'href'    =&gt; '',                  // гиперссылка (внешний URL или внутренняя позиция)
+    'f'       =&gt; '',                  // исходный текст формулы (без =)
+    'format'  =&gt; 'General',           // строка числового формата
+    's'       =&gt; 0,                   // индекс стиля → $xlsx-&gt;cellFormats[0]
+    'css'     =&gt; 'color: #000000;...',// сгенерированная CSS-строка
+    'r'       =&gt; 1,                   // номер строки (1-based)
+    'hidden'  =&gt; false,               // скрыта ли строка или столбец, где находится ячейка
+    'width'   =&gt; 13.7109375,          // ширина столбца (пользовательские единицы Excel)
+    'height'  =&gt; 0,                   // высота строки (в пунктах pt)
+    'comment' =&gt; 'Это примечание',    // чистый текст примечания ячейки
+]
+</code></pre>
+<h3 id="_5">Подробное описание полей</h3>
+<table>
+<thead>
+<tr>
+<th>Поле</th>
+<th>Тип</th>
+<th>Описание и замечания</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>Исходный атрибут <code>t</code>: <code>s</code>(общая строка) <code>str</code>(результат строковой формулы) <code>b</code>(логическое) <code>e</code>(ошибка) <code>inlineStr</code>(встроенный текст) <code>n</code>/<code>''</code>(число) <code>d</code>(дата ISO). <strong>Пустая строка в качестве типа — это нормально</strong>, означает число или общий формат</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>Например <code>B2</code>. Даже для пустой ячейки выдаётся корректная координата</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>mixed</td>
+<td>Разобранное значение, типы см. в <a href="#7-таблица-соответствия-типов-данных-проверено-на-практике">главе 7</a></td>
+</tr>
+<tr>
+<td><code>href</code></td>
+<td>string</td>
+<td>Гиперссылка. Внешняя ссылка — полный URL; внутренний переход имеет вид <code>Sheet1!A1</code>. <strong>Проверка по белому списку протоколов не выполняется</strong>, перед выводом в HTML обязательно фильтруйте самостоятельно (см. <a href="#12-вопросы-безопасности">главу 12</a>)</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>string</td>
+<td>Исходный текст формулы, например <code>B3*2</code> (без ведущего <code>=</code>). <strong>Внимание</strong>: для ячейки с формулой <code>value</code> — это кэшированный Excel результат, а не вычисленный заново</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td>string</td>
+<td>Код числового формата, например <code>YYYY-MM-DD HH:MM:SS</code>, <code>0.00%</code>, <code>#,##0.00</code></td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>int</td>
+<td>Индекс стиля. Обратите внимание: в исходном коде, когда <code>s</code> равен 0, происходит откат к <strong>стилю столбца</strong> <code>cols[$curC]['s']</code></td>
+</tr>
+<tr>
+<td><code>css</code></td>
+<td>string</td>
+<td>Предварительно сгенерировано в <code>SimpleXLSXEx::readXfs()</code>. <strong>Есть баг накопления, см. <a href="#13-известные-проблемы-и-список-ловушек">главу 13</a></strong></td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>int</td>
+<td>Номер строки, 1-based</td>
+</tr>
+<tr>
+<td><code>hidden</code></td>
+<td>bool</td>
+<td>Скрыта строка <strong>или</strong> столбец; true, если хотя бы одно из них true (проверено: после скрытия строки 4 у всех ячеек этой строки <code>hidden=true</code>)</td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td>float</td>
+<td>Ширина столбца в пользовательских единицах Excel (≈ ширина символа). Значение есть только если <code>customWidth</code> истинно, иначе 0</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td>float</td>
+<td>Высота строки в пунктах (pt = 1/72 дюйма). Значение есть только если <code>customHeight</code> истинно</td>
+</tr>
+<tr>
+<td><code>comment</code></td>
+<td>string</td>
+<td>Чистый текст примечания. Проверено: примечания на китайском возвращаются корректно</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">Пример фактического вывода</h3>
+<p>Вызов <code>rowsEx()</code> для тестовой таблицы с различными типами, взят столбец B:</p>
+<pre><code>name=B1    type='inlineStr' value='значение'             format='General'  hidden=false width=24 comment=''
+name=B2    type='inlineStr' value='привет мир'           format='General'  hidden=false width=24 comment='Это примечание'
+name=B3    type='n'         value=618260307             format='General'  hidden=false width=24 f=''
+name=B4    type='n'         value=1233.34               format='General'  hidden=true  width=24
+name=B5    type='n'         value='2016-04-12 13:41:00' format='yyyy-mm-dd h:mm:ss'
+name=B8    type='b'         value=true                  format='HH:MM:SS'
+name=B9    type=''          value=''                    format='General'  f='B3*2'
+name=B11   type='e'         value='#DIV/0!'             format='0.00%'
+</code></pre>
+<hr />
+<h2 id="7">7. Таблица соответствия типов данных (проверено на практике)</h2>
+<p>Метод <code>value()</code> — вся логика преобразования типов. Таблица ниже — реальное поведение, которое я проверил на PHP 8.3 с помощью xlsx-файла, покрывающего все типы:</p>
+<table>
+<thead>
+<tr>
+<th>Содержимое Excel</th>
+<th><code>type</code></th>
+<th>Возвращаемый тип PHP</th>
+<th>Возвращаемое значение</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Текст (в т.ч. китайский)</td>
+<td><code>s</code> / <code>inlineStr</code></td>
+<td><code>string</code></td>
+<td><code>'привет мир'</code></td>
+<td>UTF-8 с китайским текстом работает нормально</td>
+</tr>
+<tr>
+<td>Целое число <code>618260307</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>int</code></td>
+<td><code>618260307</code></td>
+<td>Если можно преобразовать в int, преобразуется в int</td>
+</tr>
+<tr>
+<td>Дробное <code>1233.34</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>float</code></td>
+<td><code>1233.34</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Большое число <code>1.23E+15</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>int</code></td>
+<td><code>1230000000000000</code></td>
+<td>На 64-битном PHP преобразуется в int</td>
+</tr>
+<tr>
+<td>Дата и время</td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'2016-04-12 13:41:00'</code></td>
+<td>Дата определяется по наличию <code>m</code> в коде формата</td>
+</tr>
+<tr>
+<td>Только дата</td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'2022-02-21 00:00:00'</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Только время <code>13:41</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'1970-01-01 13:41:00'</code></td>
+<td>⚠️ см. пояснение ниже</td>
+</tr>
+<tr>
+<td>TRUE</td>
+<td><code>b</code></td>
+<td><code>bool</code></td>
+<td><code>true</code></td>
+<td></td>
+</tr>
+<tr>
+<td>FALSE</td>
+<td><code>b</code></td>
+<td><code>bool</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Формула <code>=B3*2</code></td>
+<td><code>''</code></td>
+<td>mixed</td>
+<td>Кэшированное Excel значение, <strong>может быть пустой строкой</strong></td>
+<td>⚠️ см. пояснение ниже</td>
+</tr>
+<tr>
+<td>Процент <code>12.34%</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>float</code></td>
+<td><code>0.1234</code></td>
+<td><strong>Не умножается на 100</strong>, возвращается исходная десятичная дробь</td>
+</tr>
+<tr>
+<td>Значение ошибки</td>
+<td><code>e</code></td>
+<td><code>string</code></td>
+<td><code>'#DIV/0!'</code></td>
+<td>Текст ошибки возвращается как есть</td>
+</tr>
+<tr>
+<td>Пустая ячейка</td>
+<td><code>''</code></td>
+<td><code>string</code></td>
+<td><code>''</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">Логика определения типа (ключевые моменты исходного кода)</h3>
+<pre><code class="language-php">// 1) Если тип пуст или n, определяется, является ли значение датой, по строке числового формата в стиле
+if ($dataType === '' || $dataType === 'n') {
+    $s = (int)$cell['s'];
+    if ($s &gt; 0 &amp;&amp; isset($this-&gt;cellFormats[$s])) {
+        if (array_key_exists('format', $this-&gt;cellFormats[$s])) {
+            $format = $this-&gt;cellFormats[$s]['format'];
+            // Если после удаления литералов в кавычках строка формата содержит m (месяц/минута), считается датой
+            if ($format &amp;&amp; preg_match('/[mM]/', preg_replace('/&quot;[^&quot;]+&quot;/', '', $format))) {
+                $dataType = 'D';
+            }
+        }
+    }
+}
+
+// 2) Ветвь по умолчанию: строка, при возможности преобразуется в число
+$value = (string)$cell-&gt;v;
+if (is_numeric($value)) {
+    if ($value == (int)$value)   $value = (int)$value;
+    elseif ($value == (float)$value) $value = (float)$value;
+}
+</code></pre>
+<p><strong>Это означает</strong>:</p>
+<ol>
+<li><strong>Определение даты зависит от «наличия буквы m в коде формата»</strong>. Если числовой столбец в таблице ошибочно получил пользовательский формат с <code>m</code>, он будет ошибочно преобразован в дату. И наоборот, если столбцу дат назначен <code>General</code>, будет возвращено дробное серийное значение даты Excel (например <code>44613.0</code>), а не дата.</li>
+<li><strong>Ведущие нули теряются</strong>. Например <code>007</code> (воспринятое как число) превратится в <code>7</code>. Номера телефонов, ID-номера и почтовые индексы в Excel обязательно нужно задавать в текстовом формате, иначе SimpleXLSX вернёт int/float. Это источник данных-инцидентов №1 при импорте в системы.</li>
+<li><strong>Точность больших целых чисел</strong>: при превышении диапазона PHP int или при наличии дробной части преобразуется во float, <code>1234567890123456789</code> может превратиться в <code>1.2345678901235E+18</code>.</li>
+</ol>
+<h3 id="_8">О «чистом времени»</h3>
+<p>Время без даты в Excel (например <code>13:41:00</code>) хранится как <code>0.570138...</code> (целая часть равна 0). Для <code>d == 0</code> метод <code>unixstamp()</code> идёт по особой ветке:</p>
+<pre><code class="language-php">$t = (abs($d) &gt; 0) ? ($d - 25569) * 86400 + round($t * 86400) : round($t * 86400);
+</code></pre>
+<p>В результате отсчёт идёт <strong>от эпохи Unix (1970-01-01)</strong>, поэтому <code>13:41</code> → <code>'1970-01-01 13:41:00'</code> (подтверждено на практике).</p>
+<p>Практическое решение для бизнес-логики: брать только часть времени.</p>
+<pre><code class="language-php">$val = $cell['value'];               // '1970-01-01 13:41:00'
+$time = substr($val, 11);            // '13:41:00'
+</code></pre>
+<h3 id="_9">О формулах</h3>
+<p>SimpleXLSX <strong>не вычисляет формулы</strong>, он читает <strong>кэшированный результат</strong>, сохранённый Excel в файле (<code>&lt;v&gt;</code> внутри <code>&lt;c&gt;&lt;f&gt;B3*2&lt;/f&gt;&lt;v&gt;1236&lt;/v&gt;&lt;/c&gt;</code>).</p>
+<p>Обнаружено на практике: xlsx, созданные openpyxl и частью не-Excel инструментов, <strong>не записывают кэшированное значение</strong>; в этом случае <code>value</code> — пустая строка, содержимое есть только в <code>f</code>.</p>
+<p><strong>Рекомендации по обработке</strong>:</p>
+<pre><code class="language-php">foreach ($xlsx-&gt;rowsEx() as $row) {
+    foreach ($row as $c) {
+        $v = $c['value'];
+        if ($v === '' &amp;&amp; $c['f'] !== '') {
+            // Ячейка с формулой без кэшированного значения
+            $v = null; // или пометить для ручной обработки / пересчитать самостоятельно
+        }
+    }
+}
+</code></pre>
+<hr />
+<h2 id="8">8. Тема дат и времени</h2>
+<h3 id="81-excel">8.1 Природа дат Excel</h3>
+<p>Дата в Excel — это <strong>число с плавающей точкой</strong>: целая часть — «количество дней с 1899-12-30» (система 1900), дробная часть — доля прошедших суток. Например <code>42472.570138889</code> = <code>2016-04-12 13:41:00</code>.</p>
+<blockquote>
+<p>Почему 1899-12-30, а не 1900-01-01? Потому что в Excel есть знаменитый баг «1900 год — високосный». Число <code>25569</code> в <code>unixstamp()</code> — это разница в днях между 1899-12-30 и 1970-01-01.</p>
+</blockquote>
+<h3 id="82">8.2 Формула преобразования</h3>
+<pre><code class="language-php">public function unixstamp($excelDateTime) {
+    $d = floor($excelDateTime);      // количество дней
+    $t = $excelDateTime - $d;        // доля суток
+    if ($this-&gt;date1904) { $d += 1462; }   // для системы 1904 добавляется 1462 дня
+    $t = (abs($d) &gt; 0) ? ($d - 25569) * 86400 + round($t * 86400) : round($t * 86400);
+    return (int)$t;
+}
+</code></pre>
+<p>Затем форматирование через <code>gmdate($this-&gt;datetimeFormat, $ts)</code> — <strong>обратите внимание: используется <code>gmdate()</code>, а не <code>date()</code></strong>, то есть метка времени интерпретируется по UTC.</p>
+<h3 id="83">8.3 Четыре варианта использования</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('book.xlsx');
+
+// ① По умолчанию: формат ISO (можно напрямую сохранять в MySQL DATETIME)
+echo $xlsx-&gt;getCell(0, 'C2');   // 2016-04-12 13:41:00
+
+// ② Пользовательский формат
+$xlsx-&gt;setDateTimeFormat('d.m.Y H:i');
+echo $xlsx-&gt;getCell(0, 'C2');   // 12.04.2016 13:41
+
+// ③ Метка времени Unix
+$xlsx-&gt;setDateTimeFormat('U');
+$ts = $xlsx-&gt;getCell(0, 'C2');  // 1645401600 (строка)
+echo gmdate('Y-m-d', $ts);      // 2016-04-12
+
+// ④ Исходное серийное значение Excel (отказ от автоматического преобразования)
+$xlsx-&gt;setDateTimeFormat(null);
+$xd = $xlsx-&gt;getCell(0, 'C2');  // 42472.570138889 (float)
+echo gmdate('m/d/Y', $xlsx-&gt;unixstamp($xd));  // 04/12/2016
+</code></pre>
+<p><strong>Проверено на практике</strong> (одна и та же ячейка, четыре настройки):</p>
+<pre><code>NULL             =&gt; 44613.0                      (float)
+'Y-m-d H:i:s'    =&gt; '2022-02-21 00:00:00'        (string)
+'d.m.Y H:i'      =&gt; '21.02.2022 00:00'           (string)
+'U'              =&gt; '1645401600'                 (string)
+</code></pre>
+<p>Обратите внимание: <code>'U'</code> возвращает <strong>строку</strong>, а не целое число, требуется приведение <code>(int)</code>.</p>
+<h3 id="84">8.4 Ловушка часовых поясов</h3>
+<p><code>gmdate()</code> означает: если в Excel записано <code>2016-04-12 13:41</code>, то на выходе будет <code>2016-04-12 13:41:00</code>, <strong>без смещения из-за часового пояса сервера</strong>. Обычно это именно то, что нужно (что видно в Excel, то и получаете).</p>
+<p>И наоборот, если нужно интерпретировать по определённому часовому поясу, смещение нужно добавить самостоятельно:</p>
+<pre><code class="language-php">$xlsx-&gt;setDateTimeFormat('U');
+$ts = (int)$xlsx-&gt;getCell(0, 'C2');
+$local = date('Y-m-d H:i:s', $ts + 8 * 3600);  // отображение по восточно-китайскому поясу (UTC+8)
+</code></pre>
+<h3 id="85-1904">8.5 Система дат 1904</h3>
+<p>Старые файлы Mac-версии Excel могут использовать систему 1904. Библиотека автоматически определяет это по <code>&lt;workbookPr date1904="1"&gt;</code> в <code>workbook.xml</code> и устанавливает <code>$xlsx-&gt;date1904 = 1</code>.</p>
+<p>Если требуется ручное вмешательство (свойство public):</p>
+<pre><code class="language-php">$xlsx-&gt;date1904 = 1;   // принудительно использовать систему 1904
+</code></pre>
+<p>Если вы обнаружили, что все даты <strong>на 4 года и 1 день позже</strong> реальных, это именно та проблема.</p>
+<h3 id="86">8.6 Вспомогательная функция распознавания столбцов с датами</h3>
+<p><code>rows()</code> даёт только значения и не сообщает, какой столбец содержит даты. Определяйте по <code>format</code> из <code>rowsEx()</code>:</p>
+<pre><code class="language-php">function isDateCell(array $cell): bool {
+    if ($cell['type'] === 'd') return true;
+    if (!in_array($cell['type'], ['', 'n'], true)) return false;
+    $fmt = preg_replace('/&quot;[^&quot;]+&quot;/', '', $cell['format']);
+    // содержит любую из букв y/m/d/h/s и не является чисто числовым форматом
+    return (bool)preg_match('/[ymdhs]/i', $fmt);
+}
+</code></pre>
+<hr />
+<h2 id="9-simplexlsxex">9. Система стилей (SimpleXLSXEx)</h2>
+<h3 id="91">9.1 Момент загрузки</h3>
+<p><code>SimpleXLSXEx</code> — <strong>ленивая загрузка</strong>: класс подключается через <code>require_once</code> и инстанцируется только при первом вызове <code>rowsEx()</code> / <code>readRowsEx()</code> / <code>toHTMLEx()</code>, после чего кэшируется в <code>$xlsx-&gt;rowsExReader</code>.</p>
+<p>Если вы используете только <code>rows()</code>, этот класс вообще не будет загружен — нулевые накладные расходы.</p>
+<h3 id="92">9.2 Что делается в конструкторе</h3>
+<pre><code class="language-php">public function __construct(SimpleXLSX $xlsx) {
+    $this-&gt;readThemeColors();  // палитра темы (12 цветов)
+    $this-&gt;readFonts();        // fonts: b/i/u/strike/sz/color/name/family/charset/scheme
+    $this-&gt;readFills();        // fills: pattern/fgcolor/bgcolor
+    $this-&gt;readBorders();      // borders: 8 направлений + diagonalUp/Down/outline
+    $this-&gt;readXfs();          // объединяется в $this-&gt;css[s] и дополняются cellFormats
+    $this-&gt;readHyperlinks();   // карта гиперссылок по листам
+    $this-&gt;readComments();     // карта примечаний по листам
+}
+</code></pre>
+<h3 id="93-getcolorvalue">9.3 Разбор цвета <code>getColorValue()</code></h3>
+<p>Поддерживается приоритет трёх представлений цвета Excel:</p>
+<ol>
+<li><code>rgb="FFCCBBAA"</code> → берутся последние 6 символов (alpha отбрасывается)</li>
+<li><code>indexed="N"</code> → поиск во встроенной палитре <code>SimpleXLSXEx::$IC</code> (65 цветов)</li>
+<li><code>theme="N"</code> → поиск в палитре темы</li>
+</ol>
+<p>В конце, если присутствует атрибут <code>tint</code>, выполняется смешивание оттенка (интерполяция к белому/чёрному).</p>
+<h3 id="94-excel-css">9.4 Таблица соответствия выравнивания Excel → CSS</h3>
+<p>Горизонтальное выравнивание:</p>
+<table>
+<thead>
+<tr>
+<th>Excel</th>
+<th>CSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>general</td>
+<td>— (нет)</td>
+</tr>
+<tr>
+<td>left</td>
+<td>left</td>
+</tr>
+<tr>
+<td>center / centerContinuous</td>
+<td>center</td>
+</tr>
+<tr>
+<td>right</td>
+<td>right</td>
+</tr>
+<tr>
+<td>justify / distributed</td>
+<td>justify</td>
+</tr>
+<tr>
+<td>fill</td>
+<td>— (нет)</td>
+</tr>
+</tbody>
+</table>
+<p>Вертикальное выравнивание:</p>
+<table>
+<thead>
+<tr>
+<th>Excel</th>
+<th>CSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>top</td>
+<td>top</td>
+</tr>
+<tr>
+<td>center / justify / distributed</td>
+<td>middle</td>
+</tr>
+<tr>
+<td>bottom</td>
+<td>bottom</td>
+</tr>
+</tbody>
+</table>
+<h3 id="95">9.5 Пересчёт размера шрифта</h3>
+<pre><code class="language-php">$css .= 'font-size: ' . (round($cf['f-size'] * 1.3333) + 2) . 'px;';
+</code></pre>
+<p>Единица размера шрифта в Excel — пункт (pt), здесь грубое преобразование в px: <code>pt × 1.3333 + 2</code> (1pt ≈ 1.333px). Поэтому шрифт 11 → 17px, 14 → 21px.</p>
+<h3 id="96">9.6 Границы</h3>
+<p>14 стилей границ Excel упрощены до двух CSS: <code>solid</code> и <code>dashed</code> (<code>dashed</code>/<code>dashDot</code>/<code>dashDotDot</code> → <code>dashed</code>, остальные не none → <code>solid</code>), толщина везде <code>thin</code>, цвет берётся из цвета соответствующего направления.</p>
+<blockquote>
+<p>То есть: <code>medium</code>, <code>thick</code>, <code>double</code>, <code>hair</code> в HTML выглядят одинаково. Это намеренное упрощение, не рассчитывайте на попиксельное воспроизведение.</p>
+</blockquote>
+<h3 id="97-css-css">9.7 Самостоятельная генерация CSS (обход бага встроенного css)</h3>
+<p>Если встроенного поля <code>css</code> недостаточно (см. баг накопления в <a href="#13-известные-проблемы-и-список-ловушек">главе 13</a>), можно напрямую читать <code>cellFormats</code> и собирать CSS самому:</p>
+<pre><code class="language-php">function buildCss(SimpleXLSX $xlsx, int $s): string {
+    $f = $xlsx-&gt;cellFormats[$s] ?? [];
+    $css = '';
+    if (!empty($f['color']))    $css .= 'color:#' . $f['color'] . ';';
+    if (!empty($f['bgcolor']))  $css .= 'background-color:#' . $f['bgcolor'] . ';';
+    if (!empty($f['f-b']))      $css .= 'font-weight:bold;';
+    if (!empty($f['f-i']))      $css .= 'font-style:italic;';
+    if (!empty($f['align']))    $css .= 'text-align:' . $f['align'] . ';';
+    if (!empty($f['valign']))   $css .= 'vertical-align:' . $f['valign'] . ';';
+    if (!empty($f['f-size']))   $css .= 'font-size:' . (round($f['f-size'] * 1.3333) + 2) . 'px;';
+    return $css;
+}
+</code></pre>
+<hr />
+<h2 id="10">10. Большие файлы и оптимизация памяти</h2>
+<h3 id="101">10.1 Официальные эталонные данные</h3>
+<p>Практические измерения автора в CHANGELOG 1.0.12:</p>
+<table>
+<thead>
+<tr>
+<th>Способ</th>
+<th>Потребление памяти на 100 тыс. строк</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rowsEx()</code></td>
+<td>~880 MB</td>
+</tr>
+<tr>
+<td><code>readRowsEx()</code></td>
+<td>~162 MB</td>
+</tr>
+</tbody>
+</table>
+<p>Разница более чем в 5 раз. Причина в том, что <code>rows()</code> / <code>rowsEx()</code> разворачивают весь лист в огромный двумерный массив PHP (каждый элемент массива PHP стоит примерно 80–100 байт; 100 тыс. × 10 столбцов — это миллион zval).</p>
+<h3 id="102">10.2 Куда уходит память</h3>
+<pre><code>Всего памяти ≈ размер файла (исходный бинарник)
+       + сжатые данные всех записей ZIP (package['entries'])
+       + дерево SimpleXMLElement разобранных листов (самая большая часть)
+       + массив общих строк
+       + результирующий массив (только у rows/rowsEx)
+</code></pre>
+<p><code>readRows()</code> отсекает только последний пункт.</p>
+<h3 id="103">10.3 Список оптимизаций</h3>
+<p><strong>① В первую очередь используйте генераторы</strong></p>
+<pre><code class="language-php">// ❌ Плохо: вся таблица попадает в память
+foreach ($xlsx-&gt;rows() as $r) { ... }
+
+// ✅ Хорошо: построчная выдача
+foreach ($xlsx-&gt;readRows() as $r) { ... }
+</code></pre>
+<p><strong>② Пишите в целевой поток, не накапливайте</strong></p>
+<pre><code class="language-php">$f = fopen('out.csv', 'wb');
+fwrite($f, chr(0xEF) . chr(0xBB) . chr(0xBF));  // BOM UTF-8, чтобы Excel не показывал иероглифы вместо китайского
+foreach ($xlsx-&gt;readRows() as $r) {
+    fputcsv($f, $r);
+}
+fclose($f);
+</code></pre>
+<p><strong>③ Обрабатывайте порциями и освобождайте ресурсы</strong></p>
+<pre><code class="language-php">$pdo-&gt;beginTransaction();
+$stmt = $pdo-&gt;prepare('INSERT INTO t (a,b,c) VALUES (?,?,?)');
+$i = 0;
+foreach ($xlsx-&gt;readRows() as $k =&gt; $r) {
+    if ($k === 0) continue;                 // пропустить заголовок
+    $stmt-&gt;execute([$r[0], $r[1], $r[2]]);
+    if (++$i % 1000 === 0) {
+        $pdo-&gt;commit(); $pdo-&gt;beginTransaction();
+    }
+}
+$pdo-&gt;commit();
+</code></pre>
+<p><strong>④ Повысьте лимит памяти (крайняя мера)</strong></p>
+<pre><code class="language-php">ini_set('memory_limit', '512M');
+</code></pre>
+<p><strong>⑤ Практический совет для очень больших таблиц</strong></p>
+<p>Если xlsx превышает 20–30 MB или 500 тыс. строк, <strong>SimpleXLSX — неподходящий инструмент</strong>, потому что XML DOM обязан целиком находиться в памяти. В этом случае следует:</p>
+<ul>
+<li>на этапе загрузки предложить пользователю передавать CSV;</li>
+<li>либо написать самостоятельно с потоковым SAX-парсером (например <code>XMLReader</code> + <code>expand()</code>);</li>
+<li>либо использовать PhpSpreadsheet с <code>setReadDataOnly(true)</code> + чтение частями (chunk) (тоже расходует память, но немного лучше).</li>
+</ul>
+<h3 id="104-limit">10.4 Параметр <code>$limit</code> (⚠️ поведение методов несогласовано)</h3>
+<p><code>rows()</code> / <code>readRows()</code> / <code>rowsEx()</code> / <code>readRowsEx()</code> все объявляют <code>$limit</code>, но <strong>по проверкам надёжны только первые три</strong>:</p>
+<pre><code class="language-php">$xlsx-&gt;rows(0, 100);        // ✅ только первые 100 строк
+$xlsx-&gt;readRows(0, 100);    // ✅ нормально
+$xlsx-&gt;rowsEx(0, 100);      // ✅ нормально (внутри идёт через iterator_to_array)
+$xlsx-&gt;readRowsEx(0, 100);  // ❌ не работает, возвращает все строки
+</code></pre>
+<p>Проверенное граничное поведение <code>readRows()</code> (в таблице всего 13 строк):</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th>Количество возвращённых строк</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>13 (без ограничения)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>99</td>
+<td>13</td>
+</tr>
+</tbody>
+</table>
+<p>В тех же условиях <code>readRowsEx()</code> при передаче 1/2/3/5 всегда возвращает 13 строк. Причина и способ обхода — см. <strong>ловушку 1</strong>.</p>
+<blockquote>
+<p>⚠️ У <code>toHTML()</code> и <code>toHTMLEx()</code> параметра <code>$limit</code> вообще нет (в исходном коде только 1 параметр).</p>
+</blockquote>
+<hr />
+<h2 id="11">11. Обработка ошибок и коды ошибок</h2>
+<h3 id="111-xlsx-errno-simplexlsxparseerrno">11.1 Основная таблица кодов ошибок (<code>$xlsx-&gt;errno()</code> / <code>SimpleXLSX::parseErrno()</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Код</th>
+<th>Сообщение</th>
+<th>Значение</th>
+<th>Направление поиска проблемы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>File not found &lt;path&gt;</code></td>
+<td>Файл не существует или нечитаем</td>
+<td>Путь, <code>is_readable()</code>, права доступа, временный файл загрузки уже удалён</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Unknown archive format</code></td>
+<td>Не является корректным ZIP</td>
+<td>Файл повреждён, на самом деле .xls, замаскированный под .xlsx, загрузка неполная, HTML-страница ошибки</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>XML-entry &lt;name&gt; parser error ...</code></td>
+<td>Сбой разбора XML внутри пакета</td>
+<td>Файл повреждён; либо XML содержит содержимое, не поддерживаемое libxml</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>XML-entry not found &lt;name&gt;</code></td>
+<td>Требуемая XML-запись не прочитана</td>
+<td>Аномальная структура ZIP; сюда же попадает сбой распаковки/CRC записи</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>Entry not found &lt;name&gt;</code></td>
+<td>Указанный файл в пакете не найден</td>
+<td>xlsx от нестандартного генератора</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>Worksheet not found &lt;index&gt;</code></td>
+<td>Выход индекса листа за границы</td>
+<td>Индексация 0-based, сначала проверьте <code>sheetsCount()</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="112">11.2 Фактическое воспроизведение ошибок</h3>
+<pre><code class="language-php">// errno = 1
+SimpleXLSX::parse('/nope.xlsx');
+// → parseError: &quot;File not found /nope.xlsx&quot;
+
+// errno = 2
+file_put_contents('/tmp/bad.xlsx', 'not a zip');
+SimpleXLSX::parse('/tmp/bad.xlsx');
+// → parseError: &quot;Unknown archive format&quot;
+
+// errno = 6
+$xlsx-&gt;rows(9);   // всего 3 листа
+// → error: &quot;Worksheet not found 9&quot;, при этом rows() возвращает пустой массив array(0) {}
+</code></pre>
+<h3 id="113-errno">11.3 Скрытые внутренние ошибки (не отображаются через errno)</h3>
+<p>В <code>getEntryData()</code> есть набор ошибок <strong>уровня записей</strong>, но они лишь записываются в <code>$entry['error']</code> и заставляют метод вернуть <code>false</code>, <strong>без вызова <code>$this-&gt;error()</code></strong>. В результате верхний уровень <code>getEntryXML()</code> единогласно сообщает errno=4.</p>
+<table>
+<thead>
+<tr>
+<th>Внутренний код</th>
+<th>Значение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>Decompression of data failed (сбой распаковки)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Uncompressed size mismatch (несовпадение размера)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>CRC32 checksum mismatch (ошибка контрольной суммы)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Неподдерживаемый метод сжатия / <strong>слишком большая запись ZIP64</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Расширение PHP BZIP2 недоступно</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Что это значит для диагностики</strong>: если вы получили errno=4 "XML-entry not found", но файл явно открывается в Excel, скорее всего это проблема CRC/распаковки (файл повреждён при передаче), либо ZIP со сжатием BZIP2 (крайне редко). Можно временно вывести <code>$xlsx-&gt;getPackage()['entries']</code> и посмотреть поле <code>error</code> каждой записи.</p>
+<h3 id="114">11.4 Рекомендуемый шаблон обработки ошибок</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+function openXlsx(string $path): SimpleXLSX {
+    if (!is_readable($path)) {
+        throw new RuntimeException(&quot;Файл нечитаем: {$path}&quot;);
+    }
+    $xlsx = SimpleXLSX::parse($path);
+    if (!$xlsx) {
+        throw new RuntimeException(
+            'Сбой разбора XLSX [errno ' . SimpleXLSX::parseErrno() . ']: ' . SimpleXLSX::parseError()
+        );
+    }
+    return $xlsx;
+}
+
+try {
+    $xlsx = openXlsx($uploaded);
+    if ($xlsx-&gt;sheetsCount() === 0) {
+        throw new RuntimeException('В книге нет листов');
+    }
+    // ...
+} catch (RuntimeException $e) {
+    // записать в лог + показать пользователю понятное сообщение
+}
+</code></pre>
+<h3 id="115">11.5 Полная валидация при загрузке файлов</h3>
+<pre><code class="language-php">$err = $_FILES['file']['error'];
+if ($err !== UPLOAD_ERR_OK)                    die('Ошибка загрузки: ' . $err);
+if ($_FILES['file']['size'] &gt; 10 * 1024 * 1024) die('Файл не должен превышать 10MB');
+
+$finfo = new finfo(FILEINFO_MIME_TYPE);
+$mime  = $finfo-&gt;file($_FILES['file']['tmp_name']);
+$allowed = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/zip',      // в некоторых средах распознаётся как zip
+    'application/octet-stream',
+];
+if (!in_array($mime, $allowed, true))          die('Пожалуйста, загрузите файл .xlsx');
+
+// Внимание: сначала move_uploaded_file, затем parse; не держите файл в tmp слишком долго
+$dest = __DIR__ . '/uploads/' . date('YmdHis') . '.xlsx';
+move_uploaded_file($_FILES['file']['tmp_name'], $dest);
+
+$xlsx = SimpleXLSX::parse($dest);
+</code></pre>
+<hr />
+<h2 id="12">12. Вопросы безопасности</h2>
+<h3 id="121-xss-href">12.1 XSS: значения экранированы, но href — нет</h3>
+<p><strong>Хорошая новость</strong>: <code>toHTML()</code> и <code>toHTMLEx()</code> применяют <code>htmlspecialchars($v, ENT_QUOTES)</code> ко всем значениям ячеек.</p>
+<p><strong>Плохая новость</strong>: поле <code>href</code>, возвращаемое <code>rowsEx()</code>, <strong>не проходит никакой проверки протокола</strong>. Если вы сами собираете HTML:</p>
+<pre><code class="language-php">// ❌ Опасно: href может быть javascript:alert(1)
+echo '&lt;a href=&quot;' . $cell['href'] . '&quot;&gt;link&lt;/a&gt;';
+
+// ✅ Правильно: проверка по белому списку
+function safeHref(string $href): string {
+    if (preg_match('#^https?://#i', $href)) return $href;
+    if (preg_match('#^mailto:#i', $href))   return $href;
+    if (preg_match('/^[^!]+![A-Z]+\d+$/', $href)) return ''; // внутренний переход, в HTML выразить невозможно
+    return '';
+}
+echo '&lt;a href=&quot;' . safeHref($cell['href']) . '&quot;&gt;link&lt;/a&gt;';
+</code></pre>
+<h3 id="122-css-cve-2024-55878">12.2 CSS-инъекция (CVE-2024-55878)</h3>
+<p>В исторических версиях существовала уязвимость инъекции CSS через стили (GHSA-x6mh-rjwm-8ph7). В 1.1.19 исправлено, следующим образом:</p>
+<ul>
+<li>Имя шрифта жёстко по белому списку: <code>preg_match('/^[a-zA-Z0-9 ]+$/', $name)</code>, при недопустимости откат к <code>Calibri</code></li>
+<li>Цвет жёстко 6-значный hex: <code>preg_match('/^[A-F0-9]{6}$/', $c)</code></li>
+<li>Значения выравнивания берутся только из фиксированной таблицы соответствия</li>
+</ul>
+<p><strong>Но если вы встраиваете поле <code>css</code> напрямую в <code>style=""</code>, всё равно рекомендуется повторная санитизация</strong> (особенно при рендеринге в публичном интернете файлов, загруженных пользователями):</p>
+<pre><code class="language-php">// Грубая фильтрация: оставляем только заведомо безопасные CSS-свойства
+function sanitizeCss(string $css): string {
+    $out = '';
+    foreach (explode(';', $css) as $decl) {
+        $decl = trim($decl);
+        if (preg_match('/^(color|background-color|font-family|font-size|font-weight|font-style|text-decoration|text-align|vertical-align|border-(top|right|bottom|left)-(style|color|width)):/', $decl)) {
+            $out .= $decl . ';';
+        }
+    }
+    return $out;
+}
+</code></pre>
+<p>Более основательное решение: подключить <a href="http://htmlpurifier.org/">HTMLPurifier</a>.</p>
+<h3 id="123-xxe-xml-">12.3 XXE (внешние XML-сущности)</h3>
+<p>В исходном коде уже обработано:</p>
+<pre><code class="language-php">if (LIBXML_VERSION &lt; 20900 &amp;&amp; function_exists('libxml_disable_entity_loader')) {
+    $_old = libxml_disable_entity_loader();
+}
+$entry_xmlobj = simplexml_load_string($entry_xml, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
+</code></pre>
+<p>libxml &gt;= 2.9 по умолчанию не загружает внешние сущности, ручное отключение не требуется. <strong>При условии, что вы используете достаточно новую версию libxml</strong>, — не запускайте без защиты на старых системах вроде CentOS 6.</p>
+<h3 id="124-zip-zip-bomb">12.4 Zip-бомба (Zip Bomb)</h3>
+<p>xlsx — это ZIP, теоретически существует риск zip-бомбы (файл 1KB распаковывается в 10GB). SimpleXLSX <strong>не имеет</strong> ограничения на размер распаковки.</p>
+<p>Защита: ограничьте размер файла перед загрузкой (например ≤ 10 MB) и установите <code>memory_limit</code> на стороне PHP как подстраховку.</p>
+<h3 id="125">12.5 Прочее</h3>
+<ul>
+<li><strong>Не доверяйте dimension</strong>: вредоносный файл может объявить <code>A1:XFD1048576</code>, из-за чего <code>readRows()</code> попытается дополнить сотни миллионов пустых строк. Рекомендуется самостоятельно ограничить число строк.</li>
+<li><strong>Имена файлов</strong>: не собирайте путь из загруженного исходного имени файла (path traversal), генерируйте имя файла сами.</li>
+<li><strong>Жизненный цикл временных файлов</strong>: PHP удаляет временные файлы загрузок после завершения скрипта, обязательно сначала выполните <code>move_uploaded_file()</code>.</li>
+</ul>
+<hr />
+<h2 id="13">13. Известные проблемы и список ловушек</h2>
+<p>Ниже — поведение, обнаруженное при чтении исходного кода и практических проверках, <strong>в официальной документации не описанное</strong>, сгруппировано по серьёзности (🔴 высокий / 🟠 средний / 🟢 низкий).</p>
+<h3 id="1-limit-readrowsex-1119">🔴 Ловушка 1: параметр <code>$limit</code> у <code>readRowsEx()</code> не работает (подтверждено проверкой на 1.1.19)</h3>
+<p><strong>Симптом</strong>: когда <code>$limit</code> меньше числа строк листа, <code>readRowsEx()</code> игнорирует limit и возвращает полное количество строк (лишние — все пустые).</p>
+<p>Проверенные данные (в листе всего 13 строк):</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th>Возвращает <code>readRows()</code></th>
+<th>Возвращает <code>readRowsEx()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 (без ограничения)</td>
+<td>13</td>
+<td>13</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>13</td>
+<td>13 ✅</td>
+<td>13 ✅</td>
+</tr>
+<tr>
+<td>20</td>
+<td>13 ✅</td>
+<td>13 ✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Первопричина</strong>: в <code>SimpleXLSXEx::readRowsEx()</code> при достижении limit используется <code>break</code>, а в <code>SimpleXLSX::readRows()</code> — <code>return</code>:</p>
+<pre><code class="language-php">// SimpleXLSX::readRows() — правильно
+yield $r;
+$_limit--;
+if ($_limit === 0) { return; }        // ← генератор сразу завершается
+
+// SimpleXLSXEx::readRowsEx() — баг
+yield $cells;
+$_limit--;
+if ($_limit === 0) { break; }         // ← выход только из foreach
+// ...
+while ($curR &lt; $numRows) {            // ← после break выполнение всё равно попадает сюда
+    yield $emptyRow;                  //    продолжают добавляться пустые строки, причём $_limit уже стал отрицательным и никогда больше не станет 0
+    $_limit--;
+    if ($_limit === 0) { return; }
+}
+</code></pre>
+<p><strong>Последствия</strong>: при вызове <code>rowsEx(0, 100)</code> в надежде «предпросмотреть первые 100 строк» на самом деле вы получите все строки таблицы (включая временно добавленные в конце пустые), а на больших файлах потребление памяти и время выполнения выходят из-под контроля.</p>
+<p><strong>Обходное решение</strong>: считайте строки сами и прерывайте цикл, не полагайтесь на <code>$limit</code>:</p>
+<pre><code class="language-php">$n = 0;
+foreach ($xlsx-&gt;readRowsEx(0) as $r) {      // не передаём limit
+    if (++$n &gt; 100) break;
+    // ...
+}
+</code></pre>
+<blockquote>
+<p>✅ <strong>Исправлено</strong>: патч, прилагаемый к этому документу (см. <a href="#17-список-исправлений-багов-исходного-кода-с-патчами">XVII. Список исправлений багов исходного кода</a>), меняет <code>break</code> на <code>return</code>. После исправления <code>$limit</code> в <code>readRowsEx()</code> ведёт себя так же, как в <code>readRows()</code>, и <code>$limit</code> можно использовать напрямую.</p>
+</blockquote>
+<h3 id="2-rowsex-css">🔴 Подводный камень 2: повторные вызовы <code>rowsEx()</code> у одного экземпляра приводят к бесконечному накоплению CSS</h3>
+<p><strong>Симптомы</strong> (проверено на практике):</p>
+<pre><code>1-й вызов rowsEx B3.css = 'color: #000000;font-family: Calibri;font-size: 17px;text-align: right;×4'
+2-й вызов rowsEx B3.css = '... text-align: right;×8'
+3-й вызов rowsEx B3.css = '... text-align: right;×12'
+</code></pre>
+<p><strong>Причина</strong>: в <code>SimpleXLSXEx::valueEx()</code> используется присваивание по ссылке:</p>
+<pre><code class="language-php">$r['css'] = &amp;$this-&gt;css[$r['s']];           // ссылка!
+if (...) { $r['css'] .= 'text-align: right;'; }  // запись идёт прямо в $this-&gt;css[$s]
+</code></pre>
+<p>При каждом вызове <code>rowsEx()</code>/<code>toHTMLEx()</code> ко всем ячейкам, «непустым, без выравнивания и не текстового типа», к одной и той же общей строке добавляется ещё один фрагмент.</p>
+<p><strong>Последствия</strong>: выводимый HTML растёт, таблица стилей загрязняется (хотя семантически повторяющиеся CSS-объявления безвредны, строка растёт экспоненциально).</p>
+<p><strong>Обходное решение</strong>:</p>
+<pre><code class="language-php">// Вариант A: каждый раз заново parse (самый простой)
+$xlsx1 = SimpleXLSX::parse($f); $a = $xlsx1-&gt;rowsEx();
+$xlsx2 = SimpleXLSX::parse($f); $b = $xlsx2-&gt;rowsEx();
+
+// Вариант B: дедупликация
+$css = implode(';', array_unique(array_filter(explode(';', $cell['css'])))) . ';';
+
+// Вариант C: не использовать встроенный css, а генерировать самому по cellFormats (см. 9.7)
+</code></pre>
+<blockquote>
+<p>✅ <strong>Исправлено</strong>: сопутствующий патч заменяет присваивание по ссылке на копирование значения (<code>$r['css'] = isset($this-&gt;css[$r['s']]) ? ... : ''</code>), при повторных вызовах у одного экземпляра больше ничего не накапливается.</p>
+</blockquote>
+<h3 id="2-tohtml-tohtmlex-limit">🔴 Подводный камень 2: у <code>toHTML()</code> / <code>toHTMLEx()</code> нет параметра <code>$limit</code></h3>
+<p>В README сигнатура указана как <code>toHTML($worksheetIndex = 0, $limit = 0)</code>, но по рефлексии в исходном коде фактически <strong>только 1 параметр</strong>. Передача второго параметра молча игнорируется.</p>
+<p>Если нужно ограничить число строк:</p>
+<pre><code class="language-php">echo '&lt;table&gt;';
+$i = 0;
+foreach ($xlsx-&gt;readRowsEx(0, 100) as $r) {   // генератор + limit
+    echo '&lt;tr&gt;';
+    foreach ($r as $c) { echo '&lt;td&gt;' . htmlspecialchars($c['value']) . '&lt;/td&gt;'; }
+    echo '&lt;/tr&gt;';
+}
+echo '&lt;/table&gt;';
+</code></pre>
+<blockquote>
+<p>✅ <strong>Исправлено</strong>: сопутствующий патч добавляет обоим методам параметр <code>$limit</code> и передаёт его в <code>readRows()</code>/<code>readRowsEx()</code>, теперь можно писать <code>toHTML(0, 100)</code> напрямую.</p>
+</blockquote>
+<h3 id="3">🟠 Подводный камень 3: ячейка с формулой может вернуть пустую строку</h3>
+<p>Формулы не вычисляются, читаются только кэшированные значения. У xlsx, созданных не в Excel, кэшированного значения часто нет → <code>value === ''</code>. Подробнее см. <a href="#7-таблица-соответствия-типов-данных-проверено-на-практике">главу VII</a>.</p>
+<blockquote>
+<p>✅ <strong>Решено</strong>: сопутствующее расширение <code>SimpleXLSXPro</code> содержит собственный движок вычисления формул и может вычислять результаты даже для формул без кэшированного значения; подробнее см. <a href="#18-вычисление-формул-xlsxformula">XVIII. Вычисление формул</a>.</p>
+</blockquote>
+<h3 id="4">🟠 Подводный камень 4: ведущие нули / потеря точности у длинных чисел</h3>
+<p><code>007</code> и <code>130123199001011234</code>, сохранённые в Excel как числа, будут преобразованы в int/float — ведущие нули и точность теряются.</p>
+<p><strong>Решать нужно в источнике</strong>: требуйте от пользователей задать этим столбцам в Excel формат «Текстовый» или дописывайте нули по бизнес-правилам после импорта:</p>
+<pre><code class="language-php">$id = str_pad((string)$v, 18, '0', STR_PAD_LEFT);
+</code></pre>
+<h3 id="5-dimension">🟠 Подводный камень 5: неточный <code>dimension</code> приводит к лишним пустым строкам</h3>
+<p>После перебора реальных строк <code>readRows()</code> выполняет ещё <code>while ($curR &lt; $numRows) yield $emptyRow;</code>. Если в XML dimension объявляет число строк, намного большее фактического, вы получите кучу полностью пустых строк.</p>
+<p><strong>Защита</strong>:</p>
+<pre><code class="language-php">$maxRows = 100000;
+$n = 0;
+foreach ($xlsx-&gt;readRows() as $r) {
+    if (++$n &gt; $maxRows) break;
+    if (array_filter($r) === []) continue;   // пропускаем полностью пустые строки
+    // ...
+}
+</code></pre>
+<h3 id="6-getcell">🟡 Подводный камень 6: <code>getCell()</code> крайне медленный</h3>
+<p>Внутри — полный скан таблицы через XPath. В комментарии исходного кода прямо написано <code>VERY SLOW!</code>. При выборке 1000 ячеек через <code>getCell()</code> будут заметные задержки. Для массового получения значений используйте <code>rows()</code> и обращайтесь по индексу.</p>
+<h3 id="7-parseerror">🟡 Подводный камень 7: <code>parseError()</code> — глобальное статическое состояние</h3>
+<pre><code class="language-php">static $error = false;
+return $set ? $error = $set : $error;
+</code></pre>
+<p>При циклическом разборе нескольких файлов, если какой-то из промежуточных разборов успешен, <code>parseError()</code> <strong>не очищается</strong> (ветка успеха не вызывает <code>parseError()</code>). Поэтому:</p>
+<pre><code class="language-php">// ❌ после успешного второго parse читается ошибка от первого
+SimpleXLSX::parse('bad.xlsx');   // неудача, устанавливает error
+SimpleXLSX::parse('good.xlsx');  // успех, error не сбрасывается
+echo SimpleXLSX::parseError();   // по-прежнему показывает ошибку bad.xlsx!
+
+// ✅ правильно: читать только в ветке неудачи
+if (!$x = SimpleXLSX::parse('bad.xlsx')) { echo SimpleXLSX::parseError(); }
+if (!$x = SimpleXLSX::parse('good.xlsx')) { echo SimpleXLSX::parseError(); }
+</code></pre>
+<blockquote>
+<p>✅ <strong>Исправлено</strong>: сопутствующий патч добавляет <code>parseError()</code>/<code>parseErrno()</code> параметр <code>$reset</code> и принудительно обнуляет ошибку в ветке успеха <code>parse()</code>. Проверено после исправления:
+<code>SimpleXLSX::parse('bad.xlsx')</code> → после неудачи <code>parseError()</code> = 'File not found bad.xlsx'; сразу после успешного <code>parse('good.xlsx')</code> → <code>parseError()</code> = <code>false</code>.</p>
+</blockquote>
+<p>Либо используйте в цикле <code>new SimpleXLSX()</code> + экземплярный метод <code>$xlsx-&gt;error()</code> — естественная изоляция.</p>
+<h3 id="8-rows">🟡 Подводный камень 8: при несуществующем листе <code>rows()</code> возвращает пустой массив вместо ошибки</h3>
+<pre><code class="language-php">var_dump($xlsx-&gt;rows(9));   // array(0) {} — пустой массив, не false
+echo $xlsx-&gt;errno();        // но errno установлен в 6
+</code></pre>
+<p>Поэтому успешность нельзя определять только по <code>empty($rows)</code>, проверяйте <code>errno()</code> или сначала <code>sheetsCount()</code>.</p>
+<h3 id="9-php-notice">🟡 Подводный камень 9: выход индекса стиля за границы вызывает PHP Notice</h3>
+<p>В <code>valueEx()</code>:</p>
+<pre><code class="language-php">$st = &amp;$this-&gt;xlsx-&gt;cellFormats[$r['s']];
+</code></pre>
+<p>Если в xlsx определений <code>cellXfs</code> меньше, чем индексов <code>s</code>, на которые ссылаются ячейки, будет ошибка Undefined offset. В продакшене рекомендуется отключить вывод notice или подавить его через <code>@</code> перед вызовом.</p>
+<blockquote>
+<p>✅ <strong>Исправлено</strong>: сопутствующий патч добавляет перед получением значения защиту через <code>isset()</code>, отсутствующий индекс автоматически заполняется <code>['format'=&gt;null,'align'=&gt;0]</code>.</p>
+</blockquote>
+<h3 id="10_1">🟡 Подводный камень 10: объединённые ячейки не возвращаются</h3>
+<p><code>mergeCells</code> вообще не разбирается. В объединённой области значение есть только у верхней левой ячейки, остальные пусты. Если вы полагаетесь на эффект «заполнения» объединённых ячеек, придётся обрабатывать самостоятельно:</p>
+<pre><code class="language-php">$last = null;
+foreach ($rows as $r) {
+    $r[0] = $r[0] !== '' ? $r[0] : $last;   // простое заполнение вниз
+    $last = $r[0];
+}
+</code></pre>
+<blockquote>
+<p>✅ <strong>Решено</strong>: сопутствующее расширение <code>SimpleXLSXPro</code> полностью разбирает <code>mergeCells</code>: в CSV/TSV/JSON значения распределяются копированием по каждой ячейке x*y, в HTML выводятся настоящие <code>colspan</code>/<code>rowspan</code>. Подробнее см. <a href="#19-объединённые-ячейки-и-экспорт-в-разные-форматы">XIX. Объединённые ячейки и мультиформатный экспорт</a>.</p>
+</blockquote>
+<h3 id="11-zip64">🟢 Подводный камень 11: ограничения ZIP64</h3>
+<p>Начиная с 1.1.18 поддерживаются дескрипторы данных ZIP64, но при <strong>одиночном элементе больше 4 ГБ</strong> по-прежнему возвращается ошибка 6 "ZIP64 entry is too large to process". Обычные xlsx с этим не сталкиваются.</p>
+<h3 id="12_1">🟢 Подводный камень 12: очистка префиксов пространств имён регулярными выражениями</h3>
+<p><code>getEntryXML()</code> удаляет XML-пространства имён цепочкой регулярок:</p>
+<pre><code class="language-php">$entry_xml = preg_replace('/xmlns[^=]*=&quot;[^&quot;]*&quot;/i', '', $entry_xml);
+$entry_xml = preg_replace('/[a-zA-Z0-9]+:([a-zA-Z0-9]+=&quot;[^&quot;]+&quot;)/', '$1', $entry_xml);
+$entry_xml = preg_replace('/&lt;[a-zA-Z0-9]+:([^&gt;]+)&gt;/', '&lt;$1&gt;', $entry_xml);
+</code></pre>
+<p>Это подход «грязно, но быстро». Для крайне нестандартного XML возможны ложные срабатывания. Если встретится errno=3, можно вывести очищенный XML для диагностики.</p>
+<h3 id="13-regex-">🟢 Подводный камень 13: regex-оптимизация пустых строк</h3>
+<p>Для XML листа регуляркой удаляются строки, где «вся строка состоит из пустых <code>&lt;c/&gt;</code>»:</p>
+<pre><code class="language-php">$entry_xml = preg_replace('/&lt;row[^&gt;]+&gt;\s*(&lt;c[^\/]+\/&gt;\s*)+&lt;\/row&gt;/', '', $entry_xml, -1, $cnt);
+</code></pre>
+<p>Побочный эффект: <strong>номера строк перестают быть непрерывными</strong>. <code>rows()</code> восстанавливает пустые строки (по координатам y, вычисленным через <code>getIndex()</code>), поэтому обычно всё в порядке; но если вы напрямую перебираете <code>worksheet()-&gt;sheetData-&gt;row</code>, учтите, что номера строк идут с пропусками.</p>
+<hr />
+<h2 id="14">14. Коллекция практических примеров кода</h2>
+<h3 id="141">14.1 Базовый: чтение в двумерный массив</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+$xlsx = SimpleXLSX::parse('books.xlsx');
+if (!$xlsx) { exit(SimpleXLSX::parseError()); }
+
+print_r($xlsx-&gt;rows());
+</code></pre>
+<h3 id="142">14.2 Первая строка как ключи (ассоциативный массив)</h3>
+<p>Официальный пример, самый употребимый:</p>
+<pre><code class="language-php">function xlsxToAssoc(SimpleXLSX $xlsx, int $sheet = 0): array {
+    $header = [];
+    $rows   = [];
+    foreach ($xlsx-&gt;readRows($sheet) as $k =&gt; $r) {
+        if ($k === 0) { $header = $r; continue; }
+        $rows[] = array_combine($header, $r);
+    }
+    return $rows;
+}
+</code></pre>
+<p><strong>Улучшенная версия</strong> (обрабатывает разное число столбцов, дублирующиеся заголовки, пустые заголовки):</p>
+<pre><code class="language-php">function xlsxToAssocSafe(SimpleXLSX $xlsx, int $sheet = 0): array {
+    $header = [];
+    $rows   = [];
+    foreach ($xlsx-&gt;readRows($sheet) as $k =&gt; $r) {
+        if ($k === 0) {
+            $seen = [];
+            foreach ($r as $i =&gt; $h) {
+                $h = trim((string)$h);
+                if ($h === '') { $h = 'col_' . $i; }
+                if (isset($seen[$h])) { $h .= '_' . (++$seen[$h]); }  // к дубликату добавляем суффикс
+                $seen[$h] = 0;
+                $header[$i] = $h;
+            }
+            continue;
+        }
+        $row = [];
+        foreach ($header as $i =&gt; $h) {
+            $row[$h] = $r[$i] ?? null;      // недостающий столбец заполняем null
+        }
+        $rows[] = $row;
+    }
+    return $rows;
+}
+</code></pre>
+<h3 id="143-xlsx-csv">14.3 XLSX → CSV (потоково, подходит для больших файлов)</h3>
+<pre><code class="language-php">function xlsxToCsv(string $xlsxPath, string $csvPath, int $sheet = 0): int {
+    $xlsx = SimpleXLSX::parse($xlsxPath);
+    if (!$xlsx) { throw new RuntimeException(SimpleXLSX::parseError()); }
+
+    $fp = fopen($csvPath, 'wb');
+    fwrite($fp, chr(0xEF) . chr(0xBB) . chr(0xBF));   // BOM UTF-8
+
+    $n = 0;
+    foreach ($xlsx-&gt;readRows($sheet) as $r) {
+        fputcsv($fp, $r);
+        $n++;
+    }
+    fclose($fp);
+    return $n;
+}
+
+// нужен разделитель «точка с запятой» + своё экранирование (европейская практика)
+fputcsv($f, $r, ';', '&quot;', &quot;\\&quot;, &quot;\r\n&quot;);
+</code></pre>
+<h3 id="144-xlsx-html-">14.4 XLSX → HTML-таблица (со стилями)</h3>
+<pre><code class="language-php">echo SimpleXLSX::parse('book_styled.xlsx')-&gt;toHTMLEx();
+</code></pre>
+<p>Своя версия с полным контролем (можно добавить limit, можно очищать href):</p>
+<pre><code class="language-php">function xlsxToHtml(SimpleXLSX $xlsx, int $sheet = 0, int $limit = 0): string {
+    $s = '&lt;table border=&quot;1&quot; cellpadding=&quot;3&quot; style=&quot;border-collapse:collapse&quot;&gt;' . &quot;\n&quot;;
+    $y = 0;
+    // внимание: у $limit в readRowsEx есть баг (см. подводный камень 1), здесь считаем сами
+    foreach ($xlsx-&gt;readRowsEx($sheet) as $r) {
+        if ($limit &gt; 0 &amp;&amp; $y &gt;= $limit) { break; }
+        $s .= '&lt;tr&gt;';
+        foreach ($r as $c) {
+            $tag = ($y === 0) ? 'th' : 'td';
+            $css = sanitizeCss($c['css']);
+            $v   = htmlspecialchars((string)$c['value'], ENT_QUOTES, 'UTF-8');
+            $v   = preg_replace('/\R/', &quot;&lt;br&gt;\n&quot;, $v);
+            $s .= '&lt;' . $tag . ' style=&quot;' . $css . '&quot;&gt;'
+                . ($v === '' ? '&amp;nbsp;' : $v)
+                . '&lt;/' . $tag . '&gt;';
+        }
+        $s .= &quot;&lt;/tr&gt;\n&quot;;
+        $y++;
+    }
+    return $s . '&lt;/table&gt;';
+}
+</code></pre>
+<h3 id="145">14.5 Обход всех листов</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('multi.xlsx');
+if (!$xlsx) { exit(SimpleXLSX::parseError()); }
+
+foreach ($xlsx-&gt;sheetNames() as $i =&gt; $name) {
+    if ($xlsx-&gt;isHiddenSheet($i)) { continue; }        // пропускаем скрытые листы
+
+    list($cols, $rows) = $xlsx-&gt;dimension($i);
+    echo &quot;&lt;h2&gt;{$name} ({$cols} столбцов × {$rows} строк)&lt;/h2&gt;&quot;;
+
+    foreach ($xlsx-&gt;readRows($i) as $r) {
+        echo implode(' | ', $r) . &quot;\n&quot;;
+    }
+}
+
+echo 'Активный лист: ' . $xlsx-&gt;sheetName($xlsx-&gt;activeSheet) . &quot;\n&quot;;
+</code></pre>
+<h3 id="146">14.6 Чтение по имени листа</h3>
+<pre><code class="language-php">function rowsBySheetName(SimpleXLSX $xlsx, string $name): ?Generator {
+    $map = array_flip($xlsx-&gt;sheetNames());
+    if (!isset($map[$name])) { return null; }
+    return $xlsx-&gt;readRows($map[$name]);
+}
+
+foreach (rowsBySheetName($xlsx, 'Продажи за 2024') ?? [] as $r) {
+    // ...
+}
+</code></pre>
+<h3 id="147">14.7 Загрузка и импорт в базу данных (полный пример)</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+function importUsers(PDO $pdo, string $tmpFile): array {
+    $xlsx = SimpleXLSX::parse($tmpFile);
+    if (!$xlsx) {
+        return ['ok' =&gt; false, 'msg' =&gt; SimpleXLSX::parseError()];
+    }
+
+    // единообразный вывод в UTC, сразу сохраняем в DATETIME
+    $xlsx-&gt;setDateTimeFormat('Y-m-d H:i:s');
+
+    $stmt = $pdo-&gt;prepare(
+        'INSERT INTO users (name, phone, id_card, amount, created_at) VALUES (?,?,?,?,?)'
+    );
+
+    $ok = $fail = 0;
+    $errors = [];
+
+    $pdo-&gt;beginTransaction();
+    foreach ($xlsx-&gt;readRows() as $k =&gt; $r) {
+        if ($k === 0) { continue; }                     // пропускаем заголовок
+
+        $name  = trim((string)($r[0] ?? ''));
+        $phone = trim((string)($r[1] ?? ''));
+        $idcard= trim((string)($r[2] ?? ''));
+        $amount= is_numeric($r[3] ?? null) ? (float)$r[3] : null;
+        $ctime = ($r[4] ?? '') ?: date('Y-m-d H:i:s');
+
+        if ($name === '') { $errors[] = &quot;Строка {$k}: имя пусто&quot;; $fail++; continue; }
+
+        $stmt-&gt;execute([$name, $phone, $idcard, $amount, $ctime]);
+        $ok++;
+
+        if ($ok % 500 === 0) { $pdo-&gt;commit(); $pdo-&gt;beginTransaction(); }
+    }
+    $pdo-&gt;commit();
+
+    return ['ok' =&gt; true, 'imported' =&gt; $ok, 'failed' =&gt; $fail, 'errors' =&gt; array_slice($errors, 0, 20)];
+}
+</code></pre>
+<h3 id="148-">14.8 Рекомендуемый класс-обёртка</h3>
+<p>Разом обрабатывает все описанные выше подводные камни:</p>
+<pre><code class="language-php">&lt;?php
+use Shuchkin\SimpleXLSX;
+
+// требуется PHP 7.4+ (используются стрелочные функции и типизированные свойства)
+class XlsxReader
+{
+    private SimpleXLSX $xlsx;
+    private string $source;
+    private bool $isData;
+    private int $maxRows;
+
+    public function __construct(string $pathOrData, bool $isData = false, int $maxRows = 100000)
+    {
+        $this-&gt;maxRows = $maxRows;
+        $this-&gt;source  = $pathOrData;
+        $this-&gt;isData  = $isData;
+        $x = $isData ? SimpleXLSX::parseData($pathOrData) : SimpleXLSX::parse($pathOrData);
+        if (!$x) {
+            throw new RuntimeException(
+                'Ошибка разбора XLSX [' . SimpleXLSX::parseErrno() . ']: ' . SimpleXLSX::parseError()
+            );
+        }
+        $this-&gt;xlsx = $x;
+    }
+
+    /** выдает построчно, автоматически пропускает полностью пустые строки, автоматически ограничивает поток */
+    public function rows(int $sheet = 0): Generator
+    {
+        $n = 0;
+        foreach ($this-&gt;xlsx-&gt;readRows($sheet) as $r) {
+            if (++$n &gt; $this-&gt;maxRows) { return; }
+            if (array_filter($r, static fn($v) =&gt; $v !== '' &amp;&amp; $v !== null) === []) {
+                continue;   // пропускаем полностью пустые строки (защита от неточного dimension)
+            }
+            yield $r;
+        }
+    }
+
+    /** ассоциативный массив с заголовком */
+    public function assoc(int $sheet = 0): Generator
+    {
+        $header = null;
+        foreach ($this-&gt;rows($sheet) as $r) {
+            if ($header === null) {
+                $header = array_map(
+                    static fn($h, $i) =&gt; trim((string)$h) === '' ? &quot;col_$i&quot; : trim((string)$h),
+                    $r, array_keys($r)
+                );
+                continue;
+            }
+            $row = [];
+            foreach ($header as $i =&gt; $h) { $row[$h] = $r[$i] ?? null; }
+            yield $row;
+        }
+    }
+
+    /** ячейки со стилями, исправлены баг накопления css и безопасность href */
+    public function rowsEx(int $sheet = 0): Generator
+    {
+        // заново parse чистый экземпляр, чтобы избежать загрязнения через css-ссылки (см. подводный камень 2)
+        $ex = $this-&gt;isData ? SimpleXLSX::parseData($this-&gt;source) : SimpleXLSX::parse($this-&gt;source);
+        if (!$ex) { throw new RuntimeException(SimpleXLSX::parseError()); }
+
+        $n = 0;
+        foreach ($ex-&gt;readRowsEx($sheet) as $r) {
+            if (++$n &gt; $this-&gt;maxRows) { return; }
+            foreach ($r as &amp;$c) {
+                $c['css']  = $this-&gt;dedupeCss($c['css']);
+                $c['href'] = $this-&gt;safeHref($c['href']);
+            }
+            unset($c);
+            yield $r;
+        }
+    }
+
+    private function dedupeCss(string $css): string
+    {
+        $parts = array_filter(array_map('trim', explode(';', $css)));
+        return implode(';', array_unique($parts)) . ';';
+    }
+
+    private function safeHref(string $href): string
+    {
+        return preg_match('#^(https?://|mailto:)#i', $href) ? $href : '';
+    }
+
+    public function sheetNames(): array { return $this-&gt;xlsx-&gt;sheetNames(); }
+    public function sheetsCount(): int  { return $this-&gt;xlsx-&gt;sheetsCount(); }
+    public function dimension(int $s = 0): array { return $this-&gt;xlsx-&gt;dimension($s); }
+}
+</code></pre>
+<p>Использование:</p>
+<pre><code class="language-php">$reader = new XlsxReader($_FILES['file']['tmp_name']);
+foreach ($reader-&gt;assoc() as $row) {
+    // $row уже содержит ['Имя' =&gt; 'Чжан Сань', 'Телефон' =&gt; '138...', ...]
+}
+</code></pre>
+<h3 id="149">14.9 Отладка: когда непонятно, почему данные читаются неверно</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parseFile('weird.xlsx', true);   // режим debug
+
+echo &quot;Листы: &quot; . json_encode($xlsx-&gt;sheetNames(), JSON_UNESCAPED_UNICODE) . &quot;\n&quot;;
+echo &quot;Размерность: &quot; . json_encode($xlsx-&gt;dimension(0)) . &quot;\n&quot;;
+echo &quot;Таблица числовых форматов: &quot; . json_encode($xlsx-&gt;nf, JSON_UNESCAPED_UNICODE) . &quot;\n&quot;;
+echo &quot;Число записей таблицы стилей: &quot; . count($xlsx-&gt;cellFormats) . &quot;\n&quot;;
+
+// посмотреть, что лежит в пакете
+foreach ($xlsx-&gt;getPackage()['entries'] as $e) {
+    printf(&quot;%-40s %8d bytes  cm=%d err=%d\n&quot;, $e['path'] . '/' . $e['name'], $e['ucs'], $e['cm'], $e['error']);
+}
+
+// посмотреть исходный XML первых 3 ячеек
+$ws = $xlsx-&gt;worksheet(0);
+$i = 0;
+foreach ($ws-&gt;sheetData-&gt;row as $row) {
+    foreach ($row-&gt;c as $c) {
+        echo $c-&gt;asXML() . &quot;\n&quot;;
+        if (++$i &gt;= 3) break 2;
+    }
+}
+</code></pre>
+<hr />
+<h2 id="15">15. Сравнительный анализ выбора с другими библиотеками</h2>
+<table>
+<thead>
+<tr>
+<th>Критерий</th>
+<th>SimpleXLSX</th>
+<th>PhpSpreadsheet</th>
+<th>SimpleXLSXGen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Назначение</td>
+<td><strong>только чтение</strong> xlsx</td>
+<td>полный цикл чтение/запись</td>
+<td><strong>только запись</strong> xlsx</td>
+</tr>
+<tr>
+<td>Размер</td>
+<td>~50 КБ (2 файла)</td>
+<td>~30 МБ (много зависимостей)</td>
+<td>~30 КБ</td>
+</tr>
+<tr>
+<td>Дополнительные расширения</td>
+<td>нет (нужны только SimpleXML+zlib)</td>
+<td>zip, xml, gd, mbstring, iconv и др.</td>
+<td>нет</td>
+</tr>
+<tr>
+<td>Память (100 тыс. строк)</td>
+<td>162 МБ (генераторы)</td>
+<td>обычно 500 МБ+</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Скорость</td>
+<td>быстро</td>
+<td>медленно (в 2–5 раз)</td>
+<td>быстро</td>
+</tr>
+<tr>
+<td>Чтение стилей</td>
+<td>базовое (шрифт/цвет/границы/выравнивание)</td>
+<td>полное (включая условное форматирование и др.)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Вычисление формул</td>
+<td>❌ (читает кэшированные значения)</td>
+<td>✅ (есть вычислительный движок)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Диаграммы/изображения</td>
+<td>❌</td>
+<td>✅</td>
+<td>частично</td>
+</tr>
+<tr>
+<td>Запись</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Порог вхождения</td>
+<td>очень низкий (один <code>rows()</code>)</td>
+<td>высокий</td>
+<td>очень низкий</td>
+</tr>
+<tr>
+<td>Активность поддержки</td>
+<td>средняя (один автор)</td>
+<td>высокая (сообщество)</td>
+<td>средняя</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">Рекомендации по выбору</h3>
+<table>
+<thead>
+<tr>
+<th>Сценарий</th>
+<th>Рекомендация</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Пользователь загружает Excel → сохранить в БД</td>
+<td><strong>SimpleXLSX</strong></td>
+</tr>
+<tr>
+<td>Экспорт отчётов на сервере / генерация xlsx</td>
+<td><strong>SimpleXLSXGen</strong></td>
+</tr>
+<tr>
+<td>Нужны заполнение шаблонов + диаграммы + настройки печати</td>
+<td>PhpSpreadsheet</td>
+</tr>
+<tr>
+<td>Нужен пересчёт формул на сервере</td>
+<td>PhpSpreadsheet</td>
+</tr>
+<tr>
+<td>Чтение старых .xls (Excel 97)</td>
+<td>SimpleXLS</td>
+</tr>
+<tr>
+<td>Сверхбольшие таблицы на сотни тысяч строк и более</td>
+<td>пусть пользователь загружает CSV, или пишите SAX-потоковый парсер сами</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Типичная комбинация: <strong>SimpleXLSX для чтения + SimpleXLSXGen для записи</strong> — обе библиотеки одного автора, без зависимостей, с предельно простым API, вместе менее 100 КБ.</p>
+</blockquote>
+<hr />
+<h2 id="16">16. Эволюция версий и замечания по обновлению</h2>
+<h3 id="161">16.1 Ключевые вехи версий</h3>
+<table>
+<thead>
+<tr>
+<th>Версия</th>
+<th>Дата</th>
+<th>Изменения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1.1.19</strong></td>
+<td>2026-09-10</td>
+<td>Исправление безопасности: CSS-инъекция (font-family), CVE-2024-55878</td>
+</tr>
+<tr>
+<td><strong>1.1.18</strong></td>
+<td>2026-09-05</td>
+<td>Поддержка ZIP64</td>
+</tr>
+<tr>
+<td><strong>1.1.17</strong></td>
+<td>2026-08-11</td>
+<td>Исправление безопасности 2: XSS в атрибутах align/valign</td>
+</tr>
+<tr>
+<td><strong>1.1.16</strong></td>
+<td>2025-12-05</td>
+<td>Обновлены ссылки на документацию</td>
+</tr>
+<tr>
+<td><strong>1.1.15</strong></td>
+<td>2025-12-04</td>
+<td>Совместимость <code>getColorValue()</code> с nullable в PHP 8.4</td>
+</tr>
+<tr>
+<td><strong>1.1.14</strong></td>
+<td>2025-05-21</td>
+<td>Исправлено определение скрытых строк и столбцов</td>
+</tr>
+<tr>
+<td><strong>1.1.13</strong></td>
+<td>2024-12-21</td>
+<td>Исправлена уязвимость цвета в css</td>
+</tr>
+<tr>
+<td><strong>1.1.12</strong></td>
+<td>2024-12-11</td>
+<td>Исправлена уязвимость css в toHTMLEx</td>
+</tr>
+<tr>
+<td><strong>1.1.11</strong></td>
+<td>2024-07-06</td>
+<td>Исправление #157</td>
+</tr>
+<tr>
+<td><strong>1.1.10</strong></td>
+<td>2023-04-27</td>
+<td>Примечания вошли в rowsEx; гиперссылки перенесены в rowsEx; все методы полей стали public; вспомогательные методы стали статическими</td>
+</tr>
+<tr>
+<td><strong>1.0.12</strong></td>
+<td>2022-02-21</td>
+<td><strong>Крупная версия 1.0</strong>: пространство имён <code>Shuchkin</code>; PHP 5.5+; генераторы <code>readRows()</code>/<code>readRowsEx()</code>; класс стилей SimpleXLSXEx; <code>toHTMLEx()</code></td>
+</tr>
+<tr>
+<td><strong>0.9.10</strong></td>
+<td>2022-02-04</td>
+<td>Введено пространство имён <code>Shuchkin\SimpleXLSX</code> (критическое изменение)</td>
+</tr>
+<tr>
+<td><strong>0.8.31</strong></td>
+<td>2021-12-01</td>
+<td>Добавлено <code>$xlsx-&gt;activeSheet</code></td>
+</tr>
+<tr>
+<td><strong>0.8.30</strong></td>
+<td>2021-12-01</td>
+<td><code>rows()</code>/<code>rowsEx()</code> получили поддержку <code>$limit</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="162-08x-1x">16.2 Критические изменения при обновлении с 0.8.x до 1.x</h3>
+<ol>
+<li><strong>Обязательно добавить пространство имён</strong>:
+   ```php
+   // 0.8.x
+   $xlsx = new SimpleXLSX('a.xlsx');</li>
+</ol>
+<p>// 1.x
+   use Shuchkin\SimpleXLSX;
+   $xlsx = SimpleXLSX::parse('a.xlsx');
+   <code>``
+2. **Требуемая версия PHP повышена до 5.5+** (из-за использования генераторов).
+3. Метод с опечаткой</code>sheetNemes()<code>удалён (это всегда был баг), используйте</code>sheetMeta()<code>/</code>sheetNames()`.</p>
+<h3 id="163">16.3 Рекомендации по обновлению</h3>
+<ul>
+<li><strong>Обязательно обновитесь до &gt;= 1.1.19</strong>: 1.1.12/1.1.13/1.1.17/1.1.19 — всё исправления безопасности, связанные с CSS-инъекциями и XSS. Если ваша программа рендерит загруженные пользователями xlsx в HTML для просмотра другими, низкие версии — это реальные эксплуатируемые уязвимости.</li>
+<li>После 1.1.10 все свойства стали public; если вы раньше обращались к приватным членам через рефлексию или подклассы, поведение изменится.</li>
+</ul>
+<hr />
+<h2 id="17">17. Список исправлений багов исходного кода (с патчами)</h2>
+<p>Большая часть подводных камней из главы XIII — это <strong>дефекты исходного кода</strong>, а не «проблемы использования». В этой главе приведены патчи, которые можно применить напрямую.</p>
+<p>Сопутствующие файлы:</p>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simplexlsx-pro/simplexlsx-fixes.patch</code></td>
+<td>стандартный unified diff, применяется напрямую через <code>git apply</code></td>
+</tr>
+<tr>
+<td><code>simplexlsx-pro/src/SimpleXLSXPro.php</code></td>
+<td>подкласс с расширением функциональности (формулы / изображения / объединение / экспорт)</td>
+</tr>
+<tr>
+<td><code>simplexlsx-pro/src/XLSXFormula.php</code></td>
+<td>движок вычисления формул</td>
+</tr>
+</tbody>
+</table>
+<p>Способ применения:</p>
+<pre><code class="language-bash">cd /path/to/simplexlsx
+git apply ../simplexlsx-pro/simplexlsx-fixes.patch
+# либо наложить патч прямо в vendor
+cd vendor/shuchkin/simplexlsx
+patch -p1 &lt; /path/to/simplexlsx-fixes.patch
+</code></pre>
+<h3 id="171">17.1 Обзор списка исправлений</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Расположение</th>
+<th>Серьёзность</th>
+<th>Симптомы</th>
+<th>Исправление</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🔴</td>
+<td><code>$limit</code> полностью не работает, возвращается полное число строк</td>
+<td><code>break</code> → <code>return</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>SimpleXLSXEx::valueEx()</code></td>
+<td>🔴</td>
+<td>CSS-строка при каждом вызове удваивается</td>
+<td>присваивание по ссылке → копирование значения</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SimpleXLSX::toHTML()/toHTMLEx()</code></td>
+<td>🟠</td>
+<td>в README указан <code>$limit</code>, но в исходном коде параметра нет</td>
+<td>добавить второй параметр и пробросить его</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>SimpleXLSX::parseError()/parseErrno()</code></td>
+<td>🟡</td>
+<td>статическое состояние ошибки никогда не сбрасывается</td>
+<td>добавить параметр <code>$reset</code> + обнуление в ветке успеха</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>SimpleXLSXEx::valueEx()</code></td>
+<td>🟡</td>
+<td>Warning при выходе индекса стиля за границы</td>
+<td>защита через <code>isset()</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🟠</td>
+<td>при превышении числом столбцов ячеек значения <code>dimension</code> <code>$cols</code> не расширяется синхронно → лавина Warning</td>
+<td>расширять <code>$cols</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🟠</td>
+<td>запись с пропуском столбцов ломает порядок столбцов (например, после E3 сразу H3, вывод становится …F3 H3 G3)</td>
+<td><code>ksort($cells)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="172-1-limit">17.2 Исправление 1: неработающий <code>$limit</code> (высокая опасность)</h3>
+<pre><code class="language-diff">--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@
+             yield $cells;
+             $curR++;
+             $_limit--;
+             if ($_limit === 0) {
+-                break;
++                return; // FIXED: was break, $limit did not work
+             }
+</code></pre>
+<p>Проверка после исправления (таблица из 13 строк):</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th><code>readRows()</code></th>
+<th><code>readRowsEx()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 / 2 / 3 / 5</td>
+<td>1 / 2 / 3 / 5</td>
+<td><strong>1 / 2 / 3 / 5</strong> ✅</td>
+</tr>
+<tr>
+<td>13 / 20</td>
+<td>13 / 13</td>
+<td>13 / 13 ✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="173-2-css">17.3 Исправление 2: бесконечное накопление CSS (высокий риск)</h3>
+<pre><code class="language-diff">--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@
+-        $r['css'] = &amp;$this-&gt;css[ $r['s'] ];
++        $r['css'] = isset($this-&gt;css[$r['s']]) ? $this-&gt;css[$r['s']] : '';
+         if ($r['value'] !== '' &amp;&amp; !$st['align'] &amp;&amp; !in_array($r['type'], ['s','str','inlineStr','e'], true)) {
+             $r['css'] .= 'text-align: right;';
+         }
+</code></pre>
+<p>Первопричина: присваивание по ссылке <code>&amp;</code> превращает <code>$r['css']</code> и <code>$this-&gt;css[$s]</code> в один и тот же zval, поэтому последующий <code>.=</code> записывает напрямую в общий кэш стилей.</p>
+<h3 id="174-6-7-dimension">17.4 Исправления 6 + 7: число столбцов превышает dimension (подводный камень, обнаруженный на практике)</h3>
+<p>Когда в какой-то строке есть ячейки за пределами числа столбцов, объявленного в <code>&lt;dimension&gt;</code> (частая ситуация для файлов, созданных WPS или вручную), оригинальная версия засыпает Warning'ами, а порядок столбцов на выходе оказывается нарушен:</p>
+<pre><code class="language-diff">--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@
+                     if ($curC &gt;= $numCols) {
+                         $numCols = $curC + 1;
++                        for ($ci = count($cols); $ci &lt; $numCols; $ci++) {
++                            $cols[$ci] = ['s' =&gt; 0, 'hidden' =&gt; false, 'width' =&gt; 0];
++                        }
+                     }
+@@
+             // проверка пустых ячеек
+             for ($i = 0; $i &lt; $numCols; $i++) {
+-                if ($cells[$i] === null) {
++                if (!isset($cells[$i]) || $cells[$i] === null) {
+@@
+                     $cells[$i] = $this-&gt;valueEx($data, $i, $curR);
+                 }
+             }
++            ksort($cells);
+             yield $cells;
+</code></pre>
+<blockquote>
+<p><code>ksort()</code> обязателен: PHP-массивы хранятся в порядке вставки, <code>$cells[7] = H3</code> не создаёт автоматически индекс 6, поэтому при дозаполнении пустых ячеек G3 окажется добавлен после H3, и порядок вывода нарушится. Проверено до и после исправления:
+до исправления <code>A3 B3 C3 D3 E3 F3 H3 G3</code>, после исправления <code>A3 B3 C3 D3 E3 F3 G3 H3</code>.</p>
+</blockquote>
+<h3 id="175-3-4-5">17.5 Исправления 3 / 4 / 5</h3>
+<pre><code class="language-diff">--- a/src/SimpleXLSX.php
++++ b/src/SimpleXLSX.php
+@@
+-    public function toHTML($worksheetIndex = 0)
++    public function toHTML($worksheetIndex = 0, $limit = 0)
+     {
+         $s = '&lt;table class=excel&gt;';
+-        foreach ($this-&gt;readRows($worksheetIndex) as $r) {
++        foreach ($this-&gt;readRows($worksheetIndex, $limit) as $r) {
+@@
+-    public static function parseError($set = false)
++    public static function parseError($set = false, $reset = false)
+     {
+         static $error = false;
++        if ($reset) { $error = false; }
+         return $set ? $error = $set : $error;
+     }
+@@
+         if ($xlsx-&gt;success()) {
++            self::parseError(false, true);
++            self::parseErrno(false, true);
+             return $xlsx;
+         }
+</code></pre>
+<blockquote>
+<p>У <code>parseError()</code> добавлен второй параметр <code>$reset</code>, обратная совместимость сохранена (без него поведение полностью не меняется).</p>
+</blockquote>
+<hr />
+<h2 id="18-xlsxformula">18. Вычисление формул (XLSXFormula)</h2>
+<p>Оригинальная версия <strong>не вычисляет формулы</strong>, а только читает кэшированные значения, записанные Excel ( <code>&lt;v&gt;</code> внутри <code>&lt;c&gt;&lt;f&gt;SUM(A1:A3)&lt;/f&gt;&lt;v&gt;60&lt;/v&gt;&lt;/c&gt;</code>). Как только файл создаётся openpyxl или собственной программой, кэшированные значения пусты, и все <code>value</code> равны <code>''</code>.</p>
+<p><code>XLSXFormula</code> — это вычислитель формул на чистом PHP, который в связке с <code>SimpleXLSXPro</code> позволяет получать результаты напрямую.</p>
+<h3 id="181">18.1 Базовое использование</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSXPro;
+
+$xlsx = SimpleXLSXPro::parse('demo.xlsx');
+
+// 1) Вычислить конкретную ячейку
+echo $xlsx-&gt;calculateCell('D6');        // 745
+
+// 2) Вычислить произвольную формулу (не обязательно записанную в таблицу)
+echo $xlsx-&gt;calculate('IF(SUM(D3:D5)&gt;700,&quot;отлично&quot;,&quot;средне&quot;)');   // отлично
+
+// 3) Обойти все ячейки с формулами
+foreach ($xlsx-&gt;calculatedCells(0) as $coord =&gt; $info) {
+    printf(&quot;%s %s =&gt; %s\n&quot;, $coord, $info['formula'], $info['value']);
+}
+
+// 4) В rowsPro() каждая ячейка содержит поле calculated
+foreach ($xlsx-&gt;readRowsPro(0) as $row) {
+    foreach ($row as $c) {
+        if ($c['f'] !== '') {
+            echo $c['name'], ' = ', $c['calculated'], &quot;\n&quot;;
+        }
+    }
+}
+</code></pre>
+<p><code>rowsPro()</code> также <strong>автоматически подставляет вычисленный результат</strong>, когда <code>value</code> пуст (отключается через <code>$xlsx-&gt;preferCalculated = false</code>).</p>
+<h3 id="182">18.2 Поддерживаемый синтаксис</h3>
+<table>
+<thead>
+<tr>
+<th>Категория</th>
+<th>Поддерживаемое</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Операторы</td>
+<td><code>+ - * / ^</code>, конкатенация строк <code>&amp;</code>, сравнение <code>= &lt;&gt; &lt; &gt; &lt;= &gt;=</code>, постфиксный <code>%</code></td>
+</tr>
+<tr>
+<td>Приоритет</td>
+<td>сравнение &lt; <code>&amp;</code> &lt; <code>+ -</code> &lt; <code>* /</code> &lt; <code>^</code> &lt; унарный минус &lt; <code>%</code> (как в Excel, <code>-2^2 = 4</code>)</td>
+</tr>
+<tr>
+<td>Ссылки</td>
+<td><code>A1</code>, <code>$A$1</code>, <code>A1:B5</code>, <code>Sheet2!A1</code>, <code>'Мой лист'!A1</code> (поддержка названий листов с кириллицей/китайскими названиями)</td>
+</tr>
+<tr>
+<td>Константы</td>
+<td><code>"текст"</code>, числа, <code>TRUE</code>/<code>FALSE</code>, массивы-константы <code>{1,2;3,4}</code></td>
+</tr>
+<tr>
+<td>Значения ошибок</td>
+<td><code>#DIV/0!</code> <code>#VALUE!</code> <code>#REF!</code> <code>#NAME?</code> <code>#N/A</code> <code>#NUM!</code> <code>#NULL!</code>, распространяются вверх по выражению</td>
+</tr>
+<tr>
+<td>Циклические ссылки</td>
+<td>после обнаружения возвращается <code>#CIRC!</code>, лимит глубины рекурсии 64</td>
+</tr>
+</tbody>
+</table>
+<h3 id="183-60">18.3 Поддерживаемые функции (60+)</h3>
+<table>
+<thead>
+<tr>
+<th>Категория</th>
+<th>Функции</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Математические</td>
+<td><code>SUM</code> <code>PRODUCT</code> <code>SUMPRODUCT</code> <code>SUMSQ</code>→аппроксимация через SUM <code>ABS</code> <code>ROUND</code> <code>ROUNDUP</code> <code>ROUNDDOWN</code> <code>TRUNC</code> <code>INT</code> <code>CEILING</code> <code>FLOOR</code> <code>MOD</code> <code>POWER</code> <code>SQRT</code> <code>EXP</code> <code>LN</code> <code>LOG</code> <code>LOG10</code> <code>PI</code> <code>RAND</code> <code>RANDBETWEEN</code> <code>SIGN</code> <code>DEGREES</code> <code>RADIANS</code> <code>SUBTOTAL</code></td>
+</tr>
+<tr>
+<td>Статистические</td>
+<td><code>AVERAGE</code> <code>MEDIAN</code> <code>MAX</code> <code>MIN</code> <code>COUNT</code> <code>COUNTA</code> <code>COUNTBLANK</code> <code>COUNTIF</code> <code>SUMIF</code> <code>STDEV</code> <code>STDEVP</code> <code>VAR</code> <code>LARGE</code> <code>SMALL</code></td>
+</tr>
+<tr>
+<td>Логические</td>
+<td><code>IF</code> <code>IFERROR</code> <code>IFNA</code> <code>AND</code> <code>OR</code> <code>NOT</code> <code>TRUE</code> <code>FALSE</code> <code>ISBLANK</code> <code>ISNUMBER</code> <code>ISTEXT</code> <code>ISERROR</code> <code>ISERR</code> <code>ISNA</code> <code>NA</code> <code>N</code> <code>T</code></td>
+</tr>
+<tr>
+<td>Текстовые</td>
+<td><code>CONCATENATE</code> <code>CONCAT</code> <code>TEXTJOIN</code> <code>LEN</code> <code>LEFT</code> <code>RIGHT</code> <code>MID</code> <code>UPPER</code> <code>LOWER</code> <code>PROPER</code> <code>TRIM</code> <code>SUBSTITUTE</code> <code>REPLACE</code> <code>FIND</code> <code>SEARCH</code> <code>REPT</code> <code>TEXT</code> <code>VALUE</code> <code>CHAR</code> <code>CODE</code> <code>EXACT</code></td>
+</tr>
+<tr>
+<td>Поиск</td>
+<td><code>VLOOKUP</code> <code>HLOOKUP</code> <code>INDEX</code> <code>MATCH</code> <code>CHOOSE</code> <code>OFFSET</code> <code>LOOKUP</code></td>
+</tr>
+<tr>
+<td>Даты</td>
+<td><code>TODAY</code> <code>NOW</code> <code>DATE</code> <code>YEAR</code> <code>MONTH</code> <code>DAY</code> <code>HOUR</code> <code>MINUTE</code> <code>SECOND</code> <code>WEEKDAY</code> <code>DATEVALUE</code> <code>DATEDIF</code> <code>EDATE</code> <code>EOMONTH</code> <code>DAYS</code></td>
+</tr>
+</tbody>
+</table>
+<p>Условия в <code>COUNTIF</code> / <code>SUMIF</code> / <code>VLOOKUP</code> поддерживают записи вида <code>"&gt;10"</code>, <code>"&lt;=5"</code>, <code>"&lt;&gt;abc"</code>, <code>"A*"</code>.</p>
+<h3 id="184-demoxlsx-openpyxl-">18.4 Результаты практической проверки (demo.xlsx, создан openpyxl, без каких-либо кэшированных значений)</h3>
+<table>
+<thead>
+<tr>
+<th>Ячейка</th>
+<th>Формула</th>
+<th>Вычисленное значение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D3</td>
+<td><code>B3+C3</code></td>
+<td>270</td>
+</tr>
+<tr>
+<td>B6</td>
+<td><code>SUM(B3:B5)</code></td>
+<td>340</td>
+</tr>
+<tr>
+<td>D6</td>
+<td><code>SUM(D3:D5)</code></td>
+<td>745</td>
+</tr>
+<tr>
+<td>B7</td>
+<td><code>AVERAGE(B3:B5)</code></td>
+<td>113.33333333333</td>
+</tr>
+<tr>
+<td>C7</td>
+<td><code>ROUND(AVERAGE(C3:C5),1)</code></td>
+<td>135</td>
+</tr>
+<tr>
+<td>B8</td>
+<td><code>INDEX(A3:A5,MATCH(MAX(D3:D5),D3:D5,0))</code></td>
+<td>Южный Китай</td>
+</tr>
+<tr>
+<td>B9</td>
+<td><code>IF(D6&gt;600,"норма","не норма")</code></td>
+<td>норма</td>
+</tr>
+<tr>
+<td>B11</td>
+<td><code>参数!A1*2</code> (между листами, китайское название листа)</td>
+<td>20</td>
+</tr>
+<tr>
+<td>B12</td>
+<td><code>SUM(参数!A1:A3)</code></td>
+<td>60</td>
+</tr>
+<tr>
+<td>C13</td>
+<td><code>TEXT(B13,"0.00%")</code></td>
+<td>16.11%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="185">18.5 Известные ограничения</h3>
+<ul>
+<li><strong>Это не полноценный движок Excel</strong>: формулы массивов (CSE), динамические массивы (<code>FILTER</code>/<code>SORT</code>/<code>UNIQUE</code>), <code>LET</code>/<code>LAMBDA</code>, функции макросов не поддерживаются</li>
+<li>Нераспознанные функции по умолчанию возвращают <code>0</code> (<code>$f-&gt;lenientUnknownFunctions = false</code> меняет на возврат <code>#NAME?</code>)</li>
+<li><code>TEXT()</code> реализует только распространённые форматы вроде <code>0.00</code> <code>#,##0.00</code> <code>0%</code> <code>yyyy-mm-dd</code>; сложные пользовательские форматы деградируют</li>
+<li>Даты обрабатываются по системе дат 1900 (Excel for Windows); для книг <code>date1904</code> пересчёт не выполняется</li>
+<li>Циклические ссылки возвращают <code>#CIRC!</code>, итеративное решение, как в Excel, не выполняется</li>
+</ul>
+<hr />
+<h2 id="19">19. Объединённые ячейки и экспорт в разные форматы</h2>
+<h3 id="191">19.1 Чтение информации об объединении</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSXPro::parse('demo.xlsx');
+
+foreach ($xlsx-&gt;mergeCells(0) as $m) {
+    printf(&quot;%s начало(%d,%d) размер %dx%d\n&quot;, $m['ref'], $m['x1'], $m['y1'], $m['w'], $m['h']);
+}
+// B9:D9 начало(1,8) размер 3x1
+// A1:E1 начало(0,0) размер 5x1
+// E4:E5 начало(4,3) размер 1x2
+
+// Проверить по координатам, входит ли ячейка в объединение
+$m = $xlsx-&gt;mergeAt(0, 4, 3);   // ['ref'=&gt;'E4:E5','w'=&gt;1,'h'=&gt;2,'master'=&gt;true]
+</code></pre>
+<p>Каждая ячейка в <code>rowsPro()</code> содержит поле <code>merge</code>:</p>
+<pre><code class="language-php">[
+  'cell'  =&gt; 'E4',
+  'value' =&gt; 'Примечание в объединении (E4:E5)',
+  'merge' =&gt; ['ref' =&gt; 'E4:E5', 'w' =&gt; 1, 'h' =&gt; 2, 'master' =&gt; true],
+]
+</code></pre>
+<h3 id="192">19.2 Три стратегии обработки</h3>
+<table>
+<thead>
+<tr>
+<th>Стратегия</th>
+<th>Подходит для вывода</th>
+<th>Способ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Разбиение с дублированием</strong></td>
+<td>CSV / TSV / JSON</td>
+<td>Значение из левого верхнего угла копируется в каждую ячейку области x*y</td>
+</tr>
+<tr>
+<td><strong>Сохранение объединения</strong></td>
+<td>HTML</td>
+<td>Главная ячейка выводится с <code>colspan</code>/<code>rowspan</code>, объединённые ячейки пропускаются</td>
+</tr>
+<tr>
+<td><strong>Как есть</strong></td>
+<td>Восстановление правки</td>
+<td>Сохраняется только значение левого верхнего угла, остальное пусто (<code>$fillMerged = false</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="193-csv-tsv">19.3 CSV / TSV</h3>
+<pre><code class="language-php">// Разбиение с дублированием (по умолчанию): значение A1:E1 будет записано во все 5 ячеек
+echo $xlsx-&gt;toCSV(0, true);        // второй параметр = fillMerged
+$xlsx-&gt;saveCSV('out.csv', 0, true);
+
+// TSV
+echo $xlsx-&gt;toTSV(0, true);
+$xlsx-&gt;saveTSV('out.tsv', 0, true);
+
+// Вариант без BOM (удобнее для обработки в Linux-конвейерах)
+echo $xlsx-&gt;toCSV(0, true, false);
+</code></pre>
+<p>CSV на практике (<code>demo.xlsx</code>, A1:E1 и E4:E5 разделены):</p>
+<pre><code class="language-csv">&quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,&quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,&quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,&quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,&quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,
+Регион,I квартал,II квартал,Итого,Примечание,Плавающее изображение
+Восточный Китай,120,150,270,Самый быстрый рост,
+Северный Китай,90,110,200,Примечание в объединении (E4:E5),
+Южный Китай,130,145,275,Примечание в объединении (E4:E5),
+Итого,340,405,745,,
+</code></pre>
+<h3 id="194-json">19.4 JSON</h3>
+<pre><code class="language-php">// 1) Двумерный массив чистых значений
+echo $xlsx-&gt;toJSON(0);
+
+// 2) Первая строка как ключи =&gt; массив объектов (header может быть и номером строки, например ['header' =&gt; 1] — вторая строка)
+echo $xlsx-&gt;toJSON(0, ['header' =&gt; true]);
+
+// 3) Полные ячейки: value + img + merge + formula + calculated
+echo $xlsx-&gt;toJSON(0, ['cells' =&gt; true]);
+
+// 4) С метаинформацией: имена листов / размер / области объединения / список изображений
+echo $xlsx-&gt;toJSON(0, ['meta' =&gt; true]);
+</code></pre>
+<p>Пример вывода для <code>['cells' =&gt; true]</code>:</p>
+<pre><code class="language-json">[
+  [
+    { &quot;cell&quot;: &quot;A1&quot;, &quot;value&quot;: &quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,
+      &quot;merge&quot;: { &quot;ref&quot;: &quot;A1:E1&quot;, &quot;w&quot;: 5, &quot;h&quot;: 1, &quot;master&quot;: true } },
+    { &quot;cell&quot;: &quot;B1&quot;, &quot;value&quot;: &quot;Отчёт о продажах за 2024 год (с объединёнными ячейками и формулами)&quot;,
+      &quot;merge&quot;: { &quot;ref&quot;: &quot;A1:E1&quot;, &quot;w&quot;: 5, &quot;h&quot;: 1, &quot;master&quot;: false } }
+  ],
+  [
+    { &quot;cell&quot;: &quot;D3&quot;, &quot;value&quot;: 270, &quot;formula&quot;: &quot;B3+C3&quot;, &quot;calculated&quot;: 270 },
+    { &quot;cell&quot;: &quot;F3&quot;, &quot;value&quot;: &quot;&quot;, &quot;img&quot;: &quot;Img/sheet1_F3_1.png&quot; }
+  ]
+]
+</code></pre>
+<p>Обзор опций:</p>
+<table>
+<thead>
+<tr>
+<th>Опция</th>
+<th>По умолчанию</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fill_merged</code></td>
+<td><code>true</code></td>
+<td>Значение объединённой ячейки размножается на каждую ячейку</td>
+</tr>
+<tr>
+<td><code>header</code></td>
+<td><code>false</code></td>
+<td><code>true</code> — первая строка используется как ключи; число = указанный номер строки</td>
+</tr>
+<tr>
+<td><code>cells</code></td>
+<td><code>false</code></td>
+<td>Выводить полные объекты ячеек вместо чистых значений</td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td><code>false</code></td>
+<td>Добавить sheet / dimension / merges / images</td>
+</tr>
+<tr>
+<td><code>pretty</code></td>
+<td><code>true</code></td>
+<td>Форматированный вывод</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td><code>0</code></td>
+<td>Дополнительные флаги <code>json_encode</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="195-html">19.5 HTML: сохранение объединения + изображения</h3>
+<pre><code class="language-php">echo $xlsx-&gt;toHTMLMerged(0, [
+    'images'     =&gt; true,    // выводить &lt;img&gt;
+    'head'       =&gt; true,    // первая строка как &lt;th&gt;
+    'img_height' =&gt; 60,      // высота отображения изображений, 0 = исходный размер
+    'class'      =&gt; 'excel',
+    'limit'      =&gt; 0,
+]);
+</code></pre>
+<p>Сравнение с оригинальным <code>toHTMLEx()</code>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>toHTMLEx()</code></th>
+<th><code>toHTMLMerged()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Объединённые ячейки</td>
+<td>Разбиваются на кучу пустых <code>&lt;td&gt;</code></td>
+<td>Главная ячейка выводится с <code>colspan=5 rowspan=2</code>, остальные не выводятся</td>
+</tr>
+<tr>
+<td>Изображения</td>
+<td>Нет</td>
+<td><code>&lt;img src="Img/xxx.png"&gt;</code></td>
+</tr>
+<tr>
+<td>Заголовок таблицы</td>
+<td>Первая строка всегда <code>&lt;th&gt;</code></td>
+<td>Можно отключить</td>
+</tr>
+<tr>
+<td>Лимит строк</td>
+<td>Нет</td>
+<td>Опция <code>limit</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="196">19.6 Пакетная конвертация из командной строки</h3>
+<pre><code class="language-bash">php 06-cli_convert.php input.xlsx                        # по умолчанию JSON
+php 06-cli_convert.php input.xlsx --format=csv
+php 06-cli_convert.php input.xlsx --format=json --header=1 --cells
+php 06-cli_convert.php input.xlsx --format=html -o=out.html
+php 06-cli_convert.php *.xlsx --format=csv --outdir=./out --img-dir=./images
+</code></pre>
+<hr />
+<h2 id="20-img">20. Извлечение изображений (каталог Img)</h2>
+<h3 id="201">20.1 Два источника изображений</h3>
+<table>
+<thead>
+<tr>
+<th>Источник</th>
+<th>Особенности</th>
+<th>Способ привязки</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Плавающие изображения</strong> (Excel / LibreOffice)</td>
+<td><code>xl/drawings/drawing1.xml</code></td>
+<td><code>&lt;from&gt;&lt;col&gt;&lt;row&gt;</code> в <code>twoCellAnchor</code> / <code>oneCellAnchor</code>, 0-based</td>
+</tr>
+<tr>
+<td><strong>Изображения внутри ячеек</strong> (WPS)</td>
+<td><code>xl/cellimages.xml</code> + формула ячейки <code>=DISPIMG("ID_xxx",1)</code></td>
+<td>Сопоставление по <code>ID_xxx</code> с конкретной ячейкой</td>
+</tr>
+</tbody>
+</table>
+<p>Поддерживаются оба типа.</p>
+<h3 id="202">20.2 Использование</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSXPro::parse('demo.xlsx');
+
+// Экспорт в Img/ (относительно текущего рабочего каталога), возвращает [sheet][row][col] =&gt; путь
+$map = $xlsx-&gt;extractImages('Img');
+
+// Список изображений
+foreach ($xlsx-&gt;imageList() as $img) {
+    printf(&quot;%s  cell=%s  source=%s\n&quot;, $img['path'], $img['cell'], $img['source']);
+}
+// Img/sheet1_F3_1.png  cell=F3  source=xl/media/image1.png
+// Img/sheet1_F8_2.png  cell=F8  source=xl/media/image2.png
+
+// Получение по координатам
+echo $xlsx-&gt;imageAt(0, 5, 2);     // Img/sheet1_F3_1.png (col=5,row=2 — это F3)
+
+// Если передать вторым параметром false, будут записаны абсолютные пути
+$xlsx-&gt;extractImages('/var/www/uploads/Img', false);
+</code></pre>
+<h3 id="203">20.3 Правила именования файлов</h3>
+<pre><code>Img/sheet{номер листа}_{буква столбца}{номер строки}_{порядковый номер}.{исходное расширение}
+Пример: Img/sheet1_F3_1.png
+</code></pre>
+<p>Когда одно и то же изображение упоминается в нескольких местах, <strong>на диск оно записывается только один раз</strong> (внутренний кэш media), все места возвращают один и тот же путь.</p>
+<h3 id="204-img">20.4 Запись пути img в данных</h3>
+<p><code>rowsPro()</code> / <code>toJSON(['cells'=&gt;true])</code> добавляют к ячейке поле <code>img</code>:</p>
+<pre><code class="language-php">foreach ($xlsx-&gt;readRowsPro(0) as $row) {
+    foreach ($row as $c) {
+        if ($c['img'] !== '') {
+            // Сразу в базу: ['cell' =&gt; 'F3', 'img' =&gt; 'Img/sheet1_F3_1.png']
+            $db-&gt;insert('cell_images', ['cell' =&gt; $c['name'], 'img' =&gt; $c['img']]);
+        }
+    }
+}
+</code></pre>
+<p>Практическая проверка встроенных изображений WPS (<code>demo_wps.xlsx</code>):</p>
+<pre><code>F3  img = Img/sheet1_F3_1.png   f = (плавающее)
+H3  img = Img/sheet1_F3_1.png   f = DISPIMG(&quot;ID_1&quot;,1)
+H4  img = Img/sheet1_F3_1.png   f = DISPIMG(&quot;ID_1&quot;,1)
+F8  img = Img/sheet1_F8_2.png   f = (плавающее)
+</code></pre>
+<h3 id="205">20.5 Примечания</h3>
+<ul>
+<li>После успешного извлечения запись media освобождается через <code>deleteEntry()</code>, <strong>большие изображения не остаются в памяти</strong></li>
+<li>Извлечение изображений происходит при вызове <code>extractImages()</code>; без вызова ничего не записывается на диск и место не занимается</li>
+<li><code>imageDir</code> задаётся относительно текущего рабочего каталога; в веб-окружении рекомендуется абсолютный путь</li>
+<li>Обрабатываются только растровые изображения внутри <code>xl/media/*</code>; <code>legacyDrawing</code> (картинки VML-примечаний) и внешние изображения (<code>r:link</code>) не обрабатываются</li>
+</ul>
+<hr />
+<h2 id="a-xlsx">Приложение A: шпаргалка по внутренней структуре xlsx</h2>
+<pre><code>book.xlsx (ZIP)
+├── [Content_Types].xml                 MIME-тип каждой части
+├── _rels/.rels                         ★ входная точка, указывает на xl/workbook.xml
+├── docProps/
+│   ├── app.xml                         Сведения о приложении
+│   └── core.xml                        Автор, время создания и т.д.
+└── xl/
+    ├── workbook.xml                    ★ список листов &lt;sheet name r:id sheetId state&gt;
+    │                                     &lt;workbookPr date1904=&quot;1&quot;/&gt;  &lt;bookViews activeTab&gt;
+    ├── _rels/workbook.xml.rels         ★ rId → фактический путь
+    ├── sharedStrings.xml               ★ весь текст (&lt;si&gt;&lt;t&gt;)
+    ├── styles.xml                      ★ numFmts / fonts / fills / borders / cellXfs
+    ├── theme/theme1.xml                Палитра темы clrScheme
+    ├── calcChain.xml                   Цепочка вычисления формул (SimpleXLSX игнорирует)
+    └── worksheets/
+        ├── sheet1.xml                  ★ &lt;dimension ref&gt; &lt;sheetData&gt;&lt;row r&gt;&lt;c r t s&gt;
+        │                                   &lt;cols&gt;&lt;col min max width customWidth hidden&gt;
+        │                                   &lt;hyperlinks&gt;&lt;hyperlink ref id location&gt;
+        ├── _rels/sheet1.xml.rels       Сопоставление rId гиперссылок / примечаний / графики
+        └── comments1.xml               &lt;commentList&gt;&lt;comment ref&gt;&lt;text&gt;
+</code></pre>
+<h3 id="xml">Вид ячейки в XML</h3>
+<pre><code class="language-xml">&lt;!-- Общая строка --&gt;
+&lt;c r=&quot;A1&quot; t=&quot;s&quot;&gt;&lt;v&gt;0&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Число --&gt;
+&lt;c r=&quot;B2&quot; s=&quot;1&quot;&gt;&lt;v&gt;1233.34&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Логическое значение --&gt;
+&lt;c r=&quot;C3&quot; t=&quot;b&quot;&gt;&lt;v&gt;1&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Формула (с кэшированным значением) --&gt;
+&lt;c r=&quot;D4&quot; s=&quot;2&quot;&gt;&lt;f&gt;B3*2&lt;/f&gt;&lt;v&gt;2466.68&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Значение ошибки --&gt;
+&lt;c r=&quot;E5&quot; t=&quot;e&quot;&gt;&lt;v&gt;#DIV/0!&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Встроенная строка --&gt;
+&lt;c r=&quot;F6&quot; t=&quot;inlineStr&quot;&gt;&lt;is&gt;&lt;t&gt;текст&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;
+</code></pre>
+<h3 id="simplexlsx_1">Соответствие (как это видит SimpleXLSX)</h3>
+<table>
+<thead>
+<tr>
+<th>XML</th>
+<th>SimpleXLSX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>r</code> в <code>&lt;c r="B2"&gt;</code></td>
+<td><code>name</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>t</code> в <code>&lt;c t="s"&gt;</code></td>
+<td><code>type</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;v&gt;</code> или sharedStrings</td>
+<td><code>value</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>s</code> в <code>&lt;c s="3"&gt;</code></td>
+<td><code>s</code> в <code>rowsEx()</code> → <code>cellFormats[3]</code></td>
+</tr>
+<tr>
+<td><code>&lt;f&gt;</code></td>
+<td><code>f</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;col width hidden&gt;</code></td>
+<td><code>width</code> / <code>hidden</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;row ht customHeight hidden&gt;</code></td>
+<td><code>height</code> / <code>hidden</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;hyperlink ref id&gt;</code> + rels</td>
+<td><code>href</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;comment ref&gt;</code></td>
+<td><code>comment</code> в <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td>numFmts из <code>styles.xml</code></td>
+<td><code>$xlsx-&gt;nf</code> / <code>cellFormats[n]['format']</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="b-cf">Приложение B: таблица встроенных числовых форматов $CF</h2>
+<p><code>SimpleXLSX::$CF</code> — таблица встроенных (не пользовательских) кодов числовых форматов Excel, в исходном коде жёстко заданы 40 штук:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Код формата</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>General</code></td>
+<td>Общий</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>0</code></td>
+<td>Целое число</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>0.00</code></td>
+<td>Два десятичных знака</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>#,##0</code></td>
+<td>Разделитель тысяч</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>#,##0.00</code></td>
+<td>Разделитель тысяч, два десятичных знака</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>0%</code></td>
+<td>Проценты</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>0.00%</code></td>
+<td>Проценты, два десятичных знака</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>0.00E+00</code></td>
+<td>Научная запись</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code># ?/?</code></td>
+<td>Дробь</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code># ??/??</code></td>
+<td>Дробь</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>mm-dd-yy</code></td>
+<td>Дата</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>d-mmm-yy</code></td>
+<td>Дата</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>d-mmm</code></td>
+<td>Дата</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>mmm-yy</code></td>
+<td>Год и месяц</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>h:mm AM/PM</code></td>
+<td>Время</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>h:mm:ss AM/PM</code></td>
+<td>Время</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>h:mm</code></td>
+<td>Время</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>h:mm:ss</code></td>
+<td>Время</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>m/d/yy h:mm</code></td>
+<td>Дата и время</td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>#,##0 ;(#,##0)</code></td>
+<td>Отрицательные числа в скобках</td>
+</tr>
+<tr>
+<td>38</td>
+<td><code>#,##0 ;[Red](#,##0)</code></td>
+<td>Отрицательные красным</td>
+</tr>
+<tr>
+<td>39</td>
+<td><code>#,##0.00;(#,##0.00)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>#,##0.00;[Red](#,##0.00)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>44</td>
+<td><code>_("$"* #,##0.00_)...</code></td>
+<td>Валюта</td>
+</tr>
+<tr>
+<td>45</td>
+<td><code>mm:ss</code></td>
+<td>Минуты и секунды</td>
+</tr>
+<tr>
+<td>46</td>
+<td><code>[h]:mm:ss</code></td>
+<td>Накопленная длительность</td>
+</tr>
+<tr>
+<td>47</td>
+<td><code>mmss.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>##0.0E+0</code></td>
+<td>Научная запись</td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>@</code></td>
+<td>Текст</td>
+</tr>
+<tr>
+<td>27/30/36/50/57</td>
+<td><code>[$-404]e/m/d</code>, <code>m/d/yy</code></td>
+<td>Региональные даты</td>
+</tr>
+<tr>
+<td>59~70</td>
+<td><code>t0</code>, <code>t0.00</code>, <code>t#,##0</code>…</td>
+<td>Форматы Восточной Азии</td>
+</tr>
+</tbody>
+</table>
+<p>Пользовательские форматы (ID &gt;= 164) читаются из <code>numFmts</code> файла <code>styles.xml</code> в <code>$xlsx-&gt;nf</code>.</p>
+<p><strong>Назначение</strong>: когда нужно определить, является ли столбец «датой/валютой/процентами», можно использовать поле <code>format</code> вместе с этой таблицей.</p>
+<hr />
+<h2 id="c-api">Приложение C: шпаргалка по API</h2>
+<pre><code class="language-php">// ===== Открытие =====
+SimpleXLSX::parse($file, $is_data = false, $debug = false) : SimpleXLSX|false
+SimpleXLSX::parseFile($file, $debug = false)                : SimpleXLSX|false
+SimpleXLSX::parseData($data, $debug = false)                : SimpleXLSX|false
+new SimpleXLSX($file, $is_data = null, $debug = null)
+
+// ===== Простое чтение =====
+$xlsx-&gt;rows($sheet = 0, $limit = 0)      : array       // двумерный массив
+$xlsx-&gt;readRows($sheet = 0, $limit = 0)  : Generator   // построчно (экономия памяти)
+$xlsx-&gt;toHTML($sheet = 0)                : string      // ⚠️ нет параметра limit
+
+// ===== Расширенное чтение (со стилями) =====
+$xlsx-&gt;rowsEx($sheet = 0, $limit = 0)    : array
+$xlsx-&gt;readRowsEx($sheet = 0, $limit = 0): Generator
+$xlsx-&gt;toHTMLEx($sheet = 0)              : string      // ⚠️ нет параметра limit
+
+// ===== Метаданные листов =====
+$xlsx-&gt;sheetsCount()              : int
+$xlsx-&gt;sheetNames()               : array     // [0 =&gt; 'Sheet1', ...]
+$xlsx-&gt;sheetName($i)              : string|false
+$xlsx-&gt;sheetMeta($i = null)       : array|false   // name/sheetId/state/id
+$xlsx-&gt;isHiddenSheet($i)          : bool
+$xlsx-&gt;dimension($sheet = 0)      : array     // [число столбцов, число строк]
+$xlsx-&gt;activeSheet                : int       // свойство, индекс активного листа
+
+// ===== Низкоуровневые объекты =====
+$xlsx-&gt;worksheet($i = 0)          : SimpleXMLElement|false
+$xlsx-&gt;getSheets()                : SimpleXMLElement[]
+$xlsx-&gt;getStyles()                : SimpleXMLElement
+$xlsx-&gt;getPackage()               : array
+
+// ===== Ячейки =====
+$xlsx-&gt;getCell($sheet = 0, $cell = 'A1')   : mixed   // ⚠️ очень медленно
+$xlsx-&gt;getIndex('AB12')                    : array   // [27, 11]
+$xlsx-&gt;value($cellNode)                    : mixed
+
+// ===== Даты =====
+$xlsx-&gt;setDateTimeFormat('Y-m-d H:i:s')  // или null = вернуть исходный серийный номер Excel
+$xlsx-&gt;unixstamp($excelFloat)            : int
+$xlsx-&gt;datetimeFormat                    : string   // свойство
+$xlsx-&gt;date1904                          : int      // свойство
+
+// ===== Стили =====
+$xlsx-&gt;cellFormats     : array   // [s =&gt; ['format'=&gt;..,'font'=&gt;..,'color'=&gt;..,'f-b'=&gt;..,...]]
+$xlsx-&gt;nf              : array   // [numFmtId =&gt; formatCode]
+$xlsx-&gt;rowsExReader    : SimpleXLSXEx|null
+SimpleXLSX::$CF        : array   // таблица встроенных числовых форматов
+
+// ===== Состояние/ошибки =====
+$xlsx-&gt;success()              : bool
+$xlsx-&gt;errno()                : int
+$xlsx-&gt;error()                : string|false
+SimpleXLSX::parseError()      : string|false   // ⚠️ глобальное статическое состояние
+SimpleXLSX::parseErrno()      : int|false
+
+// ===== Статические утилиты =====
+SimpleXLSX::num2name(3)                // 'C'
+SimpleXLSX::boolean('true')            // true
+SimpleXLSX::parseRichText($isNode)     // богатый текст → строка
+SimpleXLSX::getTarget($base, $target)  // нормализация пути
+SimpleXLSX::strlen/substr/strpos/strtoupper($s)
+</code></pre>
+<h3 id="_11">Краткая памятка кодов ошибок</h3>
+<pre><code>1 = файл не найден     2 = не ZIP        3 = ошибка разбора XML
+4 = отсутствует запись XML  5 = запись не существует   6 = лист не существует
+</code></pre>
+<hr />
+<h2 id="d-api-simplexlsxpro">Приложение D: шпаргалка по расширенному API SimpleXLSXPro</h2>
+<pre><code class="language-php">use Shuchkin\SimpleXLSXPro;
+$xlsx = SimpleXLSXPro::parse('a.xlsx');   // при неудаче возвращает false
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Возврат</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimpleXLSXPro::parse($file, $is_data = false, $debug = false)</code></td>
+<td><code>self\|false</code></td>
+<td>Как у родительского класса, возвращает экземпляр Pro</td>
+</tr>
+<tr>
+<td><code>extractImages($dir = null, $returnRelative = true)</code></td>
+<td><code>array</code></td>
+<td>Экспортирует изображения в <code>$dir</code>, возвращает <code>[sheet][row][col] =&gt; путь</code></td>
+</tr>
+<tr>
+<td><code>imageList()</code></td>
+<td><code>array</code></td>
+<td>Список изображений (path / sheet / cell / source / name)</td>
+</tr>
+<tr>
+<td><code>imageMap()</code></td>
+<td><code>array</code></td>
+<td>То же, что и возвращаемое значение <code>extractImages()</code></td>
+</tr>
+<tr>
+<td><code>imageAt($sheet, $col, $row)</code></td>
+<td><code>string</code></td>
+<td>Путь к изображению по 0-based координатам, без изображения — <code>''</code></td>
+</tr>
+<tr>
+<td><code>mergeCells($sheet = 0)</code></td>
+<td><code>array</code></td>
+<td><code>[['ref','x1','y1','x2','y2','w','h'], ...]</code></td>
+</tr>
+<tr>
+<td><code>mergeAt($sheet, $col, $row)</code></td>
+<td><code>array\|null</code></td>
+<td>Информация об объединении одной ячейки</td>
+</tr>
+<tr>
+<td><code>readRowsPro($sheet = 0, $limit = 0)</code></td>
+<td><code>Generator</code></td>
+<td><code>readRowsEx()</code> + <code>img</code> / <code>merge</code> / <code>calculated</code></td>
+</tr>
+<tr>
+<td><code>rowsPro($sheet = 0, $limit = 0)</code></td>
+<td><code>array</code></td>
+<td>Массивная версия предыдущего</td>
+</tr>
+<tr>
+<td><code>calculateCell($coord, $sheet = null)</code></td>
+<td><code>mixed</code></td>
+<td>Вычислить формулу ячейки</td>
+</tr>
+<tr>
+<td><code>calculate($formula, $sheet = 0)</code></td>
+<td><code>mixed</code></td>
+<td>Вычислить произвольную строку формулы</td>
+</tr>
+<tr>
+<td><code>calculatedCells($sheet = 0)</code></td>
+<td><code>array</code></td>
+<td><code>[coord =&gt; ['formula','cached','value']]</code></td>
+</tr>
+<tr>
+<td><code>formula()</code></td>
+<td><code>XLSXFormula</code></td>
+<td>Экземпляр низкоуровневого движка, можно настраивать <code>lenientUnknownFunctions</code> и т.д.</td>
+</tr>
+<tr>
+<td><code>toArray($sheet = 0, $fillMerged = true, $limit = 0)</code></td>
+<td><code>array</code></td>
+<td>Двумерный массив, объединённые значения можно размножить</td>
+</tr>
+<tr>
+<td><code>toCSV($sheet = 0, $fillMerged = true, $bom = true)</code></td>
+<td><code>string</code></td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>toTSV($sheet = 0, $fillMerged = true, $bom = false)</code></td>
+<td><code>string</code></td>
+<td>TSV</td>
+</tr>
+<tr>
+<td><code>saveCSV($path, $sheet = 0, $fillMerged = true)</code></td>
+<td><code>bool</code></td>
+<td>Записать файл</td>
+</tr>
+<tr>
+<td><code>saveTSV($path, $sheet = 0, $fillMerged = true)</code></td>
+<td><code>bool</code></td>
+<td>Записать файл</td>
+</tr>
+<tr>
+<td><code>toJSON($sheet = 0, $options = [])</code></td>
+<td><code>string</code></td>
+<td>JSON, опции см. в 19.4</td>
+</tr>
+<tr>
+<td><code>saveJSON($path, $sheet = 0, $options = [])</code></td>
+<td><code>bool</code></td>
+<td>Записать файл</td>
+</tr>
+<tr>
+<td><code>toCellsArray($sheet = 0, $fillMerged = true)</code></td>
+<td><code>array</code></td>
+<td>Полный двумерный массив ячеек</td>
+</tr>
+<tr>
+<td><code>toHTMLMerged($sheet = 0, $options = [])</code></td>
+<td><code>string</code></td>
+<td>HTML с сохранением объединения + изображений</td>
+</tr>
+<tr>
+<td><code>fillMerged(array $rows, $sheet = 0)</code></td>
+<td><code>array</code></td>
+<td>Разбиение объединения только для уже имеющегося двумерного массива</td>
+</tr>
+<tr>
+<td><code>SimpleXLSXPro::convert($file, $format, $options)</code></td>
+<td><code>mixed</code></td>
+<td>Одним шагом: <code>csv</code>/<code>tsv</code>/<code>json</code>/<code>html</code>/<code>html-merged</code>/<code>array</code></td>
+</tr>
+</tbody>
+</table>
+<p>Настраиваемые свойства:</p>
+<table>
+<thead>
+<tr>
+<th>Свойство</th>
+<th>По умолчанию</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$xlsx-&gt;imageDir</code></td>
+<td><code>'Img'</code></td>
+<td>Каталог вывода изображений по умолчанию</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;calculateFormulas</code></td>
+<td><code>true</code></td>
+<td>Вычислять ли формулы в <code>readRowsPro()</code> / <code>toArray()</code></td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;preferCalculated</code></td>
+<td><code>true</code></td>
+<td>При пустом кэшированном значении подставлять в <code>value</code> вычисленное</td>
+</tr>
+</tbody>
+</table>
+<p>Автономное использование <code>XLSXFormula</code> (без зависимости от файла xlsx):</p>
+<pre><code class="language-php">$f = new Shuchkin\XLSXFormula(function ($sheetIndex, $coord) {
+    return ['value' =&gt; 10, 'formula' =&gt; ''];     // ваш провайдер данных
+}, 0);
+$f-&gt;setSheetNames(['Sheet1', 'Sheet2']);
+echo $f-&gt;calculate('SUM(A1:A3)*2');
+</code></pre>
+<hr />
+<h2 id="_12">Вместо заключения</h2>
+<p>Ценность SimpleXLSX — в <strong>своевременной достаточности</strong>: он доводит задачу «чтения Excel» до 80 баллов, платой за это являются ноль зависимостей и возможность начать с одного <code>rows()</code>. Оставшиеся 20 баллов (вычисление формул, диаграммы, точная вёрстка), если они вам нужны, — значит пора переходить на PhpSpreadsheet, но в большинстве сценариев импорта он вам не понадобится.</p>
+<p>Три пункта, где при использовании чаще всего случаются проблемы, повторим ещё раз:</p>
+<ol>
+<li><strong>Числовой формат</strong>: ведущие нули, номера удостоверений личности, длинные числа — обязательно задавайте как текст прямо в источнике Excel;</li>
+<li><strong>Формулы</strong>: отсутствие значения — обычное дело, библиотека не вычисляет формулы;</li>
+<li><strong>Безопасность</strong>: перед рендерингом загруженных пользователями xlsx <code>href</code> обязательно фильтруйте самостоятельно, а версия должна быть &gt;= 1.1.19.</li>
+</ol>
+<hr />
+<p><em>Документ написан на основе сквозного чтения исходного кода shuchkin/simplexlsx v1.1.19 и практической проверки на PHP 8.3.6. Все выводы с пометкой «практическая проверка» были проверены в локальном окружении.</em></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,156 @@
+diff --git a/src/SimpleXLSX.php b/src/SimpleXLSX.php
+index b6cdc6a..5ac3082 100644
+--- a/src/SimpleXLSX.php
++++ b/src/SimpleXLSX.php
+@@ -719,6 +719,11 @@ class SimpleXLSX
+             $xlsx->parseEntries();
+         }
+         if ($xlsx->success()) {
++            // FIXED: static error state was never reset, a successful parse
++            // after a failed one still reported the old error
++            self::parseError(false, true);
++            self::parseErrno(false, true);
++
+             return $xlsx;
+         }
+         self::parseError($xlsx->error());
+@@ -734,16 +739,35 @@ class SimpleXLSX
+ 
+     // https://github.com/shuchkin/simplexlsx#gets-extend-cell-info-by--rowsex
+ 
+-    public static function parseError($set = false)
++    /**
++     * @param false|string $set   pass a string to store an error, omit to read it
++     * @param bool         $reset FIXED: pass true to clear the stored error
++     *                            (the old signature made it impossible to reset)
++     *
++     * @return false|string
++     */
++    public static function parseError($set = false, $reset = false)
+     {
+         static $error = false;
++        if ($reset) {
++            $error = false;
++        }
+ 
+         return $set ? $error = $set : $error;
+     }
+ 
+-    public static function parseErrno($set = false)
++    /**
++     * @param false|int $set
++     * @param bool      $reset FIXED: pass true to clear the stored errno
++     *
++     * @return false|int
++     */
++    public static function parseErrno($set = false, $reset = false)
+     {
+         static $errno = false;
++        if ($reset) {
++            $errno = false;
++        }
+ 
+         return $set ? $errno = $set : $errno;
+     }
+@@ -958,10 +982,16 @@ class SimpleXLSX
+         return (int)$t;
+     }
+ 
+-    public function toHTML($worksheetIndex = 0)
++    /**
++     * @param int $worksheetIndex
++     * @param int $limit  FIXED: second argument documented in README but missing
++     *
++     * @return string
++     */
++    public function toHTML($worksheetIndex = 0, $limit = 0)
+     {
+         $s = '<table class=excel>';
+-        foreach ($this->readRows($worksheetIndex) as $r) {
++        foreach ($this->readRows($worksheetIndex, $limit) as $r) {
+             $s .= '<tr>';
+             foreach ($r as $c) {
+                 $s .= '<td nowrap>' . ($c === '' ? '&nbsp' : htmlspecialchars($c, ENT_QUOTES)) . '</td>';
+@@ -972,11 +1002,17 @@ class SimpleXLSX
+ 
+         return $s;
+     }
+-    public function toHTMLEx($worksheetIndex = 0)
++    /**
++     * @param int $worksheetIndex
++     * @param int $limit FIXED: second argument documented in README but missing
++     *
++     * @return string
++     */
++    public function toHTMLEx($worksheetIndex = 0, $limit = 0)
+     {
+         $s = '<table class=excel>';
+         $y = 0;
+-        foreach ($this->readRowsEx($worksheetIndex) as $r) {
++        foreach ($this->readRowsEx($worksheetIndex, $limit) as $r) {
+             $s .= '<tr>';
+             $x = 0;
+             foreach ($r as $c) {
+diff --git a/src/SimpleXLSXEx.php b/src/SimpleXLSXEx.php
+index b60f27f..f97ad65 100644
+--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@ -491,6 +491,11 @@ class SimpleXLSXEx
+                     $curC = $x;
+                     if ($curC >= $numCols) {
+                         $numCols = $curC + 1;
++                        // FIXED: $numCols grew but $cols did not, every access to
++                        // $cols[$curC] raised "Undefined array key" + a null offset warning
++                        for ($ci = count($cols); $ci < $numCols; $ci++) {
++                            $cols[$ci] = ['s' => 0, 'hidden' => false, 'width' => 0];
++                        }
+                     }
+                     while ($curR < $y) {
+                         $emptyRow = [];
+@@ -523,8 +528,9 @@ class SimpleXLSXEx
+                 $curC++;
+             }
+             // check empty cells
++            // FIXED: $numCols may have grown on a previous row, $cells must catch up
+             for ($i = 0; $i < $numCols; $i++) {
+-                if ($cells[$i] === null) {
++                if (!isset($cells[$i]) || $cells[$i] === null) {
+                     if ($r_style['s'] > 0) {
+                         $data = $r_style;
+                     } else {
+@@ -535,13 +541,16 @@ class SimpleXLSXEx
+                     $cells[$i] = $this->valueEx($data, $i, $curR);
+                 }
+             }
++            // FIXED: PHP arrays keep insertion order, a gap (e.g. E3 then H3)
++            // would yield the columns out of order
++            ksort($cells);
+ 
+             yield $cells;
+ 
+             $curR++;
+             $_limit--;
+             if ($_limit === 0) {
+-                break;
++                return; // FIXED: was break, $limit did not work
+             }
+         }
+ 
+@@ -582,9 +591,16 @@ class SimpleXLSXEx
+                 $r[$k] = $v;
+             }
+         }
++        if (!isset($this->xlsx->cellFormats[$r['s']])) {
++            // FIXED: undefined style index killed PHP 8 with a warning
++            $this->xlsx->cellFormats[$r['s']] = ['format' => null, 'align' => 0];
++        }
+         $st = &$this->xlsx->cellFormats[$r['s']];
+         $r['format'] = $st['format'];
+-        $r['css'] = &$this->css[ $r['s'] ];
++        // FIXED: was a reference assignment ($r['css'] = &$this->css[...]),
++        // so the '.=' below permanently polluted the shared style cache
++        // and css grew on every call of rowsEx()/readRowsEx().
++        $r['css'] = isset($this->css[$r['s']]) ? $this->css[$r['s']] : '';
+         if ($r['value'] !== '' && !$st['align'] && !in_array($r['type'], ['s','str','inlineStr','e'], true)) {
+             $r['css'] .= 'text-align: right;';
+         }

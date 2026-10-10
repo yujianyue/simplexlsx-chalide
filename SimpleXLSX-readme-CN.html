@@ -1,0 +1,3879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SimpleXLSX 中文开发文档</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --fg: #24292f;
+  --muted: #57606a;
+  --border: #d8dee4;
+  --accent: #0969da;
+  --code-bg: #f6f8fa;
+  --sidebar-bg: #f6f8fa;
+  --mark: #fff8c5;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.75;
+  font-size: 15px;
+}
+.layout { display: flex; align-items: flex-start; }
+
+/* ---------- 侧边目录 ---------- */
+.sidebar {
+  position: sticky;
+  top: 0;
+  width: 320px;
+  flex: 0 0 320px;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  padding: 20px 12px 60px;
+}
+.sidebar h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin: 4px 8px 12px;
+}
+.sidebar ul { list-style: none; padding-left: 0; margin: 0; }
+.sidebar ul ul { padding-left: 14px; }
+.sidebar li { margin: 1px 0; }
+.sidebar a {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 13.5px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+.sidebar a:hover { background: #eaeef2; color: var(--accent); }
+.sidebar > ul > li > a { font-weight: 600; }
+
+/* ---------- 正文 ---------- */
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 980px;
+  padding: 40px 48px 120px;
+}
+h1 { font-size: 30px; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; }
+h2 { font-size: 23px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-top: 44px; }
+h3 { font-size: 18.5px; margin-top: 30px; }
+h4 { font-size: 16px; margin-top: 22px; color: var(--muted); }
+p { margin: 12px 0; }
+a { color: var(--accent); }
+code {
+  background: var(--code-bg);
+  padding: .18em .4em;
+  border-radius: 5px;
+  font-size: 13px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+pre code { background: none; padding: 0; font-size: 13px; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+  font-size: 14px;
+  display: block;
+  overflow-x: auto;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: var(--sidebar-bg); font-weight: 600; }
+tr:nth-child(even) td { background: #fafbfc; }
+blockquote {
+  margin: 16px 0;
+  padding: 2px 16px;
+  border-left: 4px solid var(--accent);
+  background: #f6f8fa;
+  color: #444c56;
+}
+blockquote p { margin: 8px 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+ul, ol { padding-left: 26px; }
+li { margin: 4px 0; }
+img { max-width: 100%; }
+mark { background: var(--mark); }
+strong { font-weight: 650; }
+/* 代码块配色（深色） */
+.codehilite {
+  background: #0d1117 !important;
+  border-radius: 8px;
+  padding: 14px 16px !important;
+  overflow-x: auto;
+  border: none !important;
+}
+.codehilite pre { background: none; border: none; padding: 0; }
+.codehilite code { color: #e6edf3; }
+pre { line-height: 125%; }
+td.linenos .normal { color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #e6edf3; background-color: #6e7681; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #e6edf3; background-color: #6e7681; padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: #6e7681 }
+.codehilite { background: #0d1117; color: #E6EDF3 }
+.codehilite .c { color: #8B949E; font-style: italic } /* Comment */
+.codehilite .err { color: #F85149 } /* Error */
+.codehilite .esc { color: #E6EDF3 } /* Escape */
+.codehilite .g { color: #E6EDF3 } /* Generic */
+.codehilite .k { color: #FF7B72 } /* Keyword */
+.codehilite .l { color: #A5D6FF } /* Literal */
+.codehilite .n { color: #E6EDF3 } /* Name */
+.codehilite .o { color: #FF7B72; font-weight: bold } /* Operator */
+.codehilite .x { color: #E6EDF3 } /* Other */
+.codehilite .p { color: #E6EDF3 } /* Punctuation */
+.codehilite .ch { color: #8B949E; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #8B949E; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #8B949E; font-weight: bold; font-style: italic } /* Comment.Preproc */
+.codehilite .cpf { color: #8B949E; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #8B949E; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #8B949E; font-weight: bold; font-style: italic } /* Comment.Special */
+.codehilite .gd { color: #FFA198; background-color: #490202 } /* Generic.Deleted */
+.codehilite .ge { color: #E6EDF3; font-style: italic } /* Generic.Emph */
+.codehilite .ges { color: #E6EDF3; font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.codehilite .gr { color: #FFA198 } /* Generic.Error */
+.codehilite .gh { color: #79C0FF; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #56D364; background-color: #0F5323 } /* Generic.Inserted */
+.codehilite .go { color: #8B949E } /* Generic.Output */
+.codehilite .gp { color: #8B949E } /* Generic.Prompt */
+.codehilite .gs { color: #E6EDF3; font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #79C0FF } /* Generic.Subheading */
+.codehilite .gt { color: #FF7B72 } /* Generic.Traceback */
+.codehilite .g-Underline { color: #E6EDF3; text-decoration: underline } /* Generic.Underline */
+.codehilite .kc { color: #79C0FF } /* Keyword.Constant */
+.codehilite .kd { color: #FF7B72 } /* Keyword.Declaration */
+.codehilite .kn { color: #FF7B72 } /* Keyword.Namespace */
+.codehilite .kp { color: #79C0FF } /* Keyword.Pseudo */
+.codehilite .kr { color: #FF7B72 } /* Keyword.Reserved */
+.codehilite .kt { color: #FF7B72 } /* Keyword.Type */
+.codehilite .ld { color: #79C0FF } /* Literal.Date */
+.codehilite .m { color: #A5D6FF } /* Literal.Number */
+.codehilite .s { color: #A5D6FF } /* Literal.String */
+.codehilite .na { color: #E6EDF3 } /* Name.Attribute */
+.codehilite .nb { color: #E6EDF3 } /* Name.Builtin */
+.codehilite .nc { color: #F0883E; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #79C0FF; font-weight: bold } /* Name.Constant */
+.codehilite .nd { color: #D2A8FF; font-weight: bold } /* Name.Decorator */
+.codehilite .ni { color: #FFA657 } /* Name.Entity */
+.codehilite .ne { color: #F0883E; font-weight: bold } /* Name.Exception */
+.codehilite .nf { color: #D2A8FF; font-weight: bold } /* Name.Function */
+.codehilite .nl { color: #79C0FF; font-weight: bold } /* Name.Label */
+.codehilite .nn { color: #FF7B72 } /* Name.Namespace */
+.codehilite .nx { color: #E6EDF3 } /* Name.Other */
+.codehilite .py { color: #79C0FF } /* Name.Property */
+.codehilite .nt { color: #7EE787 } /* Name.Tag */
+.codehilite .nv { color: #79C0FF } /* Name.Variable */
+.codehilite .ow { color: #FF7B72; font-weight: bold } /* Operator.Word */
+.codehilite .pm { color: #E6EDF3 } /* Punctuation.Marker */
+.codehilite .w { color: #6E7681 } /* Text.Whitespace */
+.codehilite .mb { color: #A5D6FF } /* Literal.Number.Bin */
+.codehilite .mf { color: #A5D6FF } /* Literal.Number.Float */
+.codehilite .mh { color: #A5D6FF } /* Literal.Number.Hex */
+.codehilite .mi { color: #A5D6FF } /* Literal.Number.Integer */
+.codehilite .mo { color: #A5D6FF } /* Literal.Number.Oct */
+.codehilite .sa { color: #79C0FF } /* Literal.String.Affix */
+.codehilite .sb { color: #A5D6FF } /* Literal.String.Backtick */
+.codehilite .sc { color: #A5D6FF } /* Literal.String.Char */
+.codehilite .dl { color: #79C0FF } /* Literal.String.Delimiter */
+.codehilite .sd { color: #A5D6FF } /* Literal.String.Doc */
+.codehilite .s2 { color: #A5D6FF } /* Literal.String.Double */
+.codehilite .se { color: #79C0FF } /* Literal.String.Escape */
+.codehilite .sh { color: #79C0FF } /* Literal.String.Heredoc */
+.codehilite .si { color: #A5D6FF } /* Literal.String.Interpol */
+.codehilite .sx { color: #A5D6FF } /* Literal.String.Other */
+.codehilite .sr { color: #79C0FF } /* Literal.String.Regex */
+.codehilite .s1 { color: #A5D6FF } /* Literal.String.Single */
+.codehilite .ss { color: #A5D6FF } /* Literal.String.Symbol */
+.codehilite .bp { color: #E6EDF3 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #D2A8FF; font-weight: bold } /* Name.Function.Magic */
+.codehilite .vc { color: #79C0FF } /* Name.Variable.Class */
+.codehilite .vg { color: #79C0FF } /* Name.Variable.Global */
+.codehilite .vi { color: #79C0FF } /* Name.Variable.Instance */
+.codehilite .vm { color: #79C0FF } /* Name.Variable.Magic */
+.codehilite .il { color: #A5D6FF } /* Literal.Number.Integer.Long */
+@media (max-width: 1000px) {
+  .sidebar { display: none; }
+  .content { padding: 24px 18px 80px; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <h2>目录</h2>
+    <div class="toc">
+<ul>
+
+<li><a href="#一这是什么">一、这是什么</a><ul>
+<li><a href="#它做了什么">它做了什么</a></li>
+<li><a href="#它不能做什么">它不能做什么</a></li>
+<li><a href="#基本信息">基本信息</a></li>
+</ul>
+</li>
+<li><a href="#二环境要求与安装">二、环境要求与安装</a><ul>
+<li><a href="#21-系统要求">2.1 系统要求</a></li>
+<li><a href="#22-安装方式一composer推荐">2.2 安装方式一：Composer（推荐）</a></li>
+<li><a href="#23-安装方式二单文件直接引入">2.3 安装方式二：单文件直接引入</a></li>
+<li><a href="#24-在框架中使用">2.4 在框架中使用</a></li>
+</ul>
+</li>
+<li><a href="#三5-分钟快速上手">三、5 分钟快速上手</a><ul>
+<li><a href="#31-最小示例">3.1 最小示例</a></li>
+<li><a href="#32-三种打开方式">3.2 三种打开方式</a></li>
+<li><a href="#33-经典-oop-写法">3.3 经典 OOP 写法</a></li>
+<li><a href="#34-调试模式">3.4 调试模式</a></li>
+</ul>
+</li>
+<li><a href="#四核心概念xlsx-是怎么被读出来的">四、核心概念：xlsx 是怎么被读出来的</a><ul>
+<li><a href="#41-xlsx-本质是一个-zip">4.1 xlsx 本质是一个 ZIP</a></li>
+<li><a href="#42-解析流程对应源码方法">4.2 解析流程（对应源码方法）</a></li>
+<li><a href="#43-内存模型重点">4.3 内存模型（重点）</a></li>
+<li><a href="#44-单元格坐标">4.4 单元格坐标</a></li>
+</ul>
+</li>
+<li><a href="#五api-全量参考">五、API 全量参考</a><ul>
+<li><a href="#51-静态工厂方法">5.1 静态工厂方法</a></li>
+<li><a href="#52-状态与错误">5.2 状态与错误</a></li>
+<li><a href="#53-工作表元数据">5.3 工作表元数据</a></li>
+<li><a href="#54-读取数据核心">5.4 读取数据（核心）</a></li>
+<li><a href="#55-输出-html">5.5 输出 HTML</a></li>
+<li><a href="#56-样式相关">5.6 样式相关</a></li>
+<li><a href="#57-日期时间控制">5.7 日期时间控制</a></li>
+<li><a href="#58-静态工具方法">5.8 静态工具方法</a></li>
+<li><a href="#59-底层方法一般用不到排查问题时有用">5.9 底层方法（一般用不到，排查问题时有用）</a></li>
+</ul>
+</li>
+<li><a href="#六rowsex-单元格字段详解">六、rowsEx() 单元格字段详解</a><ul>
+<li><a href="#字段逐项说明">字段逐项说明</a></li>
+<li><a href="#实测样例输出">实测样例输出</a></li>
+</ul>
+</li>
+<li><a href="#七数据类型映射表实测">七、数据类型映射表（实测）</a><ul>
+<li><a href="#类型判定逻辑源码要点">类型判定逻辑（源码要点）</a></li>
+<li><a href="#关于纯时间">关于"纯时间"</a></li>
+<li><a href="#关于公式">关于公式</a></li>
+</ul>
+</li>
+<li><a href="#八日期与时间专题">八、日期与时间专题</a><ul>
+<li><a href="#81-excel-日期的本质">8.1 Excel 日期的本质</a></li>
+<li><a href="#82-转换公式">8.2 转换公式</a></li>
+<li><a href="#83-四种用法">8.3 四种用法</a></li>
+<li><a href="#84-时区陷阱">8.4 时区陷阱</a></li>
+<li><a href="#85-1904-日期系统">8.5 1904 日期系统</a></li>
+<li><a href="#86-日期列识别工具函数">8.6 日期列识别工具函数</a></li>
+</ul>
+</li>
+<li><a href="#九样式系统simplexlsxex">九、样式系统（SimpleXLSXEx）</a><ul>
+<li><a href="#91-加载时机">9.1 加载时机</a></li>
+<li><a href="#92-构造时做的事">9.2 构造时做的事</a></li>
+<li><a href="#93-颜色解析-getcolorvalue">9.3 颜色解析 getColorValue()</a></li>
+<li><a href="#94-excel-对齐-css-映射表">9.4 Excel 对齐 → CSS 映射表</a></li>
+<li><a href="#95-字号换算">9.5 字号换算</a></li>
+<li><a href="#96-边框">9.6 边框</a></li>
+<li><a href="#97-自己生成-css绕过内置-css-的-bug">9.7 自己生成 CSS（绕过内置 css 的 bug）</a></li>
+</ul>
+</li>
+<li><a href="#十大文件与内存优化">十、大文件与内存优化</a><ul>
+<li><a href="#101-官方基准数据">10.1 官方基准数据</a></li>
+<li><a href="#102-内存去哪了">10.2 内存去哪了</a></li>
+<li><a href="#103-优化清单">10.3 优化清单</a></li>
+<li><a href="#104-limit-参数-各方法行为不一致">10.4 $limit 参数（⚠️ 各方法行为不一致）</a></li>
+</ul>
+</li>
+<li><a href="#十一错误处理与错误码">十一、错误处理与错误码</a><ul>
+<li><a href="#111-主错误码表xlsx-errno-simplexlsxparseerrno">11.1 主错误码表（$xlsx-&gt;errno() / SimpleXLSX::parseErrno()）</a></li>
+<li><a href="#112-各错误实测复现">11.2 各错误实测复现</a></li>
+<li><a href="#113-隐藏的内部错误不通过-errno-暴露">11.3 隐藏的内部错误（不通过 errno 暴露）</a></li>
+<li><a href="#114-推荐的错误处理模式">11.4 推荐的错误处理模式</a></li>
+<li><a href="#115-上传场景的完整校验">11.5 上传场景的完整校验</a></li>
+</ul>
+</li>
+<li><a href="#十二安全注意事项">十二、安全注意事项</a><ul>
+<li><a href="#121-xss值已转义但-href-没有">12.1 XSS：值已转义，但 href 没有</a></li>
+<li><a href="#122-css-注入cve-2024-55878">12.2 CSS 注入（CVE-2024-55878）</a></li>
+<li><a href="#123-xxexml-外部实体">12.3 XXE（XML 外部实体）</a></li>
+<li><a href="#124-解压炸弹zip-bomb">12.4 解压炸弹（Zip Bomb）</a></li>
+<li><a href="#125-其他">12.5 其他</a></li>
+</ul>
+</li>
+<li><a href="#十三已知问题与避坑清单">十三、已知问题与避坑清单</a><ul>
+<li><a href="#坑-1readrowsex-的-limit-参数失效1119-实测确认">🔴 坑 1：readRowsEx() 的 $limit 参数失效（1.1.19 实测确认）</a></li>
+<li><a href="#坑-2同一实例多次调用-rowsex-会让-css-无限累加">🔴 坑 2：同一实例多次调用 rowsEx() 会让 CSS 无限累加</a></li>
+<li><a href="#坑-2tohtml-tohtmlex-没有-limit-参数">🔴 坑 2：toHTML() / toHTMLEx() 没有 $limit 参数</a></li>
+<li><a href="#坑-3公式单元格可能返回空字符串">🟠 坑 3：公式单元格可能返回空字符串</a></li>
+<li><a href="#坑-4前导零-长数字精度丢失">🟠 坑 4：前导零 / 长数字精度丢失</a></li>
+<li><a href="#坑-5dimension-不准导致多余空行">🟠 坑 5：dimension 不准导致多余空行</a></li>
+<li><a href="#坑-6getcell-极慢">🟡 坑 6：getCell() 极慢</a></li>
+<li><a href="#坑-7parseerror-是全局静态状态">🟡 坑 7：parseError() 是全局静态状态</a></li>
+<li><a href="#坑-8工作表不存在时-rows-返回空数组而不报错">🟡 坑 8：工作表不存在时 rows() 返回空数组而不报错</a></li>
+<li><a href="#坑-9样式索引越界会有-php-notice">🟡 坑 9：样式索引越界会有 PHP Notice</a></li>
+<li><a href="#坑-10合并单元格不返回">🟡 坑 10：合并单元格不返回</a></li>
+<li><a href="#坑-11zip64-限制">🟢 坑 11：ZIP64 限制</a></li>
+<li><a href="#坑-12命名空间前缀的正则清理">🟢 坑 12：命名空间前缀的正则清理</a></li>
+<li><a href="#坑-13空行正则优化">🟢 坑 13：空行正则优化</a></li>
+</ul>
+</li>
+<li><a href="#十四实战代码集">十四、实战代码集</a><ul>
+<li><a href="#141-基础读成二维数组">14.1 基础：读成二维数组</a></li>
+<li><a href="#142-用第一行做键名关联数组">14.2 用第一行做键名（关联数组）</a></li>
+<li><a href="#143-xlsx-csv流式适合大文件">14.3 XLSX → CSV（流式，适合大文件）</a></li>
+<li><a href="#144-xlsx-html-表格带样式">14.4 XLSX → HTML 表格（带样式）</a></li>
+<li><a href="#145-遍历所有工作表">14.5 遍历所有工作表</a></li>
+<li><a href="#146-按工作表名读取">14.6 按工作表名读取</a></li>
+<li><a href="#147-上传并导入数据库完整示例">14.7 上传并导入数据库（完整示例）</a></li>
+<li><a href="#148-推荐的封装类">14.8 推荐的封装类</a></li>
+<li><a href="#149-调试看不懂为什么读错时">14.9 调试：看不懂为什么读错时</a></li>
+</ul>
+</li>
+<li><a href="#十五与其他库的选型对比">十五、与其他库的选型对比</a><ul>
+<li><a href="#选型建议">选型建议</a></li>
+</ul>
+</li>
+<li><a href="#十六版本演进与升级注意">十六、版本演进与升级注意</a><ul>
+<li><a href="#161-关键版本里程碑">16.1 关键版本里程碑</a></li>
+<li><a href="#162-从-08x-升级到-1x-的破坏性变更">16.2 从 0.8.x 升级到 1.x 的破坏性变更</a></li>
+<li><a href="#163-升级建议">16.3 升级建议</a></li>
+</ul>
+</li>
+<li><a href="#十七源码-bug-修复清单含补丁">十七、源码 BUG 修复清单（含补丁）</a><ul>
+<li><a href="#171-修复清单总览">17.1 修复清单总览</a></li>
+<li><a href="#172-修复-1limit-失效高危">17.2 修复 1：$limit 失效（高危）</a></li>
+<li><a href="#173-修复-2css-无限累加高危">17.3 修复 2：CSS 无限累加（高危）</a></li>
+<li><a href="#174-修复-6-7列数超出-dimension实测踩到的坑">17.4 修复 6 + 7：列数超出 dimension（实测踩到的坑）</a></li>
+<li><a href="#175-修复-3-4-5">17.5 修复 3 / 4 / 5</a></li>
+</ul>
+</li>
+<li><a href="#十八公式计算xlsxformula">十八、公式计算（XLSXFormula）</a><ul>
+<li><a href="#181-基本用法">18.1 基本用法</a></li>
+<li><a href="#182-支持的语法">18.2 支持的语法</a></li>
+<li><a href="#183-支持的函数60">18.3 支持的函数（60+）</a></li>
+<li><a href="#184-实测结果demoxlsxopenpyxl-生成无任何缓存值">18.4 实测结果（demo.xlsx，openpyxl 生成，无任何缓存值）</a></li>
+<li><a href="#185-已知限制">18.5 已知限制</a></li>
+</ul>
+</li>
+<li><a href="#十九合并单元格与多格式导出">十九、合并单元格与多格式导出</a><ul>
+<li><a href="#191-读取合并信息">19.1 读取合并信息</a></li>
+<li><a href="#192-三种处理策略">19.2 三种处理策略</a></li>
+<li><a href="#193-csv-tsv">19.3 CSV / TSV</a></li>
+<li><a href="#194-json">19.4 JSON</a></li>
+<li><a href="#195-html保留合并-图片">19.5 HTML：保留合并 + 图片</a></li>
+<li><a href="#196-命令行批量转换">19.6 命令行批量转换</a></li>
+</ul>
+</li>
+<li><a href="#二十图片提取img-目录">二十、图片提取（Img 目录）</a><ul>
+<li><a href="#201-两种图片来源">20.1 两种图片来源</a></li>
+<li><a href="#202-用法">20.2 用法</a></li>
+<li><a href="#203-文件命名规则">20.3 文件命名规则</a></li>
+<li><a href="#204-数据里记录-img-路径">20.4 数据里记录 img 路径</a></li>
+<li><a href="#205-注意事项">20.5 注意事项</a></li>
+</ul>
+</li>
+<li><a href="#附录-axlsx-内部结构速查">附录 A：xlsx 内部结构速查</a><ul>
+<li><a href="#单元格-xml-形貌">单元格 XML 形貌</a></li>
+<li><a href="#对应关系simplexlsx-怎么看它">对应关系（SimpleXLSX 怎么看它）</a></li>
+</ul>
+</li>
+<li><a href="#附录-b内置数字格式表-cf">附录 B：内置数字格式表 $CF</a></li>
+<li><a href="#附录-capi-速查卡">附录 C：API 速查卡</a><ul>
+<li><a href="#错误码速记">错误码速记</a></li>
+</ul>
+</li>
+<li><a href="#附录-dsimplexlsxpro-扩展-api-速查">附录 D：SimpleXLSXPro 扩展 API 速查</a></li>
+<li><a href="#写在最后">写在最后</a></li>
+</ul>
+</div>
+
+  </nav>
+  <main class="content">
+    <h1 id="simplexlsx-中文开发文档">SimpleXLSX 中文开发文档</h1>
+<blockquote>
+<p>面向 PHP 开发者的 <code>shuchkin/simplexlsx</code> 完整中文说明书与开发指南
+基于源码逐行通读 + PHP 8.3 实测验证编写（版本 1.1.19）</p>
+</blockquote>
+<hr />
+
+<hr />
+<h2 id="一这是什么">一、这是什么</h2>
+<p>SimpleXLSX 是一个<strong>纯 PHP 的 xlsx 读取器</strong>，用于解析 Microsoft Excel 2007+ 的 <code>.xlsx</code> 工作簿并把单元格数据取成 PHP 数组。</p>
+<p>它的核心卖点只有一句话：<strong>不依赖任何额外 PHP 扩展，只用内置的 SimpleXML + zlib 就能读 Excel</strong>。</p>
+<h3 id="它做了什么">它做了什么</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>读取单元格值</td>
+<td>文本、数字、布尔、日期、错误值、富文本</td>
+</tr>
+<tr>
+<td>多工作表</td>
+<td>索引/名称访问、隐藏表识别、激活表识别</td>
+</tr>
+<tr>
+<td>样式提取</td>
+<td>字体、颜色、填充、边框、对齐、行高列宽</td>
+</tr>
+<tr>
+<td>超链接与批注</td>
+<td>单元格外链、内部跳转、批注纯文本</td>
+</tr>
+<tr>
+<td>流式读取</td>
+<td>生成器 <code>readRows()</code>，适合大文件</td>
+</tr>
+<tr>
+<td>HTML 导出</td>
+<td><code>toHTML()</code> / <code>toHTMLEx()</code> 一键转表格</td>
+</tr>
+<tr>
+<td>零扩展依赖</td>
+<td>无 <code>php-zip</code>、无 <code>php-excel</code>，纯 PHP 实现解压</td>
+</tr>
+</tbody>
+</table>
+<h3 id="它不能做什么">它不能做什么</h3>
+<p>这一点比"能做什么"更重要，先说清楚能省掉你半天时间：</p>
+<table>
+<thead>
+<tr>
+<th>不在能力范围内</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>写入/生成 xlsx</strong></td>
+<td>只读库。写请用配套的 <a href="https://github.com/shuchkin/simplexlsxgen">SimpleXLSXGen</a></td>
+</tr>
+<tr>
+<td><strong>读取老格式 .xls</strong></td>
+<td>完全不同的二进制格式，请用 <a href="https://github.com/shuchkin/simplexls">SimpleXLS</a></td>
+</tr>
+<tr>
+<td><strong>计算公式</strong></td>
+<td>只返回 Excel 保存时缓存的结果值，不重算公式</td>
+</tr>
+<tr>
+<td><strong>合并单元格信息</strong></td>
+<td>不解析 <code>mergeCells</code>，合并区只有左上角有值</td>
+</tr>
+<tr>
+<td><strong>图片/图表/透视表</strong></td>
+<td>全部忽略</td>
+</tr>
+<tr>
+<td><strong>条件格式、数据验证</strong></td>
+<td>不解析</td>
+</tr>
+<tr>
+<td><strong>单元格"原始富文本分段"</strong></td>
+<td>富文本会被拼接成一个字符串（见 <code>parseRichText</code>）</td>
+</tr>
+<tr>
+<td><strong>读 .xlsb / 加密文件</strong></td>
+<td>二进制格式与加密 ZIP 都不支持</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>一句话选型</strong>：如果你的需求是"用户上传一个 Excel，我把里面的表格读出来存数据库"，SimpleXLSX 是性价比最高的选择（几十 KB、无依赖、够快）。如果你需要"生成带图表的复杂报表"或"精确还原打印样式"，请上 PhpSpreadsheet。</p>
+</blockquote>
+<h3 id="基本信息">基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命名空间</td>
+<td><code>Shuchkin\SimpleXLSX</code></td>
+</tr>
+<tr>
+<td>主类文件</td>
+<td><code>src/SimpleXLSX.php</code>（约 1250 行）</td>
+</tr>
+<tr>
+<td>样式扩展类</td>
+<td><code>src/SimpleXLSXEx.php</code>（约 677 行，按需加载）</td>
+</tr>
+<tr>
+<td>许可证</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>当前版本</td>
+<td>1.1.19（2026-09-10）</td>
+</tr>
+<tr>
+<td>Composer</td>
+<td><code>shuchkin/simplexlsx</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="二环境要求与安装">二、环境要求与安装</h2>
+<h3 id="21-系统要求">2.1 系统要求</h3>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PHP</td>
+<td>&gt;= 5.5（实测 PHP 8.3 正常；PHP 5.5+ 用 <code>Generator</code> 兼容写法）</td>
+</tr>
+<tr>
+<td><code>ext-simplexml</code></td>
+<td>必需，解析 XML</td>
+</tr>
+<tr>
+<td><code>ext-zlib</code></td>
+<td>必需，<code>gzinflate()</code> 解压 ZIP 条目</td>
+</tr>
+<tr>
+<td><code>ext-libxml</code></td>
+<td>必需</td>
+</tr>
+<tr>
+<td><code>ext-mbstring</code></td>
+<td>必需（composer 声明），用于 func_overload 兼容分支</td>
+</tr>
+</tbody>
+</table>
+<p>注意：<strong>不需要 <code>ext-zip</code></strong>。ZIP 解包是作者自己手写的（见 <code>unzip()</code> 方法）。这是它能在各种廉价虚拟主机上跑起来的原因。</p>
+<h3 id="22-安装方式一composer推荐">2.2 安装方式一：Composer（推荐）</h3>
+<div class="codehilite"><pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>shuchkin/simplexlsx
+</code></pre></div>
+
+<p>然后：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">require_once &#39;vendor/autoload.php&#39;;</span>
+
+<span class="x">use Shuchkin\SimpleXLSX;</span>
+
+<span class="x">if ( $xlsx = SimpleXLSX::parse(&#39;book.xlsx&#39;) ) {</span>
+<span class="x">    print_r( $xlsx-&gt;rows() );</span>
+<span class="x">} else {</span>
+<span class="x">    echo SimpleXLSX::parseError();</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<blockquote>
+<p>⚠️ <strong>注意</strong>：<code>composer.json</code> 的 autoload 里只注册了 <code>src/SimpleXLSX.php</code>：
+<code>json
+"autoload": { "classmap": ["src/SimpleXLSX.php"] }</code>
+<code>SimpleXLSXEx.php</code> <strong>没有被注册进 classmap</strong>，它是通过 <code>require_once __DIR__.'/SimpleXLSXEx.php'</code> 在调用 <code>readRowsEx()</code> 时手动加载的。你不用管，但也别指望 <code>class_exists('Shuchkin\SimpleXLSXEx')</code> 在没调用过 <code>rowsEx()</code> 时为 true。</p>
+</blockquote>
+<h3 id="23-安装方式二单文件直接引入">2.3 安装方式二：单文件直接引入</h3>
+<p>适合不能装 Composer 的环境：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">require_once __DIR__ . &#39;/src/SimpleXLSX.php&#39;;</span>
+
+<span class="x">use Shuchkin\SimpleXLSX;</span>
+</code></pre></div>
+
+<p><code>SimpleXLSX.php</code> 是自包含的，不依赖其他文件（除非你要用 <code>rowsEx()</code>）。</p>
+<h3 id="24-在框架中使用">2.4 在框架中使用</h3>
+<p><strong>Laravel</strong>：composer 装好后直接用，无需 ServiceProvider。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">use Shuchkin\SimpleXLSX;</span>
+
+<span class="x">public function import(Request $request) {</span>
+<span class="x">    $request-&gt;validate([&#39;file&#39; =&gt; &#39;required|file|mimes:xlsx|max:10240&#39;]);</span>
+<span class="x">    $xlsx = SimpleXLSX::parse($request-&gt;file(&#39;file&#39;)-&gt;getRealPath());</span>
+<span class="x">    // ...</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p><strong>ThinkPHP / 其他</strong>：<code>require</code> 文件路径或 composer autoload 均可。</p>
+<hr />
+<h2 id="三5-分钟快速上手">三、5 分钟快速上手</h2>
+<h3 id="31-最小示例">3.1 最小示例</h3>
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Shuchkin\SimpleXLSX</span><span class="p">;</span>
+<span class="k">require_once</span> <span class="no">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/src/SimpleXLSX.php&#39;</span><span class="p">;</span>
+
+<span class="k">if</span> <span class="p">(</span> <span class="nv">$xlsx</span> <span class="o">=</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parse</span><span class="p">(</span><span class="s1">&#39;book.xlsx&#39;</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nb">print_r</span><span class="p">(</span> <span class="nv">$xlsx</span><span class="o">-&gt;</span><span class="na">rows</span><span class="p">()</span> <span class="p">);</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parseError</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>输出：</p>
+<div class="codehilite"><pre><span></span><code>Array
+(
+    [0] =&gt; Array
+        (
+            [0] =&gt; ISBN
+            [1] =&gt; title
+            [2] =&gt; author
+            [3] =&gt; publisher
+            [4] =&gt; ctry
+        )
+
+    [1] =&gt; Array
+        (
+            [0] =&gt; 618260307
+            [1] =&gt; The Hobbit
+            [2] =&gt; J. R. R. Tolkien
+            [3] =&gt; Houghton Mifflin
+            [4] =&gt; USA
+        )
+)
+</code></pre></div>
+
+<h3 id="32-三种打开方式">3.2 三种打开方式</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">// ① 从文件路径（最常用）</span>
+<span class="x">$xlsx = SimpleXLSX::parse(&#39;/path/to/book.xlsx&#39;);</span>
+<span class="x">$xlsx = SimpleXLSX::parseFile(&#39;/path/to/book.xlsx&#39;);   // 等价写法</span>
+
+<span class="x">// ② 从内存中的二进制数据</span>
+<span class="x">$data = file_get_contents(&#39;https://example.com/book.xlsx&#39;);</span>
+<span class="x">// 或者从数据库 BLOB、Redis 缓存里取出</span>
+<span class="x">$xlsx = SimpleXLSX::parseData($data);</span>
+
+<span class="x">// ③ 也支持直接给 URL（内部走 file_get_contents，受 allow_url_fopen 限制）</span>
+<span class="x">$xlsx = SimpleXLSX::parse(&#39;https://www.example.com/example.xlsx&#39;);</span>
+</code></pre></div>
+
+<p><strong>三者关系</strong>（源码真相）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">public static function parse($filename, $is_data = false, $debug = false) // 核心</span>
+<span class="x">public static function parseFile($filename, $debug = false)  // → parse($filename, false, $debug)</span>
+<span class="x">public static function parseData($data, $debug = false)      // → parse($data, true, $debug)</span>
+</code></pre></div>
+
+<p><code>parse()</code> 内部先 <code>unzip()</code> 再 <code>parseEntries()</code>，成功返回 <code>SimpleXLSX</code> 对象，<strong>失败返回 <code>false</code></strong>。</p>
+<h3 id="33-经典-oop-写法">3.3 经典 OOP 写法</h3>
+<p>如果你更喜欢"构造对象 + 检查状态"，而不是"静态工厂 + 判 false"：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = new SimpleXLSX(&#39;books.xlsx&#39;);</span>
+<span class="x">if ( $xlsx-&gt;success() ) {</span>
+<span class="x">    foreach ( $xlsx-&gt;rows() as $r ) {</span>
+<span class="x">        // ...</span>
+<span class="x">    }</span>
+<span class="x">} else {</span>
+<span class="x">    echo &#39;xlsx error: &#39; . $xlsx-&gt;error();</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p>构造函数签名：<code>__construct($filename = null, $is_data = null, $debug = null)</code>。</p>
+<blockquote>
+<p>两种写法的差异：静态 <code>parse()</code> 失败返回 <code>false</code> 并把错误信息塞进静态变量；<code>new</code> 方式永远返回对象，用 <code>success()</code> 判断。底层都调用同一个 <code>unzip()</code>。</p>
+</blockquote>
+<h3 id="34-调试模式">3.4 调试模式</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">ini_set(&#39;error_reporting&#39;, E_ALL);</span>
+<span class="x">ini_set(&#39;display_errors&#39;, 1);</span>
+
+<span class="x">if ( $xlsx = SimpleXLSX::parseFile(&#39;books.xlsx&#39;, true) ) {</span>
+<span class="x">    echo $xlsx-&gt;toHTML();</span>
+<span class="x">} else {</span>
+<span class="x">    echo SimpleXLSX::parseError();</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p>开启 <code>$debug = true</code> 后，内部每次 <code>error()</code> 都会额外 <code>trigger_error(..., E_USER_WARNING)</code>，方便定位。</p>
+<hr />
+<h2 id="四核心概念xlsx-是怎么被读出来的">四、核心概念：xlsx 是怎么被读出来的</h2>
+<p>要真正用好这个库（尤其是排查问题），值得花 3 分钟理解它的工作流。</p>
+<h3 id="41-xlsx-本质是一个-zip">4.1 xlsx 本质是一个 ZIP</h3>
+<p><code>.xlsx</code> 就是一个改了后缀的 ZIP 包，里面是一堆 XML：</p>
+<div class="codehilite"><pre><span></span><code>book.xlsx
+├── _rels/.rels                        ← 入口，指明 workbook 在哪
+├── xl/
+│   ├── workbook.xml                   ← 工作表清单、名称、顺序、激活表
+│   ├── _rels/workbook.xml.rels        ← rId → 实际文件的映射
+│   ├── sharedStrings.xml              ← 共享字符串池
+│   ├── styles.xml                     ← 字体/填充/边框/数字格式
+│   ├── theme/theme1.xml               ← 主题色
+│   └── worksheets/
+│       ├── sheet1.xml                 ← 真正的单元格数据
+│       ├── _rels/sheet1.xml.rels      ← 该表的超链接/批注
+│       └── ...
+</code></pre></div>
+
+<h3 id="42-解析流程对应源码方法">4.2 解析流程（对应源码方法）</h3>
+<div class="codehilite"><pre><span></span><code>SimpleXLSX::parse($file)
+    │
+    ├─ unzip($filename, $is_data)      ← 手写 ZIP 解包，全部条目读入 $this-&gt;package[&#39;entries&#39;]
+    │                                     （此时不解压，只保存压缩数据 + 头信息）
+    │
+    └─ parseEntries()                  ← 建立索引
+         ├─ 读 _rels/.rels → 找到 officeDocument → xl/workbook.xml
+         ├─ 遍历 workbook.xml 的 &lt;sheet&gt; → $this-&gt;sheetMetaData[i]（name/sheetId/state/id）
+         ├─ 读 xl/_rels/workbook.xml.rels → 按 rId 分派：
+         │     worksheet    → $this-&gt;sheets[i] = SimpleXMLElement（并记 sheetFiles[i]）
+         │     sharedStrings→ $this-&gt;sharedstrings[] = 字符串数组
+         │     styles       → $this-&gt;styles + $this-&gt;nf + $this-&gt;cellFormats
+         │     theme        → $this-&gt;theme
+         └─ 从 workbook.xml 的 &lt;bookViews&gt;&lt;workbookView activeTab=&quot;N&quot;&gt; 取 $this-&gt;activeSheet
+</code></pre></div>
+
+<h3 id="43-内存模型重点">4.3 内存模型（重点）</h3>
+<p>这一点很多人会踩坑：</p>
+<ol>
+<li><code>unzip()</code> 一次性 <code>file_get_contents()</code> <strong>整个文件</strong>到内存；</li>
+<li>所有 ZIP 条目（压缩态）<strong>全部保留</strong>在 <code>$this-&gt;package['entries']</code> 数组里；</li>
+<li>调用 <code>getEntryXML($name)</code> 时才 <code>gzinflate()</code> 解压，解压完立刻 <code>deleteEntry()</code> 从数组中删掉（省内存）；</li>
+<li>但 <code>sheet1.xml</code> 被 <code>simplexml_load_string()</code> 解析成 <code>SimpleXMLElement</code> 后<strong>常驻内存</strong>。</li>
+</ol>
+<p><strong>结论</strong>：峰值内存至少是文件大小的 2~3 倍，再加上 XML 对象树。<code>readRows()</code> 只能省掉"结果数组"那一层，省不掉"整表 DOM"这一层。详见 <a href="#十大文件与内存优化">第十章</a>。</p>
+<h3 id="44-单元格坐标">4.4 单元格坐标</h3>
+<ul>
+<li><code>A1</code> 风格（Excel 表示法）与 <code>[列索引, 行索引]</code>（0-based）互相转换：</li>
+<li><code>getIndex('AB12')</code> → <code>[27, 11]</code>（实测）</li>
+<li><code>SimpleXLSX::num2name(3)</code> → <code>'C'</code></li>
+<li><code>num2name(1) = 'A'</code>，<code>num2name(27) = 'AA'</code>（实测）</li>
+</ul>
+<hr />
+<h2 id="五api-全量参考">五、API 全量参考</h2>
+<blockquote>
+<p>以下签名全部来自对 1.1.19 源码的反射提取，参数默认值与源码完全一致。</p>
+</blockquote>
+<h3 id="51-静态工厂方法">5.1 静态工厂方法</h3>
+<h4 id="simplexlsxparsefilename-is_data-false-debug-false"><code>SimpleXLSX::parse($filename, $is_data = false, $debug = false)</code></h4>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$filename</code></td>
+<td>string</td>
+<td>文件路径、URL，或当 <code>$is_data=true</code> 时为 xlsx 二进制内容</td>
+</tr>
+<tr>
+<td><code>$is_data</code></td>
+<td>bool</td>
+<td>true 表示第一参数是数据而非路径</td>
+</tr>
+<tr>
+<td><code>$debug</code></td>
+<td>bool</td>
+<td>开启后错误会 <code>trigger_error</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>返回</strong>：成功 <code>SimpleXLSX</code> 对象，失败 <code>false</code>。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSX::parse(&#39;book.xlsx&#39;);          // 文件</span>
+<span class="x">$xlsx = SimpleXLSX::parse($binary, true);        // 内存数据</span>
+<span class="x">$xlsx = SimpleXLSX::parse(&#39;a.xlsx&#39;, false, true);// 调试</span>
+</code></pre></div>
+
+<h4 id="simplexlsxparsefilefilename-debug-false"><code>SimpleXLSX::parseFile($filename, $debug = false)</code></h4>
+<p>等价于 <code>parse($filename, false, $debug)</code>。语义更清晰，推荐。</p>
+<h4 id="simplexlsxparsedatadata-debug-false"><code>SimpleXLSX::parseData($data, $debug = false)</code></h4>
+<p>等价于 <code>parse($data, true, $debug)</code>。用于数据库 BLOB / 缓存 / 网络流。</p>
+<h4 id="simplexlsxparseerrorset-false-simplexlsxparseerrnoset-false"><code>SimpleXLSX::parseError($set = false)</code> / <code>SimpleXLSX::parseErrno($set = false)</code></h4>
+<p>读取（或设置）最近一次 <code>parse()</code> 的错误信息/错误码。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">if ( !$xlsx = SimpleXLSX::parse(&#39;x.xlsx&#39;) ) {</span>
+<span class="x">    echo SimpleXLSX::parseErrno() . &#39;: &#39; . SimpleXLSX::parseError();</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<blockquote>
+<p>⚠️ 这两个方法用的是 <strong>static 局部变量</strong>，是全局共享状态。连续解析多个文件时，务必在每次 <code>parse()</code> 后立刻读取，否则会被后一次解析覆盖。</p>
+</blockquote>
+<hr />
+<h3 id="52-状态与错误">5.2 状态与错误</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success()</code></td>
+<td>bool</td>
+<td>是否解析成功（内部就是 <code>!$this-&gt;error</code>）</td>
+</tr>
+<tr>
+<td><code>errno()</code></td>
+<td>int</td>
+<td>实例级错误码</td>
+</tr>
+<tr>
+<td><code>error($num = null, $str = null)</code></td>
+<td>string|false</td>
+<td>读/写错误信息</td>
+</tr>
+<tr>
+<td><code>getPackage()</code></td>
+<td>array</td>
+<td>原始 ZIP 包信息（filename/mtime/size/entries）</td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = new SimpleXLSX(&#39;books.xlsx&#39;);</span>
+<span class="x">if ( $xlsx-&gt;success() ) {</span>
+<span class="x">    // ...</span>
+<span class="x">} else {</span>
+<span class="x">    echo $xlsx-&gt;errno() . &#39; - &#39; . $xlsx-&gt;error();</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="53-工作表元数据">5.3 工作表元数据</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sheetsCount()</code></td>
+<td>int</td>
+<td>工作表数量</td>
+</tr>
+<tr>
+<td><code>sheetNames()</code></td>
+<td>array</td>
+<td><code>[0 =&gt; 'Sheet1', 1 =&gt; 'Sheet2', ...]</code></td>
+</tr>
+<tr>
+<td><code>sheetName($i)</code></td>
+<td>string|false</td>
+<td>按索引取名称</td>
+</tr>
+<tr>
+<td><code>sheetMeta($i = null)</code></td>
+<td>array|false</td>
+<td>单个表的全部属性；传 <code>null</code> 返回全部</td>
+</tr>
+<tr>
+<td><code>isHiddenSheet($i)</code></td>
+<td>bool</td>
+<td>是否隐藏工作表</td>
+</tr>
+<tr>
+<td><code>getSheets()</code></td>
+<td>array</td>
+<td>返回 <code>SimpleXMLElement[]</code> 原始工作表对象</td>
+</tr>
+<tr>
+<td><code>worksheet($i = 0)</code></td>
+<td>SimpleXMLElement|false</td>
+<td>取单个表的原始 XML 对象</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;activeSheet</code></td>
+<td>int</td>
+<td><strong>属性</strong>，Excel 最后保存时激活的表索引（0-based）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>实测输出</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$x = SimpleXLSX::parse(&#39;types.xlsx&#39;);</span>
+<span class="x">print_r($x-&gt;sheetNames());</span>
+<span class="x">// Array( [0] =&gt; 类型测试 [1] =&gt; 第二页 [2] =&gt; 隐藏页 )</span>
+
+<span class="x">print_r($x-&gt;sheetMeta());</span>
+<span class="x">// Array(</span>
+<span class="x">//   [0] =&gt; Array( [name] =&gt; 类型测试 [sheetId] =&gt; 1 [state] =&gt; visible [id] =&gt; rId1 )</span>
+<span class="x">//   [1] =&gt; Array( [name] =&gt; 第二页   [sheetId] =&gt; 2 [state] =&gt; visible [id] =&gt; rId2 )</span>
+<span class="x">//   [2] =&gt; Array( [name] =&gt; 隐藏页   [sheetId] =&gt; 3 [state] =&gt; hidden  [id] =&gt; rId3 )</span>
+<span class="x">// )</span>
+
+<span class="x">var_dump($x-&gt;isHiddenSheet(2)); // true</span>
+</code></pre></div>
+
+<p><strong>按名字找索引</strong>（库没提供，自己写）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">function sheetIndexByName(SimpleXLSX $xlsx, string $name): ?int {</span>
+<span class="x">    $map = array_flip($xlsx-&gt;sheetNames());</span>
+<span class="x">    return $map[$name] ?? null;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<blockquote>
+<p>💡 <code>sheets</code> 数组的键是<strong>按 workbook.xml 中 <code>&lt;sheet&gt;</code> 出现顺序</strong>排的，并且 <code>parseEntries()</code> 结尾做了 <code>ksort()</code>，所以索引稳定对应 Excel 里从左到右的标签顺序。</p>
+</blockquote>
+<hr />
+<h3 id="54-读取数据核心">5.4 读取数据（核心）</h3>
+<h4 id="rowsworksheetindex-0-limit-0-array"><code>rows($worksheetIndex = 0, $limit = 0): array</code></h4>
+<p>最常用方法。返回二维数组，每行是从第 0 列开始的<strong>数值索引数组</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$worksheetIndex</code></td>
+<td>工作表索引，<strong>0-based</strong></td>
+</tr>
+<tr>
+<td><code>$limit</code></td>
+<td>最多返回几行；<code>0</code> 表示不限</td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><code><span class="x">foreach ( $xlsx-&gt;rows() as $r ) {</span>
+<span class="x">    echo $r[0] . &#39; | &#39; . $r[1] . &quot;\n&quot;;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p>内部实现：<code>iterator_to_array($this-&gt;readRows(...), false)</code>，即一次性全部展开成数组。</p>
+<p><strong>空行补齐行为</strong>：<code>readRows()</code> 会按 <code>dimension()</code> 的行数补齐尾部空行。也就是说如果 Excel 的 <code>&lt;dimension&gt;</code> 声明了 100 行但只有 3 行有数据，你会拿到 100 行（后 97 行全是空字符串数组）。</p>
+<h4 id="readrowsworksheetindex-0-limit-0-generator"><code>readRows($worksheetIndex = 0, $limit = 0): Generator</code></h4>
+<p>与 <code>rows()</code> 返回同样的数据，但是<strong>生成器</strong>，逐行产出，不占用结果数组内存。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">foreach ( $xlsx-&gt;readRows() as $k =&gt; $r ) {</span>
+<span class="x">    fputcsv($fp, $r);</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h4 id="rowsexworksheetindex-0-limit-0-array"><code>rowsEx($worksheetIndex = 0, $limit = 0): array</code></h4>
+<p>扩展版，每个单元格是一个<strong>包含 16 个字段的关联数组</strong>（值 + 样式 + 超链接 + 批注 + 公式等）。详见 <a href="#六rowsex-单元格字段详解">第六章</a>。</p>
+<blockquote>
+<p>首次调用会 <code>require_once</code> 加载 <code>SimpleXLSXEx.php</code> 并构造 <code>SimpleXLSXEx</code> 实例（缓存在 <code>$xlsx-&gt;rowsExReader</code>）。</p>
+</blockquote>
+<h4 id="readrowsexworksheetindex-0-limit-0-generator"><code>readRowsEx($worksheetIndex = 0, $limit = 0): Generator</code></h4>
+<p><code>rowsEx()</code> 的生成器版本。</p>
+<blockquote>
+<p>🔴 <strong>实测 bug</strong>：<code>$limit</code> 在小于表行数时<strong>无效</strong>（会返回满行数，多出的是空行）。详见<strong>坑 1</strong>。请自己计数 <code>break</code>。</p>
+</blockquote>
+<h4 id="getcellworksheetindex-0-cell-a1-mixed"><code>getCell($worksheetIndex = 0, $cell = 'A1'): mixed</code></h4>
+<p>按 Excel 坐标取单个单元格的值。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">echo $xlsx-&gt;getCell(0, &#39;B2&#39;);     // The Hobbit</span>
+<span class="x">echo $xlsx-&gt;getCell(0, [1, 2]);   // 等价，[列索引, 行号]，列 0-based、行 1-based</span>
+</code></pre></div>
+
+<blockquote>
+<p>⚠️ <strong>性能警告</strong>：源码注释直接写着 <code>VERY SLOW!</code>。它内部用 <code>$ws-&gt;sheetData-&gt;xpath("row/c[@r='B2']")</code> 做全表 XPath 扫描，每调用一次扫一遍。<strong>绝对不要在循环里用</strong>。要取一批单元格，请一次 <code>rows()</code> 然后按索引取。</p>
+</blockquote>
+<p>找不到时返回 <code>null</code>，工作表不存在返回 <code>false</code>。</p>
+<h4 id="dimensionworksheetindex-0-array"><code>dimension($worksheetIndex = 0): array</code></h4>
+<p>返回 <code>[列数, 行数]</code>。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">list($cols, $rows) = $xlsx-&gt;dimension(0);</span>
+</code></pre></div>
+
+<p>优先读 <code>&lt;dimension ref="A1:E3"&gt;</code>，读不到时<strong>退化成遍历整个 sheetData 计算最大值</strong>（慢）。</p>
+<blockquote>
+<p>⚠️ 官方 README 自己也写了 <code>// don't trust dimension extracted from xml</code>。有些工具（如部分 Java/Python 库）生成的 xlsx 里 dimension 可能不准。如果列数偏多，你会拿到一堆空列。</p>
+</blockquote>
+<h4 id="getindexcell-a1-array"><code>getIndex($cell = 'A1'): array</code></h4>
+<p><code>'AB12'</code> → <code>[27, 11]</code>（0-based 列、0-based 行）。解析失败返回 <code>[-1, -1]</code>。</p>
+<h4 id="valuecell"><code>value($cell)</code></h4>
+<p>传入一个 SimpleXMLElement 的 <code>&lt;c&gt;</code> 节点，返回其 PHP 值。<strong>这是类型映射的核心方法</strong>（见 <a href="#七数据类型映射表实测">第七章</a>）。一般业务代码不需要直接调它。</p>
+<hr />
+<h3 id="55-输出-html">5.5 输出 HTML</h3>
+<h4 id="tohtmlworksheetindex-0-string"><code>toHTML($worksheetIndex = 0): string</code></h4>
+<div class="codehilite"><pre><span></span><code><span class="x">echo SimpleXLSX::parse(&#39;book.xlsx&#39;)-&gt;toHTML();</span>
+</code></pre></div>
+
+<p>输出形如：</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">table</span> <span class="na">class</span><span class="o">=</span><span class="s">excel</span><span class="p">&gt;&lt;</span><span class="nt">tr</span><span class="p">&gt;&lt;</span><span class="nt">td</span> <span class="na">nowrap</span><span class="p">&gt;</span>ISBN<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;&lt;</span><span class="nt">td</span> <span class="na">nowrap</span><span class="p">&gt;</span>title<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<ul>
+<li>值经过 <code>htmlspecialchars($c, ENT_QUOTES)</code> 转义</li>
+<li>空单元格输出 <code>&amp;nbsp</code></li>
+</ul>
+<h4 id="tohtmlexworksheetindex-0-string"><code>toHTMLEx($worksheetIndex = 0): string</code></h4>
+<p>带样式的版本。第一行用 <code>&lt;th&gt;</code>，其余用 <code>&lt;td&gt;</code>，每个单元格内联 <code>style</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">table</span> <span class="na">class</span><span class="o">=</span><span class="s">excel</span><span class="p">&gt;&lt;</span><span class="nt">tr</span><span class="p">&gt;&lt;</span><span class="nt">th</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;color: #000000;font-family: Calibri;font-size: 17px;width: 5.17em;&quot;</span> <span class="na">nowrap</span><span class="p">&gt;</span>ISBN<span class="p">&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<ul>
+<li>列宽换算：<code>width: round($width * 0.47, 2) . 'em'</code></li>
+<li>行高换算：<code>height: round($height * 1.3333) . 'px'</code>（仅每行第一列输出）</li>
+<li>换行符转成 <code>&lt;br&gt;</code></li>
+</ul>
+<blockquote>
+<p>⚠️ 官方文档写的签名是 <code>toHTML($worksheetIndex = 0, $limit = 0)</code>，但<strong>源码实际只有 1 个参数</strong>（反射实测：<code>toHTML</code> 参数个数 = 1，<code>toHTMLEx</code> = 1）。传第二个参数不会报错（PHP 允许），但<strong>不会生效</strong>。需要限制行数请自己循环 <code>readRowsEx()</code> 并计数中断（注意 <code>readRowsEx()</code> 的 <code>$limit</code> 也失效，见<strong>坑 1</strong>）。</p>
+</blockquote>
+<hr />
+<h3 id="56-样式相关">5.6 样式相关</h3>
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getStyles()</code></td>
+<td>返回 <code>styles.xml</code> 的 <code>SimpleXMLElement</code> 原始对象</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;cellFormats</code></td>
+<td><strong>数组</strong>，每个元素是一个样式索引的完整描述（见下）</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;nf</code></td>
+<td><strong>数组</strong>，自定义数字格式 <code>[numFmtId =&gt; formatCode]</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::$CF</code></td>
+<td><strong>静态数组</strong>，Excel 内置数字格式码表（见附录 B）</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;rowsExReader</code></td>
+<td><code>SimpleXLSXEx</code> 实例（调用过 <code>rowsEx()</code> 后才有）</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;theme</code></td>
+<td>主题 XML 对象</td>
+</tr>
+</tbody>
+</table>
+<p><code>$cellFormats</code> 单元素实测结构：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">[</span>
+<span class="x">    &#39;format&#39;     =&gt; &#39;General&#39;,   // 数字格式串</span>
+<span class="x">    &#39;numFmtId&#39;   =&gt; 0,</span>
+<span class="x">    &#39;fontId&#39;     =&gt; 1,</span>
+<span class="x">    &#39;fillId&#39;     =&gt; 2,</span>
+<span class="x">    &#39;borderId&#39;   =&gt; 0,</span>
+<span class="x">    &#39;applyAlignment&#39; =&gt; 1,</span>
+<span class="x">    &#39;xfId&#39;       =&gt; 0,</span>
+<span class="x">    &#39;alignment&#39;  =&gt; [&#39;horizontal&#39; =&gt; &#39;center&#39;, &#39;vertical&#39; =&gt; &#39;center&#39;],</span>
+<span class="x">    &#39;align&#39;      =&gt; &#39;center&#39;,    // 映射后的 CSS text-align</span>
+<span class="x">    &#39;valign&#39;     =&gt; &#39;middle&#39;,    // 映射后的 CSS vertical-align</span>
+<span class="x">    &#39;font&#39;       =&gt; &#39;Calibri&#39;,</span>
+<span class="x">    &#39;color&#39;      =&gt; &#39;FF0000&#39;,    // 字体颜色（6 位 hex，无 #）</span>
+<span class="x">    &#39;f-size&#39;     =&gt; 14,</span>
+<span class="x">    &#39;f-b&#39;        =&gt; true,        // 粗体</span>
+<span class="x">    &#39;f-i&#39;        =&gt; true,        // 斜体</span>
+<span class="x">    &#39;f-u&#39;        =&gt; &#39;single&#39;,    // 下划线：&#39;&#39; | &#39;single&#39; | &#39;double&#39;</span>
+<span class="x">    &#39;f-strike&#39;   =&gt; false,       // 删除线</span>
+<span class="x">    &#39;bgcolor&#39;    =&gt; &#39;FFFF00&#39;,    // 背景色</span>
+<span class="x">    &#39;b-left-color&#39; =&gt; &#39;&#39;,  &#39;b-left-style&#39;   =&gt; &#39;solid&#39;,</span>
+<span class="x">    &#39;b-right-color&#39; =&gt; &#39;&#39;, &#39;b-right-style&#39;  =&gt; &#39;solid&#39;,</span>
+<span class="x">    &#39;b-top-color&#39; =&gt; &#39;&#39;,   &#39;b-top-style&#39;    =&gt; &#39;solid&#39;,</span>
+<span class="x">    &#39;b-bottom-color&#39; =&gt; &#39;&#39;, &#39;b-bottom-style&#39; =&gt; &#39;solid&#39;,</span>
+<span class="x">]</span>
+</code></pre></div>
+
+<p>用法：拿 <code>rowsEx()</code> 里的 <code>s</code> 去查表：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$s = $cell[&#39;s&#39;];</span>
+<span class="x">$fmt = $xlsx-&gt;cellFormats[$s];</span>
+<span class="x">echo $fmt[&#39;f-b&#39;] ? &#39;粗体&#39; : &#39;常规&#39;;</span>
+<span class="x">echo $fmt[&#39;bgcolor&#39;] ? &#39;#&#39; . $fmt[&#39;bgcolor&#39;] : &#39;无填充&#39;;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="57-日期时间控制">5.7 日期时间控制</h3>
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setDateTimeFormat($value)</code></td>
+<td>设置日期输出格式，传 <code>null</code> 返回 Excel 原始序列号</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;datetimeFormat</code></td>
+<td><strong>属性</strong>，默认 <code>'Y-m-d H:i:s'</code></td>
+</tr>
+<tr>
+<td><code>unixstamp($excelDateTime)</code></td>
+<td>Excel 序列号 → Unix 时间戳（UTC）</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;date1904</code></td>
+<td><strong>属性</strong>，1 表示工作簿使用 1904 日期系统</td>
+</tr>
+</tbody>
+</table>
+<p><code>SimpleXLSX::unixstamp()</code> 用的是 <code>gmdate()</code>，即<strong>按 UTC 解释</strong>。详见 <a href="#八日期与时间专题">第八章</a>。</p>
+<hr />
+<h3 id="58-静态工具方法">5.8 静态工具方法</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+<th>实测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimpleXLSX::num2name($num)</code></td>
+<td>列索引 → 字母（1-based）</td>
+<td><code>num2name(1)='A'</code>，<code>num2name(27)='AA'</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::parseRichText($is)</code></td>
+<td>富文本节点 → 拼接字符串</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::boolean($value)</code></td>
+<td>Excel 布尔解析</td>
+<td><code>'true'=&gt;true</code>，<code>'1'=&gt;true</code>，<code>'0'=&gt;false</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::getTarget($base, $target)</code></td>
+<td>ZIP 内相对路径规范化</td>
+<td><code>getTarget('xl','../theme/theme1.xml')='theme/theme1.xml'</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::strlen/substr/strpos/strtoupper</code></td>
+<td>mbstring.func_overload 安全封装</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="59-底层方法一般用不到排查问题时有用">5.9 底层方法（一般用不到，排查问题时有用）</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unzip($filename, $is_data = false)</code></td>
+<td>手写 ZIP 解包，填充 <code>$this-&gt;package['entries']</code></td>
+</tr>
+<tr>
+<td><code>parseEntries()</code></td>
+<td>建立 workbook/sheets/styles 索引</td>
+</tr>
+<tr>
+<td><code>getEntryData($name)</code></td>
+<td>按包内路径取原始（解压后）数据</td>
+</tr>
+<tr>
+<td><code>getEntryXML($name)</code></td>
+<td>取并解析成 SimpleXMLElement（用完即删条目省内存）</td>
+</tr>
+<tr>
+<td><code>entryExists($name)</code></td>
+<td>判断包内条目是否存在</td>
+</tr>
+<tr>
+<td><code>deleteEntry($name)</code></td>
+<td>从内存中释放某个条目</td>
+</tr>
+</tbody>
+</table>
+<p>调试示例 —— 看看 xlsx 里到底有哪些文件：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSX::parse(&#39;book.xlsx&#39;);</span>
+<span class="x">foreach ( $xlsx-&gt;getPackage()[&#39;entries&#39;] as $e ) {</span>
+<span class="x">    echo $e[&#39;path&#39;] . &#39;/&#39; . $e[&#39;name&#39;] . &#39; (&#39; . $e[&#39;ucs&#39;] . &quot; bytes)\n&quot;;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="六rowsex-单元格字段详解">六、rowsEx() 单元格字段详解</h2>
+<p><code>rowsEx()</code> / <code>readRowsEx()</code> 返回的每个单元格是如下结构的关联数组（16 个字段，实测确认）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">[</span>
+<span class="x">    &#39;type&#39;    =&gt; &#39;s&#39;,                 // 单元格数据类型</span>
+<span class="x">    &#39;name&#39;    =&gt; &#39;A1&#39;,                // Excel 坐标</span>
+<span class="x">    &#39;value&#39;   =&gt; &#39;ISBN&#39;,              // 解析后的 PHP 值</span>
+<span class="x">    &#39;href&#39;    =&gt; &#39;&#39;,                  // 超链接（外部 URL 或内部位置）</span>
+<span class="x">    &#39;f&#39;       =&gt; &#39;&#39;,                  // 公式原文（不含 =）</span>
+<span class="x">    &#39;format&#39;  =&gt; &#39;General&#39;,           // 数字格式串</span>
+<span class="x">    &#39;s&#39;       =&gt; 0,                   // 样式索引 → $xlsx-&gt;cellFormats[0]</span>
+<span class="x">    &#39;css&#39;     =&gt; &#39;color: #000000;...&#39;,// 生成的 CSS 串</span>
+<span class="x">    &#39;r&#39;       =&gt; 1,                   // 行号（1-based）</span>
+<span class="x">    &#39;hidden&#39;  =&gt; false,               // 所在行或列是否隐藏</span>
+<span class="x">    &#39;width&#39;   =&gt; 13.7109375,          // 列宽（Excel 自定义单位）</span>
+<span class="x">    &#39;height&#39;  =&gt; 0,                   // 行高（磅 pt）</span>
+<span class="x">    &#39;comment&#39; =&gt; &#39;这是一个批注&#39;,       // 单元格批注纯文本</span>
+<span class="x">]</span>
+</code></pre></div>
+
+<h3 id="字段逐项说明">字段逐项说明</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>说明与注意</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>原始 <code>t</code> 属性：<code>s</code>(共享字符串) <code>str</code>(公式字符串结果) <code>b</code>(布尔) <code>e</code>(错误) <code>inlineStr</code>(内联文本) <code>n</code>/<code>''</code>(数字) <code>d</code>(ISO 日期)。<strong>类型为空字符串是正常的</strong>，表示数字或通用</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>如 <code>B2</code>。空单元格也会补出正确的坐标</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>mixed</td>
+<td>解析后的值，类型见<a href="#七数据类型映射表实测">第七章</a></td>
+</tr>
+<tr>
+<td><code>href</code></td>
+<td>string</td>
+<td>超链接。外部链接是完整 URL；内部跳转形如 <code>Sheet1!A1</code>。<strong>未做协议白名单校验</strong>，输出到 HTML 前必须自己过滤（见<a href="#十二安全注意事项">第十二章</a>）</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>string</td>
+<td>公式原文，如 <code>B3*2</code>（不含前导 <code>=</code>）。<strong>注意</strong>：有公式的单元格 <code>value</code> 是 Excel 缓存的结果，不是现算的</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td>string</td>
+<td>数字格式码，如 <code>YYYY-MM-DD HH:MM:SS</code>、<code>0.00%</code>、<code>#,##0.00</code></td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>int</td>
+<td>样式索引。注意源码里 <code>s</code> 为 0 时会回退用<strong>列样式</strong> <code>cols[$curC]['s']</code></td>
+</tr>
+<tr>
+<td><code>css</code></td>
+<td>string</td>
+<td>由 <code>SimpleXLSXEx::readXfs()</code> 预生成。<strong>有累加 bug，见<a href="#十三已知问题与避坑清单">第十三章</a></strong></td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>int</td>
+<td>行号，1-based</td>
+</tr>
+<tr>
+<td><code>hidden</code></td>
+<td>bool</td>
+<td>行隐藏 <strong>或</strong> 列隐藏，任一为 true 即为 true（实测：隐藏第 4 行后，该行所有单元格 <code>hidden=true</code>）</td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td>float</td>
+<td>列宽，Excel 自定义单位（≈ 字符宽度）。只有 <code>customWidth</code> 为真才有值，否则 0</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td>float</td>
+<td>行高，单位磅（pt = 1/72 英寸）。只有 <code>customHeight</code> 为真才有值</td>
+</tr>
+<tr>
+<td><code>comment</code></td>
+<td>string</td>
+<td>批注纯文本。实测中文批注正常返回</td>
+</tr>
+</tbody>
+</table>
+<h3 id="实测样例输出">实测样例输出</h3>
+<p>对一个含各种类型的测试表调用 <code>rowsEx()</code>，取 B 列：</p>
+<div class="codehilite"><pre><span></span><code>name=B1    type=&#39;inlineStr&#39; value=&#39;值&#39;                  format=&#39;General&#39;  hidden=false width=24 comment=&#39;&#39;
+name=B2    type=&#39;inlineStr&#39; value=&#39;你好世界&#39;            format=&#39;General&#39;  hidden=false width=24 comment=&#39;这是一个批注&#39;
+name=B3    type=&#39;n&#39;         value=618260307             format=&#39;General&#39;  hidden=false width=24 f=&#39;&#39;
+name=B4    type=&#39;n&#39;         value=1233.34               format=&#39;General&#39;  hidden=true  width=24
+name=B5    type=&#39;n&#39;         value=&#39;2016-04-12 13:41:00&#39; format=&#39;yyyy-mm-dd h:mm:ss&#39;
+name=B8    type=&#39;b&#39;         value=true                  format=&#39;HH:MM:SS&#39;
+name=B9    type=&#39;&#39;          value=&#39;&#39;                    format=&#39;General&#39;  f=&#39;B3*2&#39;
+name=B11   type=&#39;e&#39;         value=&#39;#DIV/0!&#39;             format=&#39;0.00%&#39;
+</code></pre></div>
+
+<hr />
+<h2 id="七数据类型映射表实测">七、数据类型映射表（实测）</h2>
+<p><code>value()</code> 方法是类型映射的全部逻辑。下表是我在 PHP 8.3 下用一份覆盖各类型的 xlsx 实测得到的真实行为：</p>
+<table>
+<thead>
+<tr>
+<th>Excel 内容</th>
+<th><code>type</code></th>
+<th>PHP 返回类型</th>
+<th>返回值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本（含中文）</td>
+<td><code>s</code> / <code>inlineStr</code></td>
+<td><code>string</code></td>
+<td><code>'你好世界'</code></td>
+<td>中文 UTF-8 正常</td>
+</tr>
+<tr>
+<td>整数 <code>618260307</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>int</code></td>
+<td><code>618260307</code></td>
+<td>能转 int 就转 int</td>
+</tr>
+<tr>
+<td>小数 <code>1233.34</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>float</code></td>
+<td><code>1233.34</code></td>
+<td></td>
+</tr>
+<tr>
+<td>大数 <code>1.23E+15</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>int</code></td>
+<td><code>1230000000000000</code></td>
+<td>64 位 PHP 下转成 int</td>
+</tr>
+<tr>
+<td>日期时间</td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'2016-04-12 13:41:00'</code></td>
+<td>靠格式码含 <code>m</code> 判定为日期</td>
+</tr>
+<tr>
+<td>纯日期</td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'2022-02-21 00:00:00'</code></td>
+<td></td>
+</tr>
+<tr>
+<td>纯时间 <code>13:41</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'1970-01-01 13:41:00'</code></td>
+<td>⚠️ 见下方说明</td>
+</tr>
+<tr>
+<td>TRUE</td>
+<td><code>b</code></td>
+<td><code>bool</code></td>
+<td><code>true</code></td>
+<td></td>
+</tr>
+<tr>
+<td>FALSE</td>
+<td><code>b</code></td>
+<td><code>bool</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td>公式 <code>=B3*2</code></td>
+<td><code>''</code></td>
+<td>mixed</td>
+<td>Excel 缓存值，<strong>可能为空串</strong></td>
+<td>⚠️ 见下方说明</td>
+</tr>
+<tr>
+<td>百分比 <code>12.34%</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>float</code></td>
+<td><code>0.1234</code></td>
+<td><strong>不乘 100</strong>，返回原始小数</td>
+</tr>
+<tr>
+<td>错误值</td>
+<td><code>e</code></td>
+<td><code>string</code></td>
+<td><code>'#DIV/0!'</code></td>
+<td>原样返回错误文本</td>
+</tr>
+<tr>
+<td>空白单元格</td>
+<td><code>''</code></td>
+<td><code>string</code></td>
+<td><code>''</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="类型判定逻辑源码要点">类型判定逻辑（源码要点）</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">// 1) 类型为空或 n 时，靠样式里的数字格式串判定是不是日期</span>
+<span class="x">if ($dataType === &#39;&#39; || $dataType === &#39;n&#39;) {</span>
+<span class="x">    $s = (int)$cell[&#39;s&#39;];</span>
+<span class="x">    if ($s &gt; 0 &amp;&amp; isset($this-&gt;cellFormats[$s])) {</span>
+<span class="x">        if (array_key_exists(&#39;format&#39;, $this-&gt;cellFormats[$s])) {</span>
+<span class="x">            $format = $this-&gt;cellFormats[$s][&#39;format&#39;];</span>
+<span class="x">            // 去掉引号内的字面量后，格式串里含 m（月/分）就当日期</span>
+<span class="x">            if ($format &amp;&amp; preg_match(&#39;/[mM]/&#39;, preg_replace(&#39;/&quot;[^&quot;]+&quot;/&#39;, &#39;&#39;, $format))) {</span>
+<span class="x">                $dataType = &#39;D&#39;;</span>
+<span class="x">            }</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+
+<span class="x">// 2) 默认分支：字符串，能转数字就转</span>
+<span class="x">$value = (string)$cell-&gt;v;</span>
+<span class="x">if (is_numeric($value)) {</span>
+<span class="x">    if ($value == (int)$value)   $value = (int)$value;</span>
+<span class="x">    elseif ($value == (float)$value) $value = (float)$value;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p><strong>这意味着</strong>：</p>
+<ol>
+<li><strong>日期判定靠"格式码里有没有字母 m"</strong>。一张表里如果数字列被误设成含 <code>m</code> 的自定义格式，会被错误地转成日期。反之，日期列如果被设成 <code>General</code>，会返回 Excel 序列号浮点数（如 <code>44613.0</code>）而不是日期。</li>
+<li><strong>前导零会丢失</strong>。像 <code>007</code>（当成数字）会变成 <code>7</code>。手机号、身份证号、邮政编码在 Excel 里必须设为文本格式，否则 SimpleXLSX 会返回 int/float。这是导入系统的头号数据事故来源。</li>
+<li><strong>大整数精度</strong>：超过 PHP int 范围或带小数时会转 float，<code>1234567890123456789</code> 可能变成 <code>1.2345678901235E+18</code>。</li>
+</ol>
+<h3 id="关于纯时间">关于"纯时间"</h3>
+<p>Excel 里不带日期的时间（如 <code>13:41:00</code>）存储值是 <code>0.570138...</code>（整数部分为 0）。<code>unixstamp()</code> 对 <code>d == 0</code> 走的是特殊分支：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$t = (abs($d) &gt; 0) ? ($d - 25569) * 86400 + round($t * 86400) : round($t * 86400);</span>
+</code></pre></div>
+
+<p>结果是<strong>以 Unix epoch（1970-01-01）为基准</strong>，所以 <code>13:41</code> → <code>'1970-01-01 13:41:00'</code>（实测确认）。</p>
+<p>业务上处理办法：只取时间部分。</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$val = $cell[&#39;value&#39;];               // &#39;1970-01-01 13:41:00&#39;</span>
+<span class="x">$time = substr($val, 11);            // &#39;13:41:00&#39;</span>
+</code></pre></div>
+
+<h3 id="关于公式">关于公式</h3>
+<p>SimpleXLSX <strong>不计算公式</strong>，它读的是 Excel 保存进文件的<strong>缓存结果</strong>（<code>&lt;c&gt;&lt;f&gt;B3*2&lt;/f&gt;&lt;v&gt;1236&lt;/v&gt;&lt;/c&gt;</code> 里的 <code>&lt;v&gt;</code>）。</p>
+<p>实测发现：用 openpyxl / 部分非 Excel 工具生成的 xlsx <strong>不写缓存值</strong>，此时 <code>value</code> 是空字符串，只有 <code>f</code> 有内容。</p>
+<p><strong>处理建议</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">foreach ($xlsx-&gt;rowsEx() as $row) {</span>
+<span class="x">    foreach ($row as $c) {</span>
+<span class="x">        $v = $c[&#39;value&#39;];</span>
+<span class="x">        if ($v === &#39;&#39; &amp;&amp; $c[&#39;f&#39;] !== &#39;&#39;) {</span>
+<span class="x">            // 无缓存值的公式单元格</span>
+<span class="x">            $v = null; // 或标记待人工处理 / 自己重算</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="八日期与时间专题">八、日期与时间专题</h2>
+<h3 id="81-excel-日期的本质">8.1 Excel 日期的本质</h3>
+<p>Excel 日期是一个<strong>浮点数</strong>：整数部分是"自 1899-12-30 起的天数"（1900 系统），小数部分是一天中的时间比例。例如 <code>42472.570138889</code> = <code>2016-04-12 13:41:00</code>。</p>
+<blockquote>
+<p>为什么是 1899-12-30 而不是 1900-01-01？因为 Excel 有个著名的"1900 年是闰年"bug。<code>unixstamp()</code> 里的 <code>25569</code> 就是 1899-12-30 到 1970-01-01 的天数差。</p>
+</blockquote>
+<h3 id="82-转换公式">8.2 转换公式</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">public function unixstamp($excelDateTime) {</span>
+<span class="x">    $d = floor($excelDateTime);      // 天数</span>
+<span class="x">    $t = $excelDateTime - $d;        // 当天时间比例</span>
+<span class="x">    if ($this-&gt;date1904) { $d += 1462; }   // 1904 系统补 1462 天</span>
+<span class="x">    $t = (abs($d) &gt; 0) ? ($d - 25569) * 86400 + round($t * 86400) : round($t * 86400);</span>
+<span class="x">    return (int)$t;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p>然后用 <code>gmdate($this-&gt;datetimeFormat, $ts)</code> 格式化 —— <strong>注意是 <code>gmdate()</code> 不是 <code>date()</code></strong>，即按 UTC 解释时间戳。</p>
+<h3 id="83-四种用法">8.3 四种用法</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSX::parse(&#39;book.xlsx&#39;);</span>
+
+<span class="x">// ① 默认：ISO 格式（可直接存 MySQL DATETIME）</span>
+<span class="x">echo $xlsx-&gt;getCell(0, &#39;C2&#39;);   // 2016-04-12 13:41:00</span>
+
+<span class="x">// ② 自定义格式</span>
+<span class="x">$xlsx-&gt;setDateTimeFormat(&#39;d.m.Y H:i&#39;);</span>
+<span class="x">echo $xlsx-&gt;getCell(0, &#39;C2&#39;);   // 12.04.2016 13:41</span>
+
+<span class="x">// ③ Unix 时间戳</span>
+<span class="x">$xlsx-&gt;setDateTimeFormat(&#39;U&#39;);</span>
+<span class="x">$ts = $xlsx-&gt;getCell(0, &#39;C2&#39;);  // 1645401600（字符串）</span>
+<span class="x">echo gmdate(&#39;Y-m-d&#39;, $ts);      // 2016-04-12</span>
+
+<span class="x">// ④ 原始 Excel 序列号（放弃自动转换）</span>
+<span class="x">$xlsx-&gt;setDateTimeFormat(null);</span>
+<span class="x">$xd = $xlsx-&gt;getCell(0, &#39;C2&#39;);  // 42472.570138889（float）</span>
+<span class="x">echo gmdate(&#39;m/d/Y&#39;, $xlsx-&gt;unixstamp($xd));  // 04/12/2016</span>
+</code></pre></div>
+
+<p><strong>实测确认</strong>（同一单元格，四种设置）：</p>
+<div class="codehilite"><pre><span></span><code>NULL             =&gt; 44613.0                      (float)
+&#39;Y-m-d H:i:s&#39;    =&gt; &#39;2022-02-21 00:00:00&#39;        (string)
+&#39;d.m.Y H:i&#39;      =&gt; &#39;21.02.2022 00:00&#39;           (string)
+&#39;U&#39;              =&gt; &#39;1645401600&#39;                 (string)
+</code></pre></div>
+
+<p>注意 <code>'U'</code> 返回的是<strong>字符串</strong>不是整数，需要 <code>(int)</code> 转换。</p>
+<h3 id="84-时区陷阱">8.4 时区陷阱</h3>
+<p><code>gmdate()</code> 意味着：Excel 里写的 <code>2016-04-12 13:41</code>，取出来就是 <code>2016-04-12 13:41:00</code>，<strong>不会因为服务器时区而偏移</strong>。这通常正是你想要的（Excel 里看到什么就是什么）。</p>
+<p>反过来说，如果你需要按某个时区解释，需要自己加偏移：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx-&gt;setDateTimeFormat(&#39;U&#39;);</span>
+<span class="x">$ts = (int)$xlsx-&gt;getCell(0, &#39;C2&#39;);</span>
+<span class="x">$local = date(&#39;Y-m-d H:i:s&#39;, $ts + 8 * 3600);  // 按东八区显示</span>
+</code></pre></div>
+
+<h3 id="85-1904-日期系统">8.5 1904 日期系统</h3>
+<p>Mac 版 Excel 老文件可能用 1904 系统。库会自动从 <code>workbook.xml</code> 的 <code>&lt;workbookPr date1904="1"&gt;</code> 检测并设置 <code>$xlsx-&gt;date1904 = 1</code>。</p>
+<p>需要手动干预时（属性是 public）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx-&gt;date1904 = 1;   // 强制用 1904 系统</span>
+</code></pre></div>
+
+<p>如果你发现所有日期都比实际<strong>晚 4 年零 1 天</strong>，就是这个问题。</p>
+<h3 id="86-日期列识别工具函数">8.6 日期列识别工具函数</h3>
+<p><code>rows()</code> 只给你值，不告诉你哪一列是日期。用 <code>rowsEx()</code> 的 <code>format</code> 判断：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">function isDateCell(array $cell): bool {</span>
+<span class="x">    if ($cell[&#39;type&#39;] === &#39;d&#39;) return true;</span>
+<span class="x">    if (!in_array($cell[&#39;type&#39;], [&#39;&#39;, &#39;n&#39;], true)) return false;</span>
+<span class="x">    $fmt = preg_replace(&#39;/&quot;[^&quot;]+&quot;/&#39;, &#39;&#39;, $cell[&#39;format&#39;]);</span>
+<span class="x">    // 含 y/m/d/h/s 中任一且不是纯数字格式</span>
+<span class="x">    return (bool)preg_match(&#39;/[ymdhs]/i&#39;, $fmt);</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="九样式系统simplexlsxex">九、样式系统（SimpleXLSXEx）</h2>
+<h3 id="91-加载时机">9.1 加载时机</h3>
+<p><code>SimpleXLSXEx</code> 是<strong>懒加载</strong>的：只有第一次调用 <code>rowsEx()</code> / <code>readRowsEx()</code> / <code>toHTMLEx()</code> 时才会 <code>require_once</code> 并实例化，之后缓存在 <code>$xlsx-&gt;rowsExReader</code>。</p>
+<p>如果你只用 <code>rows()</code>，这个类根本不会被加载，零开销。</p>
+<h3 id="92-构造时做的事">9.2 构造时做的事</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">public function __construct(SimpleXLSX $xlsx) {</span>
+<span class="x">    $this-&gt;readThemeColors();  // 主题色板（12 色）</span>
+<span class="x">    $this-&gt;readFonts();        // fonts: b/i/u/strike/sz/color/name/family/charset/scheme</span>
+<span class="x">    $this-&gt;readFills();        // fills: pattern/fgcolor/bgcolor</span>
+<span class="x">    $this-&gt;readBorders();      // borders: 8 个方向 + diagonalUp/Down/outline</span>
+<span class="x">    $this-&gt;readXfs();          // 合并成 $this-&gt;css[s] 和补全 cellFormats</span>
+<span class="x">    $this-&gt;readHyperlinks();   // 每表的超链接映射</span>
+<span class="x">    $this-&gt;readComments();     // 每表的批注映射</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="93-颜色解析-getcolorvalue">9.3 颜色解析 <code>getColorValue()</code></h3>
+<p>支持三种 Excel 颜色表示法的优先级：</p>
+<ol>
+<li><code>rgb="FFCCBBAA"</code> → 取后 6 位（去掉 alpha）</li>
+<li><code>indexed="N"</code> → 查内置调色板 <code>SimpleXLSXEx::$IC</code>（65 色）</li>
+<li><code>theme="N"</code> → 查主题色板</li>
+</ol>
+<p>最后如果带 <code>tint</code> 属性，会做色调混合（向白/黑插值）。</p>
+<h3 id="94-excel-对齐-css-映射表">9.4 Excel 对齐 → CSS 映射表</h3>
+<p>水平对齐：</p>
+<table>
+<thead>
+<tr>
+<th>Excel</th>
+<th>CSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>general</td>
+<td>—（无）</td>
+</tr>
+<tr>
+<td>left</td>
+<td>left</td>
+</tr>
+<tr>
+<td>center / centerContinuous</td>
+<td>center</td>
+</tr>
+<tr>
+<td>right</td>
+<td>right</td>
+</tr>
+<tr>
+<td>justify / distributed</td>
+<td>justify</td>
+</tr>
+<tr>
+<td>fill</td>
+<td>—（无）</td>
+</tr>
+</tbody>
+</table>
+<p>垂直对齐：</p>
+<table>
+<thead>
+<tr>
+<th>Excel</th>
+<th>CSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>top</td>
+<td>top</td>
+</tr>
+<tr>
+<td>center / justify / distributed</td>
+<td>middle</td>
+</tr>
+<tr>
+<td>bottom</td>
+<td>bottom</td>
+</tr>
+</tbody>
+</table>
+<h3 id="95-字号换算">9.5 字号换算</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$css .= &#39;font-size: &#39; . (round($cf[&#39;f-size&#39;] * 1.3333) + 2) . &#39;px;&#39;;</span>
+</code></pre></div>
+
+<p>Excel 字号单位是磅（pt），这里粗略按 <code>pt × 1.3333 + 2</code> 转 px（1pt ≈ 1.333px）。所以 11 号字 → 17px，14 号 → 21px。</p>
+<h3 id="96-边框">9.6 边框</h3>
+<p>Excel 14 种边框样式被简化成两种 CSS：<code>solid</code> 和 <code>dashed</code>（<code>dashed</code>/<code>dashDot</code>/<code>dashDotDot</code> → <code>dashed</code>，其余非 none → <code>solid</code>），宽度统一 <code>thin</code>，颜色取对应方向的颜色。</p>
+<blockquote>
+<p>也就是说：<code>medium</code>、<code>thick</code>、<code>double</code>、<code>hair</code> 在 HTML 里长得一样。这是有意的简化，别指望像素级还原。</p>
+</blockquote>
+<h3 id="97-自己生成-css绕过内置-css-的-bug">9.7 自己生成 CSS（绕过内置 css 的 bug）</h3>
+<p>如果内置的 <code>css</code> 字段不够用（见<a href="#十三已知问题与避坑清单">第十三章</a>的累加 bug），可以直接读 <code>cellFormats</code> 自己拼：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">function buildCss(SimpleXLSX $xlsx, int $s): string {</span>
+<span class="x">    $f = $xlsx-&gt;cellFormats[$s] ?? [];</span>
+<span class="x">    $css = &#39;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;color&#39;]))    $css .= &#39;color:#&#39; . $f[&#39;color&#39;] . &#39;;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;bgcolor&#39;]))  $css .= &#39;background-color:#&#39; . $f[&#39;bgcolor&#39;] . &#39;;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;f-b&#39;]))      $css .= &#39;font-weight:bold;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;f-i&#39;]))      $css .= &#39;font-style:italic;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;align&#39;]))    $css .= &#39;text-align:&#39; . $f[&#39;align&#39;] . &#39;;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;valign&#39;]))   $css .= &#39;vertical-align:&#39; . $f[&#39;valign&#39;] . &#39;;&#39;;</span>
+<span class="x">    if (!empty($f[&#39;f-size&#39;]))   $css .= &#39;font-size:&#39; . (round($f[&#39;f-size&#39;] * 1.3333) + 2) . &#39;px;&#39;;</span>
+<span class="x">    return $css;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="十大文件与内存优化">十、大文件与内存优化</h2>
+<h3 id="101-官方基准数据">10.1 官方基准数据</h3>
+<p>CHANGELOG 1.0.12 里作者给出的实测：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>10 万行内存占用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rowsEx()</code></td>
+<td>~880 MB</td>
+</tr>
+<tr>
+<td><code>readRowsEx()</code></td>
+<td>~162 MB</td>
+</tr>
+</tbody>
+</table>
+<p>差了 5 倍多。原因就是 <code>rows()</code> / <code>rowsEx()</code> 会把整张表展开成一个巨大的 PHP 二维数组（PHP 数组的每个元素开销约 80~100 字节，10 万 × 10 列就是 100 万个 zval）。</p>
+<h3 id="102-内存去哪了">10.2 内存去哪了</h3>
+<div class="codehilite"><pre><span></span><code>总内存 ≈ 文件大小（原始二进制）
+       + 所有 ZIP 条目压缩数据（package[&#39;entries&#39;]）
+       + 已解析工作表的 SimpleXMLElement 树（最大头）
+       + 共享字符串数组
+       + 结果数组（rows/rowsEx 才有）
+</code></pre></div>
+
+<p><code>readRows()</code> 只能砍掉最后一项。</p>
+<h3 id="103-优化清单">10.3 优化清单</h3>
+<p><strong>① 优先用生成器</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="x">// ❌ 差：整表进内存</span>
+<span class="x">foreach ($xlsx-&gt;rows() as $r) { ... }</span>
+
+<span class="x">// ✅ 好：逐行产出</span>
+<span class="x">foreach ($xlsx-&gt;readRows() as $r) { ... }</span>
+</code></pre></div>
+
+<p><strong>② 流式写入目标，不要累积</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="x">$f = fopen(&#39;out.csv&#39;, &#39;wb&#39;);</span>
+<span class="x">fwrite($f, chr(0xEF) . chr(0xBB) . chr(0xBF));  // UTF-8 BOM，Excel 打开中文不乱码</span>
+<span class="x">foreach ($xlsx-&gt;readRows() as $r) {</span>
+<span class="x">    fputcsv($f, $r);</span>
+<span class="x">}</span>
+<span class="x">fclose($f);</span>
+</code></pre></div>
+
+<p><strong>③ 分批处理并释放</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="x">$pdo-&gt;beginTransaction();</span>
+<span class="x">$stmt = $pdo-&gt;prepare(&#39;INSERT INTO t (a,b,c) VALUES (?,?,?)&#39;);</span>
+<span class="x">$i = 0;</span>
+<span class="x">foreach ($xlsx-&gt;readRows() as $k =&gt; $r) {</span>
+<span class="x">    if ($k === 0) continue;                 // 跳过表头</span>
+<span class="x">    $stmt-&gt;execute([$r[0], $r[1], $r[2]]);</span>
+<span class="x">    if (++$i % 1000 === 0) {</span>
+<span class="x">        $pdo-&gt;commit(); $pdo-&gt;beginTransaction();</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+<span class="x">$pdo-&gt;commit();</span>
+</code></pre></div>
+
+<p><strong>④ 调高内存上限（最后手段）</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="x">ini_set(&#39;memory_limit&#39;, &#39;512M&#39;);</span>
+</code></pre></div>
+
+<p><strong>⑤ 超大表的现实建议</strong></p>
+<p>如果一个 xlsx 超过 20~30 MB 或 50 万行，<strong>SimpleXLSX 不是合适的工具</strong>。因为 XML DOM 必须整个驻留内存。这种情况应该：</p>
+<ul>
+<li>在上传环节让用户改传 CSV；</li>
+<li>或用流式 SAX 解析器（如 <code>XMLReader</code> + <code>expand()</code>）自己写；</li>
+<li>或用 PhpSpreadsheet 的 <code>setReadDataOnly(true)</code> + chunk 读取（也吃内存，但稍好）。</li>
+</ul>
+<h3 id="104-limit-参数-各方法行为不一致">10.4 <code>$limit</code> 参数（⚠️ 各方法行为不一致）</h3>
+<p><code>rows()</code> / <code>readRows()</code> / <code>rowsEx()</code> / <code>readRowsEx()</code> 都声明了 <code>$limit</code>，但<strong>实测只有前三个可靠</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx-&gt;rows(0, 100);        // ✅ 只要前 100 行</span>
+<span class="x">$xlsx-&gt;readRows(0, 100);    // ✅ 正常</span>
+<span class="x">$xlsx-&gt;rowsEx(0, 100);      // ✅ 正常（内部走 iterator_to_array）</span>
+<span class="x">$xlsx-&gt;readRowsEx(0, 100);  // ❌ 失效，返回全部行</span>
+</code></pre></div>
+
+<p><code>readRows()</code> 实测边界行为（表共 13 行）：</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th>返回行数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>13（不限）</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>99</td>
+<td>13</td>
+</tr>
+</tbody>
+</table>
+<p>同样条件下 <code>readRowsEx()</code> 无论传 1/2/3/5 都返回 13 行。原因与规避见<strong>坑 1</strong>。</p>
+<blockquote>
+<p>⚠️ <code>toHTML()</code> 和 <code>toHTMLEx()</code> 根本没有 <code>$limit</code> 参数（源码只有 1 个参数）。</p>
+</blockquote>
+<hr />
+<h2 id="十一错误处理与错误码">十一、错误处理与错误码</h2>
+<h3 id="111-主错误码表xlsx-errno-simplexlsxparseerrno">11.1 主错误码表（<code>$xlsx-&gt;errno()</code> / <code>SimpleXLSX::parseErrno()</code>）</h3>
+<table>
+<thead>
+<tr>
+<th>码</th>
+<th>消息</th>
+<th>含义</th>
+<th>排查方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>File not found &lt;path&gt;</code></td>
+<td>文件不存在或不可读</td>
+<td>路径、<code>is_readable()</code>、权限、上传临时文件已被回收</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Unknown archive format</code></td>
+<td>不是合法 ZIP</td>
+<td>文件损坏、实际是 .xls 伪装成 .xlsx、下载不完整、是 HTML 错误页</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>XML-entry &lt;name&gt; parser error ...</code></td>
+<td>包内 XML 解析失败</td>
+<td>文件损坏；或 XML 里有 libxml 不支持的内容</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>XML-entry not found &lt;name&gt;</code></td>
+<td>需要的 XML 条目没读到</td>
+<td>ZIP 结构异常；条目解压/CRC 失败也会落到这个码</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>Entry not found &lt;name&gt;</code></td>
+<td>包内找不到指定文件</td>
+<td>非标准生成器的 xlsx</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>Worksheet not found &lt;index&gt;</code></td>
+<td>工作表索引越界</td>
+<td>索引 0-based，先查 <code>sheetsCount()</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="112-各错误实测复现">11.2 各错误实测复现</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">// errno = 1</span>
+<span class="x">SimpleXLSX::parse(&#39;/nope.xlsx&#39;);</span>
+<span class="x">// → parseError: &quot;File not found /nope.xlsx&quot;</span>
+
+<span class="x">// errno = 2</span>
+<span class="x">file_put_contents(&#39;/tmp/bad.xlsx&#39;, &#39;not a zip&#39;);</span>
+<span class="x">SimpleXLSX::parse(&#39;/tmp/bad.xlsx&#39;);</span>
+<span class="x">// → parseError: &quot;Unknown archive format&quot;</span>
+
+<span class="x">// errno = 6</span>
+<span class="x">$xlsx-&gt;rows(9);   // 只有 3 张表</span>
+<span class="x">// → error: &quot;Worksheet not found 9&quot;，同时 rows() 返回空数组 array(0) {}</span>
+</code></pre></div>
+
+<h3 id="113-隐藏的内部错误不通过-errno-暴露">11.3 隐藏的内部错误（不通过 errno 暴露）</h3>
+<p><code>getEntryData()</code> 里有一套<strong>条目级</strong>错误码，但它们只写进 <code>$entry['error']</code> 并让方法返回 <code>false</code>，<strong>不会调用 <code>$this-&gt;error()</code></strong>。于是上层 <code>getEntryXML()</code> 统一报 errno=4。</p>
+<table>
+<thead>
+<tr>
+<th>内部码</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>Decompression of data failed（解压失败）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Uncompressed size mismatch（大小不符）</td>
+</tr>
+<tr>
+<td>4</td>
+<td>CRC32 checksum mismatch（校验和错）</td>
+</tr>
+<tr>
+<td>6</td>
+<td>不支持的压缩方式 / <strong>ZIP64 条目过大</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>PHP BZIP2 扩展不可用</td>
+</tr>
+</tbody>
+</table>
+<p><strong>排查含义</strong>：如果你拿到 errno=4 "XML-entry not found" 但文件明明能被 Excel 打开，大概率是 CRC/解压问题（文件在传输中损坏），或者是 BZIP2 压缩的 ZIP（极罕见）。可以临时打印 <code>$xlsx-&gt;getPackage()['entries']</code> 看每个条目的 <code>error</code> 字段。</p>
+<h3 id="114-推荐的错误处理模式">11.4 推荐的错误处理模式</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">use Shuchkin\SimpleXLSX;</span>
+
+<span class="x">function openXlsx(string $path): SimpleXLSX {</span>
+<span class="x">    if (!is_readable($path)) {</span>
+<span class="x">        throw new RuntimeException(&quot;文件不可读: {$path}&quot;);</span>
+<span class="x">    }</span>
+<span class="x">    $xlsx = SimpleXLSX::parse($path);</span>
+<span class="x">    if (!$xlsx) {</span>
+<span class="x">        throw new RuntimeException(</span>
+<span class="x">            &#39;XLSX 解析失败 [errno &#39; . SimpleXLSX::parseErrno() . &#39;]: &#39; . SimpleXLSX::parseError()</span>
+<span class="x">        );</span>
+<span class="x">    }</span>
+<span class="x">    return $xlsx;</span>
+<span class="x">}</span>
+
+<span class="x">try {</span>
+<span class="x">    $xlsx = openXlsx($uploaded);</span>
+<span class="x">    if ($xlsx-&gt;sheetsCount() === 0) {</span>
+<span class="x">        throw new RuntimeException(&#39;工作簿中没有工作表&#39;);</span>
+<span class="x">    }</span>
+<span class="x">    // ...</span>
+<span class="x">} catch (RuntimeException $e) {</span>
+<span class="x">    // 记录日志 + 给用户友好提示</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="115-上传场景的完整校验">11.5 上传场景的完整校验</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$err = $_FILES[&#39;file&#39;][&#39;error&#39;];</span>
+<span class="x">if ($err !== UPLOAD_ERR_OK)                    die(&#39;上传失败：&#39; . $err);</span>
+<span class="x">if ($_FILES[&#39;file&#39;][&#39;size&#39;] &gt; 10 * 1024 * 1024) die(&#39;文件不能超过 10MB&#39;);</span>
+
+<span class="x">$finfo = new finfo(FILEINFO_MIME_TYPE);</span>
+<span class="x">$mime  = $finfo-&gt;file($_FILES[&#39;file&#39;][&#39;tmp_name&#39;]);</span>
+<span class="x">$allowed = [</span>
+<span class="x">    &#39;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&#39;, // xlsx</span>
+<span class="x">    &#39;application/zip&#39;,      // 有些环境识别成 zip</span>
+<span class="x">    &#39;application/octet-stream&#39;,</span>
+<span class="x">];</span>
+<span class="x">if (!in_array($mime, $allowed, true))          die(&#39;请上传 .xlsx 文件&#39;);</span>
+
+<span class="x">// 注意：move_uploaded_file 之后再 parse，别在 tmp 目录拖太久</span>
+<span class="x">$dest = __DIR__ . &#39;/uploads/&#39; . date(&#39;YmdHis&#39;) . &#39;.xlsx&#39;;</span>
+<span class="x">move_uploaded_file($_FILES[&#39;file&#39;][&#39;tmp_name&#39;], $dest);</span>
+
+<span class="x">$xlsx = SimpleXLSX::parse($dest);</span>
+</code></pre></div>
+
+<hr />
+<h2 id="十二安全注意事项">十二、安全注意事项</h2>
+<h3 id="121-xss值已转义但-href-没有">12.1 XSS：值已转义，但 href 没有</h3>
+<p><strong>好消息</strong>：<code>toHTML()</code> 和 <code>toHTMLEx()</code> 对单元格值都做了 <code>htmlspecialchars($v, ENT_QUOTES)</code>。</p>
+<p><strong>坏消息</strong>：<code>rowsEx()</code> 返回的 <code>href</code> 字段<strong>没有任何协议校验</strong>。如果你自己拼 HTML：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">// ❌ 危险：href 可能是 javascript:alert(1)</span>
+<span class="x">echo &#39;&lt;a href=&quot;&#39; . $cell[&#39;href&#39;] . &#39;&quot;&gt;link&lt;/a&gt;&#39;;</span>
+
+<span class="x">// ✅ 正确：白名单校验</span>
+<span class="x">function safeHref(string $href): string {</span>
+<span class="x">    if (preg_match(&#39;#^https?://#i&#39;, $href)) return $href;</span>
+<span class="x">    if (preg_match(&#39;#^mailto:#i&#39;, $href))   return $href;</span>
+<span class="x">    if (preg_match(&#39;/^[^!]+![A-Z]+\d+$/&#39;, $href)) return &#39;&#39;; // 内部跳转，HTML 里无法表达</span>
+<span class="x">    return &#39;&#39;;</span>
+<span class="x">}</span>
+<span class="x">echo &#39;&lt;a href=&quot;&#39; . safeHref($cell[&#39;href&#39;]) . &#39;&quot;&gt;link&lt;/a&gt;&#39;;</span>
+</code></pre></div>
+
+<h3 id="122-css-注入cve-2024-55878">12.2 CSS 注入（CVE-2024-55878）</h3>
+<p>历史版本存在通过样式注入 CSS 的漏洞（GHSA-x6mh-rjwm-8ph7）。1.1.19 已修，做法：</p>
+<ul>
+<li>字体名强制白名单：<code>preg_match('/^[a-zA-Z0-9 ]+$/', $name)</code>，不合法就回退 <code>Calibri</code></li>
+<li>颜色强制 6 位 hex：<code>preg_match('/^[A-F0-9]{6}$/', $c)</code></li>
+<li>对齐值只从固定映射表取</li>
+</ul>
+<p><strong>但如果你把 <code>css</code> 字段直接内联到 <code>style=""</code>，仍建议二次净化</strong>（尤其面向公网渲染用户上传文件时）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">// 粗过滤：只保留已知安全的 CSS 属性</span>
+<span class="x">function sanitizeCss(string $css): string {</span>
+<span class="x">    $out = &#39;&#39;;</span>
+<span class="x">    foreach (explode(&#39;;&#39;, $css) as $decl) {</span>
+<span class="x">        $decl = trim($decl);</span>
+<span class="x">        if (preg_match(&#39;/^(color|background-color|font-family|font-size|font-weight|font-style|text-decoration|text-align|vertical-align|border-(top|right|bottom|left)-(style|color|width)):/&#39;, $decl)) {</span>
+<span class="x">            $out .= $decl . &#39;;&#39;;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    return $out;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p>更彻底的方案：接 <a href="http://htmlpurifier.org/">HTMLPurifier</a>。</p>
+<h3 id="123-xxexml-外部实体">12.3 XXE（XML 外部实体）</h3>
+<p>源码已处理：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">if (LIBXML_VERSION &lt; 20900 &amp;&amp; function_exists(&#39;libxml_disable_entity_loader&#39;)) {</span>
+<span class="x">    $_old = libxml_disable_entity_loader();</span>
+<span class="x">}</span>
+<span class="x">$entry_xmlobj = simplexml_load_string($entry_xml, &#39;SimpleXMLElement&#39;, LIBXML_COMPACT | LIBXML_PARSEHUGE);</span>
+</code></pre></div>
+
+<p>libxml &gt;= 2.9 默认不加载外部实体，无需手动禁用。<strong>前提是你要用较新的 libxml</strong>，别在 CentOS 6 这种老系统上裸跑。</p>
+<h3 id="124-解压炸弹zip-bomb">12.4 解压炸弹（Zip Bomb）</h3>
+<p>xlsx 是 ZIP，理论上存在 zip bomb 风险（1KB 文件解压出 10GB）。SimpleXLSX <strong>没有</strong>做解压大小限制。</p>
+<p>防护：在上传前限制文件大小（如 ≤ 10 MB），并在 PHP 侧设 <code>memory_limit</code> 兜底。</p>
+<h3 id="125-其他">12.5 其他</h3>
+<ul>
+<li><strong>不要信任 dimension</strong>：恶意文件可以声明 <code>A1:XFD1048576</code>，导致 <code>readRows()</code> 尝试补齐上亿个空行。建议自己加行数上限。</li>
+<li><strong>文件名</strong>：不要用上传的原始文件名拼路径（路径穿越），自己生成文件名。</li>
+<li><strong>临时文件生命周期</strong>：PHP 会在脚本结束后删除上传临时文件，务必先 <code>move_uploaded_file()</code>。</li>
+</ul>
+<hr />
+<h2 id="十三已知问题与避坑清单">十三、已知问题与避坑清单</h2>
+<p>以下是我通读源码 + 实测发现的行为，<strong>官方文档没有记载</strong>，按严重程度分组（🔴 高危 / 🟠 中 / 🟢 低）。</p>
+<h3 id="坑-1readrowsex-的-limit-参数失效1119-实测确认">🔴 坑 1：<code>readRowsEx()</code> 的 <code>$limit</code> 参数失效（1.1.19 实测确认）</h3>
+<p><strong>现象</strong>：当 <code>$limit</code> 小于工作表行数时，<code>readRowsEx()</code> 无视 limit，返回满行数（多出来的全是空行）。</p>
+<p>实测数据（工作表共 13 行）：</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th><code>readRows()</code> 返回</th>
+<th><code>readRowsEx()</code> 返回</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0（不限）</td>
+<td>13</td>
+<td>13</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>13</td>
+<td>13 ✅</td>
+<td>13 ✅</td>
+</tr>
+<tr>
+<td>20</td>
+<td>13 ✅</td>
+<td>13 ✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>根因</strong>：<code>SimpleXLSXEx::readRowsEx()</code> 里命中 limit 时用的是 <code>break</code>，而 <code>SimpleXLSX::readRows()</code> 用的是 <code>return</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">// SimpleXLSX::readRows() —— 正确</span>
+<span class="x">yield $r;</span>
+<span class="x">$_limit--;</span>
+<span class="x">if ($_limit === 0) { return; }        // ← 直接结束生成器</span>
+
+<span class="x">// SimpleXLSXEx::readRowsEx() —— bug</span>
+<span class="x">yield $cells;</span>
+<span class="x">$_limit--;</span>
+<span class="x">if ($_limit === 0) { break; }         // ← 只跳出 foreach</span>
+<span class="x">// ...</span>
+<span class="x">while ($curR &lt; $numRows) {            // ← break 后仍会进入这里</span>
+<span class="x">    yield $emptyRow;                  //    继续补空行，且 $_limit 已变负数，永远不会再命中 0</span>
+<span class="x">    $_limit--;</span>
+<span class="x">    if ($_limit === 0) { return; }</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p><strong>影响</strong>：用 <code>rowsEx(0, 100)</code> 想"预览前 100 行"时，实际会拿到整张表的全部行（后面临时补的空行），大文件下内存和耗时都失控。</p>
+<p><strong>规避</strong>：自己计数中断，别依赖 <code>$limit</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$n = 0;</span>
+<span class="x">foreach ($xlsx-&gt;readRowsEx(0) as $r) {      // 不传 limit</span>
+<span class="x">    if (++$n &gt; 100) break;</span>
+<span class="x">    // ...</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<blockquote>
+<p>✅ <strong>已修复</strong>：本文档配套的补丁（见 <a href="#十七源码-bug-修复清单含补丁">十七、源码 BUG 修复清单</a>）把 <code>break</code> 改成了 <code>return</code>，修复后 <code>readRowsEx()</code> 的 <code>$limit</code> 与 <code>readRows()</code> 行为一致，<code>$limit</code> 可以直接用了。</p>
+</blockquote>
+<h3 id="坑-2同一实例多次调用-rowsex-会让-css-无限累加">🔴 坑 2：同一实例多次调用 <code>rowsEx()</code> 会让 CSS 无限累加</h3>
+<p><strong>现象</strong>（实测）：</p>
+<div class="codehilite"><pre><span></span><code>第1次 rowsEx B3.css = &#39;color: #000000;font-family: Calibri;font-size: 17px;text-align: right;×4&#39;
+第2次 rowsEx B3.css = &#39;... text-align: right;×8&#39;
+第3次 rowsEx B3.css = &#39;... text-align: right;×12&#39;
+</code></pre></div>
+
+<p><strong>原因</strong>：<code>SimpleXLSXEx::valueEx()</code> 里是<strong>引用赋值</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$r[&#39;css&#39;] = &amp;$this-&gt;css[$r[&#39;s&#39;]];           // 引用！</span>
+<span class="x">if (...) { $r[&#39;css&#39;] .= &#39;text-align: right;&#39;; }  // 写进了 $this-&gt;css[$s] 本身</span>
+</code></pre></div>
+
+<p>每次调用 <code>rowsEx()</code>/<code>toHTMLEx()</code>，所有"非空且无对齐且非文本类型"的单元格都会往同一个共享字符串再追加一次。</p>
+<p><strong>影响</strong>：输出 HTML 变长、样式表污染（虽然 CSS 语义上重复声明无害，但字符串会翻倍增长）。</p>
+<p><strong>规避</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">// 方案 A：每次重新 parse（最简单）</span>
+<span class="x">$xlsx1 = SimpleXLSX::parse($f); $a = $xlsx1-&gt;rowsEx();</span>
+<span class="x">$xlsx2 = SimpleXLSX::parse($f); $b = $xlsx2-&gt;rowsEx();</span>
+
+<span class="x">// 方案 B：去重</span>
+<span class="x">$css = implode(&#39;;&#39;, array_unique(array_filter(explode(&#39;;&#39;, $cell[&#39;css&#39;])))) . &#39;;&#39;;</span>
+
+<span class="x">// 方案 C：不用内置 css，自己按 cellFormats 生成（见 9.7）</span>
+</code></pre></div>
+
+<blockquote>
+<p>✅ <strong>已修复</strong>：配套补丁把引用赋值改成了值拷贝（<code>$r['css'] = isset($this-&gt;css[$r['s']]) ? ... : ''</code>），同一实例反复调用不再累加。</p>
+</blockquote>
+<h3 id="坑-2tohtml-tohtmlex-没有-limit-参数">🔴 坑 2：<code>toHTML()</code> / <code>toHTMLEx()</code> 没有 <code>$limit</code> 参数</h3>
+<p>README 写的签名是 <code>toHTML($worksheetIndex = 0, $limit = 0)</code>，但源码反射实测<strong>只有 1 个参数</strong>。传第二个参数静默失效。</p>
+<p>需要限制行数：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">echo &#39;&lt;table&gt;&#39;;</span>
+<span class="x">$i = 0;</span>
+<span class="x">foreach ($xlsx-&gt;readRowsEx(0, 100) as $r) {   // 用生成器 + limit</span>
+<span class="x">    echo &#39;&lt;tr&gt;&#39;;</span>
+<span class="x">    foreach ($r as $c) { echo &#39;&lt;td&gt;&#39; . htmlspecialchars($c[&#39;value&#39;]) . &#39;&lt;/td&gt;&#39;; }</span>
+<span class="x">    echo &#39;&lt;/tr&gt;&#39;;</span>
+<span class="x">}</span>
+<span class="x">echo &#39;&lt;/table&gt;&#39;;</span>
+</code></pre></div>
+
+<blockquote>
+<p>✅ <strong>已修复</strong>：配套补丁给两个方法补上了 <code>$limit</code> 参数并传给 <code>readRows()</code>/<code>readRowsEx()</code>，现在可以直接 <code>toHTML(0, 100)</code>。</p>
+</blockquote>
+<h3 id="坑-3公式单元格可能返回空字符串">🟠 坑 3：公式单元格可能返回空字符串</h3>
+<p>不计算公式，只读缓存值。非 Excel 生成的 xlsx 常常没有缓存值 → <code>value === ''</code>。详见 <a href="#七数据类型映射表实测">第七章</a>。</p>
+<blockquote>
+<p>✅ <strong>已解决</strong>：配套扩展 <code>SimpleXLSXPro</code> 自带公式计算引擎，无缓存值的公式也能算出结果，详见 <a href="#十八公式计算xlsxformula">十八、公式计算</a>。</p>
+</blockquote>
+<h3 id="坑-4前导零-长数字精度丢失">🟠 坑 4：前导零 / 长数字精度丢失</h3>
+<p>Excel 里存成数字的 <code>007</code>、<code>130123199001011234</code> 会被转成 int/float，前导零和精度都没了。</p>
+<p><strong>必须从源头解决</strong>：要求用户把这些列在 Excel 里设为"文本"格式，或导入后按业务规则补零：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$id = str_pad((string)$v, 18, &#39;0&#39;, STR_PAD_LEFT);</span>
+</code></pre></div>
+
+<h3 id="坑-5dimension-不准导致多余空行">🟠 坑 5：<code>dimension</code> 不准导致多余空行</h3>
+<p><code>readRows()</code> 在遍历完真实行之后，还会 <code>while ($curR &lt; $numRows) yield $emptyRow;</code>。如果 XML 里 dimension 声明的行数远大于实际，你会收到一堆全空行。</p>
+<p><strong>防御</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$maxRows = 100000;</span>
+<span class="x">$n = 0;</span>
+<span class="x">foreach ($xlsx-&gt;readRows() as $r) {</span>
+<span class="x">    if (++$n &gt; $maxRows) break;</span>
+<span class="x">    if (array_filter($r) === []) continue;   // 跳过全空行</span>
+<span class="x">    // ...</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="坑-6getcell-极慢">🟡 坑 6：<code>getCell()</code> 极慢</h3>
+<p>内部是 XPath 全表扫描。源码注释明写 <code>VERY SLOW!</code>。取 1000 个单元格用 <code>getCell()</code> 会有明显卡顿。批量取值请用 <code>rows()</code> 后按索引访问。</p>
+<h3 id="坑-7parseerror-是全局静态状态">🟡 坑 7：<code>parseError()</code> 是全局静态状态</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">static $error = false;</span>
+<span class="x">return $set ? $error = $set : $error;</span>
+</code></pre></div>
+
+<p>多文件循环解析时，如果中间某次成功，<code>parseError()</code> <strong>不会被清空</strong>（成功路径不调用 <code>parseError()</code>）。所以：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">// ❌ 第二次 parse 成功后，读到的还是第一次的错误</span>
+<span class="x">SimpleXLSX::parse(&#39;bad.xlsx&#39;);   // 失败，设置 error</span>
+<span class="x">SimpleXLSX::parse(&#39;good.xlsx&#39;);  // 成功，不重置 error</span>
+<span class="x">echo SimpleXLSX::parseError();   // 仍然显示 bad.xlsx 的错误！</span>
+
+<span class="x">// ✅ 正确：只在失败分支里读</span>
+<span class="x">if (!$x = SimpleXLSX::parse(&#39;bad.xlsx&#39;)) { echo SimpleXLSX::parseError(); }</span>
+<span class="x">if (!$x = SimpleXLSX::parse(&#39;good.xlsx&#39;)) { echo SimpleXLSX::parseError(); }</span>
+</code></pre></div>
+
+<blockquote>
+<p>✅ <strong>已修复</strong>：配套补丁给 <code>parseError()</code>/<code>parseErrno()</code> 增加了 <code>$reset</code> 参数，并在 <code>parse()</code> 成功分支里主动清零。修复后实测：
+<code>SimpleXLSX::parse('bad.xlsx')</code> → 失败后 <code>parseError()</code> = 'File not found bad.xlsx'；紧接着 <code>parse('good.xlsx')</code> 成功 → <code>parseError()</code> = <code>false</code>。</p>
+</blockquote>
+<p>或者在循环里用 <code>new SimpleXLSX()</code> + <code>$xlsx-&gt;error()</code> 实例方法，天然隔离。</p>
+<h3 id="坑-8工作表不存在时-rows-返回空数组而不报错">🟡 坑 8：工作表不存在时 <code>rows()</code> 返回空数组而不报错</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">var_dump($xlsx-&gt;rows(9));   // array(0) {} —— 空数组，不是 false</span>
+<span class="x">echo $xlsx-&gt;errno();        // 但 errno 被设成了 6</span>
+</code></pre></div>
+
+<p>所以判断成功不能只看 <code>empty($rows)</code>，要查 <code>errno()</code> 或先查 <code>sheetsCount()</code>。</p>
+<h3 id="坑-9样式索引越界会有-php-notice">🟡 坑 9：样式索引越界会有 PHP Notice</h3>
+<p><code>valueEx()</code> 里：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$st = &amp;$this-&gt;xlsx-&gt;cellFormats[$r[&#39;s&#39;]];</span>
+</code></pre></div>
+
+<p>如果 xlsx 的 <code>cellXfs</code> 定义少于单元格引用的 <code>s</code> 索引，会报 Undefined offset。生产环境建议关掉 notice 显示，或在调用前 <code>@</code> 抑制。</p>
+<blockquote>
+<p>✅ <strong>已修复</strong>：配套补丁在取值前补了 <code>isset()</code> 保护，缺失索引自动填 <code>['format'=&gt;null,'align'=&gt;0]</code>。</p>
+</blockquote>
+<h3 id="坑-10合并单元格不返回">🟡 坑 10：合并单元格不返回</h3>
+<p><code>mergeCells</code> 完全不解析。合并区域只有左上角单元格有值，其余是空。如果你依赖合并单元格的"填充"效果，需要自己处理：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$last = null;</span>
+<span class="x">foreach ($rows as $r) {</span>
+<span class="x">    $r[0] = $r[0] !== &#39;&#39; ? $r[0] : $last;   // 简单向下填充</span>
+<span class="x">    $last = $r[0];</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<blockquote>
+<p>✅ <strong>已解决</strong>：配套扩展 <code>SimpleXLSXPro</code> 完整解析 <code>mergeCells</code>，CSV/TSV/JSON 会把值拆分复写到 x*y 每个格，HTML 输出真正的 <code>colspan</code>/<code>rowspan</code>。详见 <a href="#十九合并单元格与多格式导出">十九、合并单元格与多格式导出</a>。</p>
+</blockquote>
+<h3 id="坑-11zip64-限制">🟢 坑 11：ZIP64 限制</h3>
+<p>1.1.18 起支持 ZIP64 数据描述符，但<strong>单个条目超过 4GB</strong> 仍会返回错误 6 "ZIP64 entry is too large to process"。正常 xlsx 不会碰到。</p>
+<h3 id="坑-12命名空间前缀的正则清理">🟢 坑 12：命名空间前缀的正则清理</h3>
+<p><code>getEntryXML()</code> 用一串正则去掉 XML 命名空间：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$entry_xml = preg_replace(&#39;/xmlns[^=]*=&quot;[^&quot;]*&quot;/i&#39;, &#39;&#39;, $entry_xml);</span>
+<span class="x">$entry_xml = preg_replace(&#39;/[a-zA-Z0-9]+:([a-zA-Z0-9]+=&quot;[^&quot;]+&quot;)/&#39;, &#39;$1&#39;, $entry_xml);</span>
+<span class="x">$entry_xml = preg_replace(&#39;/&lt;[a-zA-Z0-9]+:([^&gt;]+)&gt;/&#39;, &#39;&lt;$1&gt;&#39;, $entry_xml);</span>
+</code></pre></div>
+
+<p>这是"脏但快"的做法。对于极不规范的 XML 可能误伤。如果遇到 errno=3，可以打印清理后的 XML 排查。</p>
+<h3 id="坑-13空行正则优化">🟢 坑 13：空行正则优化</h3>
+<p>对 sheet XML 会正则删除"整行都是空 <code>&lt;c/&gt;</code>"的行：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$entry_xml = preg_replace(&#39;/&lt;row[^&gt;]+&gt;\s*(&lt;c[^\/]+\/&gt;\s*)+&lt;\/row&gt;/&#39;, &#39;&#39;, $entry_xml, -1, $cnt);</span>
+</code></pre></div>
+
+<p>副作用：<strong>行号不再连续</strong>。<code>rows()</code> 会补齐空行（靠 <code>getIndex()</code> 算出的 y 坐标），所以一般没问题；但如果你直接遍历 <code>worksheet()-&gt;sheetData-&gt;row</code>，要注意行号有跳。</p>
+<hr />
+<h2 id="十四实战代码集">十四、实战代码集</h2>
+<h3 id="141-基础读成二维数组">14.1 基础：读成二维数组</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">use Shuchkin\SimpleXLSX;</span>
+
+<span class="x">$xlsx = SimpleXLSX::parse(&#39;books.xlsx&#39;);</span>
+<span class="x">if (!$xlsx) { exit(SimpleXLSX::parseError()); }</span>
+
+<span class="x">print_r($xlsx-&gt;rows());</span>
+</code></pre></div>
+
+<h3 id="142-用第一行做键名关联数组">14.2 用第一行做键名（关联数组）</h3>
+<p>官方示例，最常用：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">function xlsxToAssoc(SimpleXLSX $xlsx, int $sheet = 0): array {</span>
+<span class="x">    $header = [];</span>
+<span class="x">    $rows   = [];</span>
+<span class="x">    foreach ($xlsx-&gt;readRows($sheet) as $k =&gt; $r) {</span>
+<span class="x">        if ($k === 0) { $header = $r; continue; }</span>
+<span class="x">        $rows[] = array_combine($header, $r);</span>
+<span class="x">    }</span>
+<span class="x">    return $rows;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p><strong>加强版</strong>（处理列数不等、重复表头、空表头）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">function xlsxToAssocSafe(SimpleXLSX $xlsx, int $sheet = 0): array {</span>
+<span class="x">    $header = [];</span>
+<span class="x">    $rows   = [];</span>
+<span class="x">    foreach ($xlsx-&gt;readRows($sheet) as $k =&gt; $r) {</span>
+<span class="x">        if ($k === 0) {</span>
+<span class="x">            $seen = [];</span>
+<span class="x">            foreach ($r as $i =&gt; $h) {</span>
+<span class="x">                $h = trim((string)$h);</span>
+<span class="x">                if ($h === &#39;&#39;) { $h = &#39;col_&#39; . $i; }</span>
+<span class="x">                if (isset($seen[$h])) { $h .= &#39;_&#39; . (++$seen[$h]); }  // 重名加后缀</span>
+<span class="x">                $seen[$h] = 0;</span>
+<span class="x">                $header[$i] = $h;</span>
+<span class="x">            }</span>
+<span class="x">            continue;</span>
+<span class="x">        }</span>
+<span class="x">        $row = [];</span>
+<span class="x">        foreach ($header as $i =&gt; $h) {</span>
+<span class="x">            $row[$h] = $r[$i] ?? null;      // 缺列补 null</span>
+<span class="x">        }</span>
+<span class="x">        $rows[] = $row;</span>
+<span class="x">    }</span>
+<span class="x">    return $rows;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="143-xlsx-csv流式适合大文件">14.3 XLSX → CSV（流式，适合大文件）</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">function xlsxToCsv(string $xlsxPath, string $csvPath, int $sheet = 0): int {</span>
+<span class="x">    $xlsx = SimpleXLSX::parse($xlsxPath);</span>
+<span class="x">    if (!$xlsx) { throw new RuntimeException(SimpleXLSX::parseError()); }</span>
+
+<span class="x">    $fp = fopen($csvPath, &#39;wb&#39;);</span>
+<span class="x">    fwrite($fp, chr(0xEF) . chr(0xBB) . chr(0xBF));   // UTF-8 BOM</span>
+
+<span class="x">    $n = 0;</span>
+<span class="x">    foreach ($xlsx-&gt;readRows($sheet) as $r) {</span>
+<span class="x">        fputcsv($fp, $r);</span>
+<span class="x">        $n++;</span>
+<span class="x">    }</span>
+<span class="x">    fclose($fp);</span>
+<span class="x">    return $n;</span>
+<span class="x">}</span>
+
+<span class="x">// 需要分号分隔 + 自定义转义（欧洲习惯）</span>
+<span class="x">fputcsv($f, $r, &#39;;&#39;, &#39;&quot;&#39;, &quot;\\&quot;, &quot;\r\n&quot;);</span>
+</code></pre></div>
+
+<h3 id="144-xlsx-html-表格带样式">14.4 XLSX → HTML 表格（带样式）</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">echo SimpleXLSX::parse(&#39;book_styled.xlsx&#39;)-&gt;toHTMLEx();</span>
+</code></pre></div>
+
+<p>自己控制版本（可加 limit、可净化 href）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">function xlsxToHtml(SimpleXLSX $xlsx, int $sheet = 0, int $limit = 0): string {</span>
+<span class="x">    $s = &#39;&lt;table border=&quot;1&quot; cellpadding=&quot;3&quot; style=&quot;border-collapse:collapse&quot;&gt;&#39; . &quot;\n&quot;;</span>
+<span class="x">    $y = 0;</span>
+<span class="x">    // 注意：readRowsEx 的 $limit 有 bug（见坑 1），这里自己计数</span>
+<span class="x">    foreach ($xlsx-&gt;readRowsEx($sheet) as $r) {</span>
+<span class="x">        if ($limit &gt; 0 &amp;&amp; $y &gt;= $limit) { break; }</span>
+<span class="x">        $s .= &#39;&lt;tr&gt;&#39;;</span>
+<span class="x">        foreach ($r as $c) {</span>
+<span class="x">            $tag = ($y === 0) ? &#39;th&#39; : &#39;td&#39;;</span>
+<span class="x">            $css = sanitizeCss($c[&#39;css&#39;]);</span>
+<span class="x">            $v   = htmlspecialchars((string)$c[&#39;value&#39;], ENT_QUOTES, &#39;UTF-8&#39;);</span>
+<span class="x">            $v   = preg_replace(&#39;/\R/&#39;, &quot;&lt;br&gt;\n&quot;, $v);</span>
+<span class="x">            $s .= &#39;&lt;&#39; . $tag . &#39; style=&quot;&#39; . $css . &#39;&quot;&gt;&#39;</span>
+<span class="x">                . ($v === &#39;&#39; ? &#39;&amp;nbsp;&#39; : $v)</span>
+<span class="x">                . &#39;&lt;/&#39; . $tag . &#39;&gt;&#39;;</span>
+<span class="x">        }</span>
+<span class="x">        $s .= &quot;&lt;/tr&gt;\n&quot;;</span>
+<span class="x">        $y++;</span>
+<span class="x">    }</span>
+<span class="x">    return $s . &#39;&lt;/table&gt;&#39;;</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="145-遍历所有工作表">14.5 遍历所有工作表</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSX::parse(&#39;multi.xlsx&#39;);</span>
+<span class="x">if (!$xlsx) { exit(SimpleXLSX::parseError()); }</span>
+
+<span class="x">foreach ($xlsx-&gt;sheetNames() as $i =&gt; $name) {</span>
+<span class="x">    if ($xlsx-&gt;isHiddenSheet($i)) { continue; }        // 跳过隐藏表</span>
+
+<span class="x">    list($cols, $rows) = $xlsx-&gt;dimension($i);</span>
+<span class="x">    echo &quot;&lt;h2&gt;{$name}（{$cols} 列 × {$rows} 行）&lt;/h2&gt;&quot;;</span>
+
+<span class="x">    foreach ($xlsx-&gt;readRows($i) as $r) {</span>
+<span class="x">        echo implode(&#39; | &#39;, $r) . &quot;\n&quot;;</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+
+<span class="x">echo &#39;当前激活表：&#39; . $xlsx-&gt;sheetName($xlsx-&gt;activeSheet) . &quot;\n&quot;;</span>
+</code></pre></div>
+
+<h3 id="146-按工作表名读取">14.6 按工作表名读取</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">function rowsBySheetName(SimpleXLSX $xlsx, string $name): ?Generator {</span>
+<span class="x">    $map = array_flip($xlsx-&gt;sheetNames());</span>
+<span class="x">    if (!isset($map[$name])) { return null; }</span>
+<span class="x">    return $xlsx-&gt;readRows($map[$name]);</span>
+<span class="x">}</span>
+
+<span class="x">foreach (rowsBySheetName($xlsx, &#39;2024年销售&#39;) ?? [] as $r) {</span>
+<span class="x">    // ...</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="147-上传并导入数据库完整示例">14.7 上传并导入数据库（完整示例）</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">use Shuchkin\SimpleXLSX;</span>
+
+<span class="x">function importUsers(PDO $pdo, string $tmpFile): array {</span>
+<span class="x">    $xlsx = SimpleXLSX::parse($tmpFile);</span>
+<span class="x">    if (!$xlsx) {</span>
+<span class="x">        return [&#39;ok&#39; =&gt; false, &#39;msg&#39; =&gt; SimpleXLSX::parseError()];</span>
+<span class="x">    }</span>
+
+<span class="x">    // 统一按 UTC 输出，直接存 DATETIME</span>
+<span class="x">    $xlsx-&gt;setDateTimeFormat(&#39;Y-m-d H:i:s&#39;);</span>
+
+<span class="x">    $stmt = $pdo-&gt;prepare(</span>
+<span class="x">        &#39;INSERT INTO users (name, phone, id_card, amount, created_at) VALUES (?,?,?,?,?)&#39;</span>
+<span class="x">    );</span>
+
+<span class="x">    $ok = $fail = 0;</span>
+<span class="x">    $errors = [];</span>
+
+<span class="x">    $pdo-&gt;beginTransaction();</span>
+<span class="x">    foreach ($xlsx-&gt;readRows() as $k =&gt; $r) {</span>
+<span class="x">        if ($k === 0) { continue; }                     // 跳过表头</span>
+
+<span class="x">        $name  = trim((string)($r[0] ?? &#39;&#39;));</span>
+<span class="x">        $phone = trim((string)($r[1] ?? &#39;&#39;));</span>
+<span class="x">        $idcard= trim((string)($r[2] ?? &#39;&#39;));</span>
+<span class="x">        $amount= is_numeric($r[3] ?? null) ? (float)$r[3] : null;</span>
+<span class="x">        $ctime = ($r[4] ?? &#39;&#39;) ?: date(&#39;Y-m-d H:i:s&#39;);</span>
+
+<span class="x">        if ($name === &#39;&#39;) { $errors[] = &quot;第 {$k} 行：姓名为空&quot;; $fail++; continue; }</span>
+
+<span class="x">        $stmt-&gt;execute([$name, $phone, $idcard, $amount, $ctime]);</span>
+<span class="x">        $ok++;</span>
+
+<span class="x">        if ($ok % 500 === 0) { $pdo-&gt;commit(); $pdo-&gt;beginTransaction(); }</span>
+<span class="x">    }</span>
+<span class="x">    $pdo-&gt;commit();</span>
+
+<span class="x">    return [&#39;ok&#39; =&gt; true, &#39;imported&#39; =&gt; $ok, &#39;failed&#39; =&gt; $fail, &#39;errors&#39; =&gt; array_slice($errors, 0, 20)];</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="148-推荐的封装类">14.8 推荐的封装类</h3>
+<p>把上面的坑一次性处理掉：</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Shuchkin\SimpleXLSX</span><span class="p">;</span>
+
+<span class="c1">// 需要 PHP 7.4+（用了箭头函数与属性类型声明）</span>
+<span class="k">class</span> <span class="nc">XlsxReader</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="nx">SimpleXLSX</span> <span class="nv">$xlsx</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nx">string</span> <span class="nv">$source</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nx">bool</span> <span class="nv">$isData</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nx">int</span> <span class="nv">$maxRows</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">string</span> <span class="nv">$pathOrData</span><span class="p">,</span> <span class="nx">bool</span> <span class="nv">$isData</span> <span class="o">=</span> <span class="k">false</span><span class="p">,</span> <span class="nx">int</span> <span class="nv">$maxRows</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">maxRows</span> <span class="o">=</span> <span class="nv">$maxRows</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">source</span>  <span class="o">=</span> <span class="nv">$pathOrData</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">isData</span>  <span class="o">=</span> <span class="nv">$isData</span><span class="p">;</span>
+        <span class="nv">$x</span> <span class="o">=</span> <span class="nv">$isData</span> <span class="o">?</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parseData</span><span class="p">(</span><span class="nv">$pathOrData</span><span class="p">)</span> <span class="o">:</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parse</span><span class="p">(</span><span class="nv">$pathOrData</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$x</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">RuntimeException</span><span class="p">(</span>
+                <span class="s1">&#39;XLSX 解析失败 [&#39;</span> <span class="o">.</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parseErrno</span><span class="p">()</span> <span class="o">.</span> <span class="s1">&#39;]: &#39;</span> <span class="o">.</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parseError</span><span class="p">()</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">xlsx</span> <span class="o">=</span> <span class="nv">$x</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="sd">/** 逐行产出，自动跳过全空行，自动限流 */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">rows</span><span class="p">(</span><span class="nx">int</span> <span class="nv">$sheet</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">:</span> <span class="nx">Generator</span>
+    <span class="p">{</span>
+        <span class="nv">$n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">xlsx</span><span class="o">-&gt;</span><span class="na">readRows</span><span class="p">(</span><span class="nv">$sheet</span><span class="p">)</span> <span class="k">as</span> <span class="nv">$r</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">++</span><span class="nv">$n</span> <span class="o">&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">maxRows</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">array_filter</span><span class="p">(</span><span class="nv">$r</span><span class="p">,</span> <span class="k">static</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$v</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nv">$v</span> <span class="o">!==</span> <span class="s1">&#39;&#39;</span> <span class="o">&amp;&amp;</span> <span class="nv">$v</span> <span class="o">!==</span> <span class="k">null</span><span class="p">)</span> <span class="o">===</span> <span class="p">[])</span> <span class="p">{</span>
+                <span class="k">continue</span><span class="p">;</span>   <span class="c1">// 跳过全空行（防御 dimension 不准）</span>
+            <span class="p">}</span>
+            <span class="k">yield</span> <span class="nv">$r</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="sd">/** 带表头的关联数组 */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">assoc</span><span class="p">(</span><span class="nx">int</span> <span class="nv">$sheet</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">:</span> <span class="nx">Generator</span>
+    <span class="p">{</span>
+        <span class="nv">$header</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">rows</span><span class="p">(</span><span class="nv">$sheet</span><span class="p">)</span> <span class="k">as</span> <span class="nv">$r</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$header</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nv">$header</span> <span class="o">=</span> <span class="nb">array_map</span><span class="p">(</span>
+                    <span class="k">static</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$h</span><span class="p">,</span> <span class="nv">$i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nb">trim</span><span class="p">((</span><span class="nx">string</span><span class="p">)</span><span class="nv">$h</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;&#39;</span> <span class="o">?</span> <span class="s2">&quot;col_</span><span class="si">$i</span><span class="s2">&quot;</span> <span class="o">:</span> <span class="nb">trim</span><span class="p">((</span><span class="nx">string</span><span class="p">)</span><span class="nv">$h</span><span class="p">),</span>
+                    <span class="nv">$r</span><span class="p">,</span> <span class="nb">array_keys</span><span class="p">(</span><span class="nv">$r</span><span class="p">)</span>
+                <span class="p">);</span>
+                <span class="k">continue</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="nv">$row</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$header</span> <span class="k">as</span> <span class="nv">$i</span> <span class="o">=&gt;</span> <span class="nv">$h</span><span class="p">)</span> <span class="p">{</span> <span class="nv">$row</span><span class="p">[</span><span class="nv">$h</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$r</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">??</span> <span class="k">null</span><span class="p">;</span> <span class="p">}</span>
+            <span class="k">yield</span> <span class="nv">$row</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="sd">/** 带样式的单元格，已修复 css 累加 bug 与 href 安全 */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">rowsEx</span><span class="p">(</span><span class="nx">int</span> <span class="nv">$sheet</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">:</span> <span class="nx">Generator</span>
+    <span class="p">{</span>
+        <span class="c1">// 重新 parse 一个干净实例，避免 css 引用污染（见坑 2）</span>
+        <span class="nv">$ex</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">isData</span> <span class="o">?</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parseData</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">source</span><span class="p">)</span> <span class="o">:</span> <span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parse</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">source</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$ex</span><span class="p">)</span> <span class="p">{</span> <span class="k">throw</span> <span class="k">new</span> <span class="nx">RuntimeException</span><span class="p">(</span><span class="nx">SimpleXLSX</span><span class="o">::</span><span class="na">parseError</span><span class="p">());</span> <span class="p">}</span>
+
+        <span class="nv">$n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$ex</span><span class="o">-&gt;</span><span class="na">readRowsEx</span><span class="p">(</span><span class="nv">$sheet</span><span class="p">)</span> <span class="k">as</span> <span class="nv">$r</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">++</span><span class="nv">$n</span> <span class="o">&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">maxRows</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
+            <span class="k">foreach</span> <span class="p">(</span><span class="nv">$r</span> <span class="k">as</span> <span class="o">&amp;</span><span class="nv">$c</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nv">$c</span><span class="p">[</span><span class="s1">&#39;css&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">dedupeCss</span><span class="p">(</span><span class="nv">$c</span><span class="p">[</span><span class="s1">&#39;css&#39;</span><span class="p">]);</span>
+                <span class="nv">$c</span><span class="p">[</span><span class="s1">&#39;href&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">safeHref</span><span class="p">(</span><span class="nv">$c</span><span class="p">[</span><span class="s1">&#39;href&#39;</span><span class="p">]);</span>
+            <span class="p">}</span>
+            <span class="nb">unset</span><span class="p">(</span><span class="nv">$c</span><span class="p">);</span>
+            <span class="k">yield</span> <span class="nv">$r</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">dedupeCss</span><span class="p">(</span><span class="nx">string</span> <span class="nv">$css</span><span class="p">)</span><span class="o">:</span> <span class="nx">string</span>
+    <span class="p">{</span>
+        <span class="nv">$parts</span> <span class="o">=</span> <span class="nb">array_filter</span><span class="p">(</span><span class="nb">array_map</span><span class="p">(</span><span class="s1">&#39;trim&#39;</span><span class="p">,</span> <span class="nb">explode</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="nv">$css</span><span class="p">)));</span>
+        <span class="k">return</span> <span class="nb">implode</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="nb">array_unique</span><span class="p">(</span><span class="nv">$parts</span><span class="p">))</span> <span class="o">.</span> <span class="s1">&#39;;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">safeHref</span><span class="p">(</span><span class="nx">string</span> <span class="nv">$href</span><span class="p">)</span><span class="o">:</span> <span class="nx">string</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;#^(https?://|mailto:)#i&#39;</span><span class="p">,</span> <span class="nv">$href</span><span class="p">)</span> <span class="o">?</span> <span class="nv">$href</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">sheetNames</span><span class="p">()</span><span class="o">:</span> <span class="k">array</span> <span class="p">{</span> <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">xlsx</span><span class="o">-&gt;</span><span class="na">sheetNames</span><span class="p">();</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">sheetsCount</span><span class="p">()</span><span class="o">:</span> <span class="nx">int</span>  <span class="p">{</span> <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">xlsx</span><span class="o">-&gt;</span><span class="na">sheetsCount</span><span class="p">();</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">dimension</span><span class="p">(</span><span class="nx">int</span> <span class="nv">$s</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">:</span> <span class="k">array</span> <span class="p">{</span> <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">xlsx</span><span class="o">-&gt;</span><span class="na">dimension</span><span class="p">(</span><span class="nv">$s</span><span class="p">);</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>用法：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$reader = new XlsxReader($_FILES[&#39;file&#39;][&#39;tmp_name&#39;]);</span>
+<span class="x">foreach ($reader-&gt;assoc() as $row) {</span>
+<span class="x">    // $row 已经是 [&#39;姓名&#39; =&gt; &#39;张三&#39;, &#39;手机&#39; =&gt; &#39;138...&#39;, ...]</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<h3 id="149-调试看不懂为什么读错时">14.9 调试：看不懂为什么读错时</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSX::parseFile(&#39;weird.xlsx&#39;, true);   // debug 模式</span>
+
+<span class="x">echo &quot;工作表：&quot; . json_encode($xlsx-&gt;sheetNames(), JSON_UNESCAPED_UNICODE) . &quot;\n&quot;;</span>
+<span class="x">echo &quot;维度：&quot; . json_encode($xlsx-&gt;dimension(0)) . &quot;\n&quot;;</span>
+<span class="x">echo &quot;数字格式表：&quot; . json_encode($xlsx-&gt;nf, JSON_UNESCAPED_UNICODE) . &quot;\n&quot;;</span>
+<span class="x">echo &quot;样式表条目数：&quot; . count($xlsx-&gt;cellFormats) . &quot;\n&quot;;</span>
+
+<span class="x">// 看包里有什么</span>
+<span class="x">foreach ($xlsx-&gt;getPackage()[&#39;entries&#39;] as $e) {</span>
+<span class="x">    printf(&quot;%-40s %8d bytes  cm=%d err=%d\n&quot;, $e[&#39;path&#39;] . &#39;/&#39; . $e[&#39;name&#39;], $e[&#39;ucs&#39;], $e[&#39;cm&#39;], $e[&#39;error&#39;]);</span>
+<span class="x">}</span>
+
+<span class="x">// 看前 3 个单元格的原始 XML</span>
+<span class="x">$ws = $xlsx-&gt;worksheet(0);</span>
+<span class="x">$i = 0;</span>
+<span class="x">foreach ($ws-&gt;sheetData-&gt;row as $row) {</span>
+<span class="x">    foreach ($row-&gt;c as $c) {</span>
+<span class="x">        echo $c-&gt;asXML() . &quot;\n&quot;;</span>
+<span class="x">        if (++$i &gt;= 3) break 2;</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="十五与其他库的选型对比">十五、与其他库的选型对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>SimpleXLSX</th>
+<th>PhpSpreadsheet</th>
+<th>SimpleXLSXGen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>定位</td>
+<td><strong>只读</strong> xlsx</td>
+<td>读写全功能</td>
+<td><strong>只写</strong> xlsx</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>~50 KB（2 个文件）</td>
+<td>~30 MB（含大量依赖）</td>
+<td>~30 KB</td>
+</tr>
+<tr>
+<td>额外扩展</td>
+<td>无（只要 SimpleXML+zlib）</td>
+<td>zip、xml、gd、mbstring、iconv 等</td>
+<td>无</td>
+</tr>
+<tr>
+<td>内存（10 万行）</td>
+<td>162 MB（生成器）</td>
+<td>通常 500 MB+</td>
+<td>—</td>
+</tr>
+<tr>
+<td>速度</td>
+<td>快</td>
+<td>慢（2~5 倍）</td>
+<td>快</td>
+</tr>
+<tr>
+<td>样式读取</td>
+<td>基础（字体/色/边框/对齐）</td>
+<td>完整（含条件格式等）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>公式计算</td>
+<td>❌（读缓存值）</td>
+<td>✅（有计算引擎）</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>图表/图片</td>
+<td>❌</td>
+<td>✅</td>
+<td>部分</td>
+</tr>
+<tr>
+<td>写入能力</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>学习成本</td>
+<td>极低（一个 <code>rows()</code>）</td>
+<td>高</td>
+<td>极低</td>
+</tr>
+<tr>
+<td>维护活跃度</td>
+<td>中等（单作者）</td>
+<td>高（社区）</td>
+<td>中等</td>
+</tr>
+</tbody>
+</table>
+<h3 id="选型建议">选型建议</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户上传 Excel → 存数据库</td>
+<td><strong>SimpleXLSX</strong></td>
+</tr>
+<tr>
+<td>后台导出报表 / 生成 xlsx</td>
+<td><strong>SimpleXLSXGen</strong></td>
+</tr>
+<tr>
+<td>需要模板填充 + 图表 + 打印设置</td>
+<td>PhpSpreadsheet</td>
+</tr>
+<tr>
+<td>需要在服务端重算公式</td>
+<td>PhpSpreadsheet</td>
+</tr>
+<tr>
+<td>读老式 .xls（Excel 97）</td>
+<td>SimpleXLS</td>
+</tr>
+<tr>
+<td>几十万行以上的超大表</td>
+<td>让用户上传 CSV，或自己写 SAX 流式解析</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>一个常见组合：<strong>SimpleXLSX 读 + SimpleXLSXGen 写</strong>，两个库都是同一作者、零依赖、API 极简，加起来不到 100 KB。</p>
+</blockquote>
+<hr />
+<h2 id="十六版本演进与升级注意">十六、版本演进与升级注意</h2>
+<h3 id="161-关键版本里程碑">16.1 关键版本里程碑</h3>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1.1.19</strong></td>
+<td>2026-09-10</td>
+<td>安全修复：CSS 注入（font-family），CVE-2024-55878</td>
+</tr>
+<tr>
+<td><strong>1.1.18</strong></td>
+<td>2026-09-05</td>
+<td>支持 ZIP64</td>
+</tr>
+<tr>
+<td><strong>1.1.17</strong></td>
+<td>2026-08-11</td>
+<td>安全修复 2：align/valign 属性 XSS</td>
+</tr>
+<tr>
+<td><strong>1.1.16</strong></td>
+<td>2025-12-05</td>
+<td>更新文档链接</td>
+</tr>
+<tr>
+<td><strong>1.1.15</strong></td>
+<td>2025-12-04</td>
+<td><code>getColorValue()</code> PHP 8.4 可空兼容</td>
+</tr>
+<tr>
+<td><strong>1.1.14</strong></td>
+<td>2025-05-21</td>
+<td>修复隐藏行列判定</td>
+</tr>
+<tr>
+<td><strong>1.1.13</strong></td>
+<td>2024-12-21</td>
+<td>修复 css 颜色漏洞</td>
+</tr>
+<tr>
+<td><strong>1.1.12</strong></td>
+<td>2024-12-11</td>
+<td>修复 toHTMLEx css 漏洞</td>
+</tr>
+<tr>
+<td><strong>1.1.11</strong></td>
+<td>2024-07-06</td>
+<td>修复 #157</td>
+</tr>
+<tr>
+<td><strong>1.1.10</strong></td>
+<td>2023-04-27</td>
+<td>批注进 rowsEx；超链接移入 rowsEx；所有字段方法改为 public；辅助方法改静态</td>
+</tr>
+<tr>
+<td><strong>1.0.12</strong></td>
+<td>2022-02-21</td>
+<td><strong>1.0 大版本</strong>：命名空间 <code>Shuchkin</code>；PHP 5.5+；<code>readRows()</code>/<code>readRowsEx()</code> 生成器；SimpleXLSXEx 样式类；<code>toHTMLEx()</code></td>
+</tr>
+<tr>
+<td><strong>0.9.10</strong></td>
+<td>2022-02-04</td>
+<td>引入命名空间 <code>Shuchkin\SimpleXLSX</code>（破坏性变更）</td>
+</tr>
+<tr>
+<td><strong>0.8.31</strong></td>
+<td>2021-12-01</td>
+<td>新增 <code>$xlsx-&gt;activeSheet</code></td>
+</tr>
+<tr>
+<td><strong>0.8.30</strong></td>
+<td>2021-12-01</td>
+<td><code>rows()</code>/<code>rowsEx()</code> 支持 <code>$limit</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="162-从-08x-升级到-1x-的破坏性变更">16.2 从 0.8.x 升级到 1.x 的破坏性变更</h3>
+<ol>
+<li><strong>必须加命名空间</strong>：
+   ```php
+   // 0.8.x
+   $xlsx = new SimpleXLSX('a.xlsx');</li>
+</ol>
+<p>// 1.x
+   use Shuchkin\SimpleXLSX;
+   $xlsx = SimpleXLSX::parse('a.xlsx');
+   <code>``
+2. **PHP 版本要求提升到 5.5+**（因为用了 Generator）。
+3.</code>sheetNemes()<code>这个拼写错误的方法已被删除（本来就是 bug），改用</code>sheetMeta()<code>/</code>sheetNames()`。</p>
+<h3 id="163-升级建议">16.3 升级建议</h3>
+<ul>
+<li><strong>务必升到 &gt;= 1.1.19</strong>：1.1.12/1.1.13/1.1.17/1.1.19 全是安全修复，涉及 CSS 注入与 XSS。如果你的程序会把用户上传的 xlsx 渲染成 HTML 给别人看，低版本是真实可利用的漏洞。</li>
+<li>1.1.10 之后所有属性都是 public，如果你之前靠反射或子类访问私有成员，行为会变。</li>
+</ul>
+<hr />
+<h2 id="十七源码-bug-修复清单含补丁">十七、源码 BUG 修复清单（含补丁）</h2>
+<p>第十三章列出的坑，大部分是<strong>源码缺陷</strong>而不是"用法问题"。本章给出可直接应用的补丁。</p>
+<p>配套文件：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simplexlsx-pro/simplexlsx-fixes.patch</code></td>
+<td>标准 unified diff，可直接 <code>git apply</code></td>
+</tr>
+<tr>
+<td><code>simplexlsx-pro/src/SimpleXLSXPro.php</code></td>
+<td>功能扩展子类（公式 / 图片 / 合并 / 导出）</td>
+</tr>
+<tr>
+<td><code>simplexlsx-pro/src/XLSXFormula.php</code></td>
+<td>公式计算引擎</td>
+</tr>
+</tbody>
+</table>
+<p>应用方式：</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/path/to/simplexlsx
+git<span class="w"> </span>apply<span class="w"> </span>../simplexlsx-pro/simplexlsx-fixes.patch
+<span class="c1"># 或者直接在 vendor 里打补丁</span>
+<span class="nb">cd</span><span class="w"> </span>vendor/shuchkin/simplexlsx
+patch<span class="w"> </span>-p1<span class="w"> </span>&lt;<span class="w"> </span>/path/to/simplexlsx-fixes.patch
+</code></pre></div>
+
+<h3 id="171-修复清单总览">17.1 修复清单总览</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>位置</th>
+<th>严重度</th>
+<th>现象</th>
+<th>修复</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🔴</td>
+<td><code>$limit</code> 完全失效，返回满行数</td>
+<td><code>break</code> → <code>return</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>SimpleXLSXEx::valueEx()</code></td>
+<td>🔴</td>
+<td>CSS 字符串每次调用翻倍累加</td>
+<td>引用赋值 → 值拷贝</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SimpleXLSX::toHTML()/toHTMLEx()</code></td>
+<td>🟠</td>
+<td>README 写了 <code>$limit</code> 但源码没有该参数</td>
+<td>补上第二个参数并透传</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>SimpleXLSX::parseError()/parseErrno()</code></td>
+<td>🟡</td>
+<td>静态错误状态永不重置</td>
+<td>新增 <code>$reset</code> 参数 + 成功分支清零</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>SimpleXLSXEx::valueEx()</code></td>
+<td>🟡</td>
+<td>样式索引越界 Warning</td>
+<td><code>isset()</code> 保护</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🟠</td>
+<td>单元格列数超出 <code>dimension</code> 时 <code>$cols</code> 未同步扩展 → Warning 洪水</td>
+<td>扩展 <code>$cols</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🟠</td>
+<td>跳列写入导致列顺序错乱（如 E3 后直接 H3，输出变成 …F3 H3 G3）</td>
+<td><code>ksort($cells)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="172-修复-1limit-失效高危">17.2 修复 1：<code>$limit</code> 失效（高危）</h3>
+<div class="codehilite"><pre><span></span><code><span class="gd">--- a/src/SimpleXLSXEx.php</span>
+<span class="gi">+++ b/src/SimpleXLSXEx.php</span>
+<span class="gu">@@</span>
+<span class="w"> </span>            yield $cells;
+<span class="w"> </span>            $curR++;
+<span class="w"> </span>            $_limit--;
+<span class="w"> </span>            if ($_limit === 0) {
+<span class="gd">-                break;</span>
+<span class="gi">+                return; // FIXED: was break, $limit did not work</span>
+<span class="w"> </span>            }
+</code></pre></div>
+
+<p>修复后实测（13 行表）：</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th><code>readRows()</code></th>
+<th><code>readRowsEx()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 / 2 / 3 / 5</td>
+<td>1 / 2 / 3 / 5</td>
+<td><strong>1 / 2 / 3 / 5</strong> ✅</td>
+</tr>
+<tr>
+<td>13 / 20</td>
+<td>13 / 13</td>
+<td>13 / 13 ✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="173-修复-2css-无限累加高危">17.3 修复 2：CSS 无限累加（高危）</h3>
+<div class="codehilite"><pre><span></span><code><span class="gd">--- a/src/SimpleXLSXEx.php</span>
+<span class="gi">+++ b/src/SimpleXLSXEx.php</span>
+<span class="gu">@@</span>
+<span class="gd">-        $r[&#39;css&#39;] = &amp;$this-&gt;css[ $r[&#39;s&#39;] ];</span>
+<span class="gi">+        $r[&#39;css&#39;] = isset($this-&gt;css[$r[&#39;s&#39;]]) ? $this-&gt;css[$r[&#39;s&#39;]] : &#39;&#39;;</span>
+<span class="w"> </span>        if ($r[&#39;value&#39;] !== &#39;&#39; &amp;&amp; !$st[&#39;align&#39;] &amp;&amp; !in_array($r[&#39;type&#39;], [&#39;s&#39;,&#39;str&#39;,&#39;inlineStr&#39;,&#39;e&#39;], true)) {
+<span class="w"> </span>            $r[&#39;css&#39;] .= &#39;text-align: right;&#39;;
+<span class="w"> </span>        }
+</code></pre></div>
+
+<p>根因：<code>&amp;</code> 引用赋值让 <code>$r['css']</code> 和 <code>$this-&gt;css[$s]</code> 变成同一个 zval，后面的 <code>.=</code> 直接写进了共享的样式缓存。</p>
+<h3 id="174-修复-6-7列数超出-dimension实测踩到的坑">17.4 修复 6 + 7：列数超出 dimension（实测踩到的坑）</h3>
+<p>当某一行存在超出 <code>&lt;dimension&gt;</code> 声明列数的单元格时（WPS/手工生成的文件很常见），原版会刷屏 Warning，而且输出列顺序错乱：</p>
+<div class="codehilite"><pre><span></span><code><span class="gd">--- a/src/SimpleXLSXEx.php</span>
+<span class="gi">+++ b/src/SimpleXLSXEx.php</span>
+<span class="gu">@@</span>
+<span class="w"> </span>                    if ($curC &gt;= $numCols) {
+<span class="w"> </span>                        $numCols = $curC + 1;
+<span class="gi">+                        for ($ci = count($cols); $ci &lt; $numCols; $ci++) {</span>
+<span class="gi">+                            $cols[$ci] = [&#39;s&#39; =&gt; 0, &#39;hidden&#39; =&gt; false, &#39;width&#39; =&gt; 0];</span>
+<span class="gi">+                        }</span>
+<span class="w"> </span>                    }
+<span class="gu">@@</span>
+<span class="w"> </span>            // check empty cells
+<span class="w"> </span>            for ($i = 0; $i &lt; $numCols; $i++) {
+<span class="gd">-                if ($cells[$i] === null) {</span>
+<span class="gi">+                if (!isset($cells[$i]) || $cells[$i] === null) {</span>
+<span class="gu">@@</span>
+<span class="w"> </span>                    $cells[$i] = $this-&gt;valueEx($data, $i, $curR);
+<span class="w"> </span>                }
+<span class="w"> </span>            }
+<span class="gi">+            ksort($cells);</span>
+<span class="w"> </span>            yield $cells;
+</code></pre></div>
+
+<blockquote>
+<p><code>ksort()</code> 是必须的：PHP 数组按插入顺序保存，<code>$cells[7] = H3</code> 不会自动创建索引 6，补空单元格时 G3 会被追加到 H3 之后，输出顺序就乱了。实测修复前后：
+修复前 <code>A3 B3 C3 D3 E3 F3 H3 G3</code>，修复后 <code>A3 B3 C3 D3 E3 F3 G3 H3</code>。</p>
+</blockquote>
+<h3 id="175-修复-3-4-5">17.5 修复 3 / 4 / 5</h3>
+<div class="codehilite"><pre><span></span><code><span class="gd">--- a/src/SimpleXLSX.php</span>
+<span class="gi">+++ b/src/SimpleXLSX.php</span>
+<span class="gu">@@</span>
+<span class="gd">-    public function toHTML($worksheetIndex = 0)</span>
+<span class="gi">+    public function toHTML($worksheetIndex = 0, $limit = 0)</span>
+<span class="w"> </span>    {
+<span class="w"> </span>        $s = &#39;&lt;table class=excel&gt;&#39;;
+<span class="gd">-        foreach ($this-&gt;readRows($worksheetIndex) as $r) {</span>
+<span class="gi">+        foreach ($this-&gt;readRows($worksheetIndex, $limit) as $r) {</span>
+<span class="gu">@@</span>
+<span class="gd">-    public static function parseError($set = false)</span>
+<span class="gi">+    public static function parseError($set = false, $reset = false)</span>
+<span class="w"> </span>    {
+<span class="w"> </span>        static $error = false;
+<span class="gi">+        if ($reset) { $error = false; }</span>
+<span class="w"> </span>        return $set ? $error = $set : $error;
+<span class="w"> </span>    }
+<span class="gu">@@</span>
+<span class="w"> </span>        if ($xlsx-&gt;success()) {
+<span class="gi">+            self::parseError(false, true);</span>
+<span class="gi">+            self::parseErrno(false, true);</span>
+<span class="w"> </span>            return $xlsx;
+<span class="w"> </span>        }
+</code></pre></div>
+
+<blockquote>
+<p><code>parseError()</code> 加了第二个参数 <code>$reset</code>，向后兼容（不传时行为完全不变）。</p>
+</blockquote>
+<hr />
+<h2 id="十八公式计算xlsxformula">十八、公式计算（XLSXFormula）</h2>
+<p>原版<strong>不计算公式</strong>，只读 Excel 写进去的缓存值（<code>&lt;c&gt;&lt;f&gt;SUM(A1:A3)&lt;/f&gt;&lt;v&gt;60&lt;/v&gt;&lt;/c&gt;</code> 里的 <code>&lt;v&gt;</code>）。一旦文件由 openpyxl / 自研程序生成，缓存值就是空的，<code>value</code> 全是 <code>''</code>。</p>
+<p><code>XLSXFormula</code> 是一个纯 PHP 的公式求值器，配合 <code>SimpleXLSXPro</code> 可以直接算出结果。</p>
+<h3 id="181-基本用法">18.1 基本用法</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">use Shuchkin\SimpleXLSXPro;</span>
+
+<span class="x">$xlsx = SimpleXLSXPro::parse(&#39;demo.xlsx&#39;);</span>
+
+<span class="x">// 1) 算某个单元格</span>
+<span class="x">echo $xlsx-&gt;calculateCell(&#39;D6&#39;);        // 745</span>
+
+<span class="x">// 2) 算一段任意公式（不必写进表格）</span>
+<span class="x">echo $xlsx-&gt;calculate(&#39;IF(SUM(D3:D5)&gt;700,&quot;优秀&quot;,&quot;一般&quot;)&#39;);   // 优秀</span>
+
+<span class="x">// 3) 遍历所有含公式的单元格</span>
+<span class="x">foreach ($xlsx-&gt;calculatedCells(0) as $coord =&gt; $info) {</span>
+<span class="x">    printf(&quot;%s %s =&gt; %s\n&quot;, $coord, $info[&#39;formula&#39;], $info[&#39;value&#39;]);</span>
+<span class="x">}</span>
+
+<span class="x">// 4) rowsPro() 里每个单元格都带 calculated 字段</span>
+<span class="x">foreach ($xlsx-&gt;readRowsPro(0) as $row) {</span>
+<span class="x">    foreach ($row as $c) {</span>
+<span class="x">        if ($c[&#39;f&#39;] !== &#39;&#39;) {</span>
+<span class="x">            echo $c[&#39;name&#39;], &#39; = &#39;, $c[&#39;calculated&#39;], &quot;\n&quot;;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p><code>rowsPro()</code> 还会在 <code>value</code> 为空时<strong>自动用计算结果回填</strong>（<code>$xlsx-&gt;preferCalculated = false</code> 可关闭）。</p>
+<h3 id="182-支持的语法">18.2 支持的语法</h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>支持内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>运算符</td>
+<td><code>+ - * / ^</code>、字符串连接 <code>&amp;</code>、比较 <code>= &lt;&gt; &lt; &gt; &lt;= &gt;=</code>、后缀 <code>%</code></td>
+</tr>
+<tr>
+<td>优先级</td>
+<td>比较 &lt; <code>&amp;</code> &lt; <code>+ -</code> &lt; <code>* /</code> &lt; <code>^</code> &lt; 一元负号 &lt; <code>%</code>（与 Excel 一致，<code>-2^2 = 4</code>）</td>
+</tr>
+<tr>
+<td>引用</td>
+<td><code>A1</code>、<code>$A$1</code>、<code>A1:B5</code>、<code>Sheet2!A1</code>、<code>'我的 表'!A1</code>（中文表名支持）</td>
+</tr>
+<tr>
+<td>常量</td>
+<td><code>"文本"</code>、数字、<code>TRUE</code>/<code>FALSE</code>、<code>{1,2;3,4}</code> 数组常量</td>
+</tr>
+<tr>
+<td>错误值</td>
+<td><code>#DIV/0!</code> <code>#VALUE!</code> <code>#REF!</code> <code>#NAME?</code> <code>#N/A</code> <code>#NUM!</code> <code>#NULL!</code>，并沿表达式向上传播</td>
+</tr>
+<tr>
+<td>循环引用</td>
+<td>检测后返回 <code>#CIRC!</code>，递归深度上限 64</td>
+</tr>
+</tbody>
+</table>
+<h3 id="183-支持的函数60">18.3 支持的函数（60+）</h3>
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th>函数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数学</td>
+<td><code>SUM</code> <code>PRODUCT</code> <code>SUMPRODUCT</code> <code>SUMSQ</code>→用 SUM 近似 <code>ABS</code> <code>ROUND</code> <code>ROUNDUP</code> <code>ROUNDDOWN</code> <code>TRUNC</code> <code>INT</code> <code>CEILING</code> <code>FLOOR</code> <code>MOD</code> <code>POWER</code> <code>SQRT</code> <code>EXP</code> <code>LN</code> <code>LOG</code> <code>LOG10</code> <code>PI</code> <code>RAND</code> <code>RANDBETWEEN</code> <code>SIGN</code> <code>DEGREES</code> <code>RADIANS</code> <code>SUBTOTAL</code></td>
+</tr>
+<tr>
+<td>统计</td>
+<td><code>AVERAGE</code> <code>MEDIAN</code> <code>MAX</code> <code>MIN</code> <code>COUNT</code> <code>COUNTA</code> <code>COUNTBLANK</code> <code>COUNTIF</code> <code>SUMIF</code> <code>STDEV</code> <code>STDEVP</code> <code>VAR</code> <code>LARGE</code> <code>SMALL</code></td>
+</tr>
+<tr>
+<td>逻辑</td>
+<td><code>IF</code> <code>IFERROR</code> <code>IFNA</code> <code>AND</code> <code>OR</code> <code>NOT</code> <code>TRUE</code> <code>FALSE</code> <code>ISBLANK</code> <code>ISNUMBER</code> <code>ISTEXT</code> <code>ISERROR</code> <code>ISERR</code> <code>ISNA</code> <code>NA</code> <code>N</code> <code>T</code></td>
+</tr>
+<tr>
+<td>文本</td>
+<td><code>CONCATENATE</code> <code>CONCAT</code> <code>TEXTJOIN</code> <code>LEN</code> <code>LEFT</code> <code>RIGHT</code> <code>MID</code> <code>UPPER</code> <code>LOWER</code> <code>PROPER</code> <code>TRIM</code> <code>SUBSTITUTE</code> <code>REPLACE</code> <code>FIND</code> <code>SEARCH</code> <code>REPT</code> <code>TEXT</code> <code>VALUE</code> <code>CHAR</code> <code>CODE</code> <code>EXACT</code></td>
+</tr>
+<tr>
+<td>查找</td>
+<td><code>VLOOKUP</code> <code>HLOOKUP</code> <code>INDEX</code> <code>MATCH</code> <code>CHOOSE</code> <code>OFFSET</code> <code>LOOKUP</code></td>
+</tr>
+<tr>
+<td>日期</td>
+<td><code>TODAY</code> <code>NOW</code> <code>DATE</code> <code>YEAR</code> <code>MONTH</code> <code>DAY</code> <code>HOUR</code> <code>MINUTE</code> <code>SECOND</code> <code>WEEKDAY</code> <code>DATEVALUE</code> <code>DATEDIF</code> <code>EDATE</code> <code>EOMONTH</code> <code>DAYS</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>COUNTIF</code> / <code>SUMIF</code> / <code>VLOOKUP</code> 的条件支持 <code>"&gt;10"</code> <code>"&lt;=5"</code> <code>"&lt;&gt;abc"</code> <code>"A*"</code> 这类写法。</p>
+<h3 id="184-实测结果demoxlsxopenpyxl-生成无任何缓存值">18.4 实测结果（demo.xlsx，openpyxl 生成，无任何缓存值）</h3>
+<table>
+<thead>
+<tr>
+<th>单元格</th>
+<th>公式</th>
+<th>计算值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D3</td>
+<td><code>B3+C3</code></td>
+<td>270</td>
+</tr>
+<tr>
+<td>B6</td>
+<td><code>SUM(B3:B5)</code></td>
+<td>340</td>
+</tr>
+<tr>
+<td>D6</td>
+<td><code>SUM(D3:D5)</code></td>
+<td>745</td>
+</tr>
+<tr>
+<td>B7</td>
+<td><code>AVERAGE(B3:B5)</code></td>
+<td>113.33333333333</td>
+</tr>
+<tr>
+<td>C7</td>
+<td><code>ROUND(AVERAGE(C3:C5),1)</code></td>
+<td>135</td>
+</tr>
+<tr>
+<td>B8</td>
+<td><code>INDEX(A3:A5,MATCH(MAX(D3:D5),D3:D5,0))</code></td>
+<td>华南</td>
+</tr>
+<tr>
+<td>B9</td>
+<td><code>IF(D6&gt;600,"达标","未达标")</code></td>
+<td>达标</td>
+</tr>
+<tr>
+<td>B11</td>
+<td><code>参数!A1*2</code>（跨表，中文表名）</td>
+<td>20</td>
+</tr>
+<tr>
+<td>B12</td>
+<td><code>SUM(参数!A1:A3)</code></td>
+<td>60</td>
+</tr>
+<tr>
+<td>C13</td>
+<td><code>TEXT(B13,"0.00%")</code></td>
+<td>16.11%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="185-已知限制">18.5 已知限制</h3>
+<ul>
+<li><strong>不是完整 Excel 引擎</strong>：数组公式（CSE）、动态数组（<code>FILTER</code>/<code>SORT</code>/<code>UNIQUE</code>）、<code>LET</code>/<code>LAMBDA</code>、宏表函数不支持</li>
+<li>未识别的函数默认返回 <code>0</code>（<code>$f-&gt;lenientUnknownFunctions = false</code> 可改成返回 <code>#NAME?</code>）</li>
+<li><code>TEXT()</code> 只实现了 <code>0.00</code> <code>#,##0.00</code> <code>0%</code> <code>yyyy-mm-dd</code> 等常见格式，复杂自定义格式会退化</li>
+<li>日期按 1900 日期系统（Excel for Windows）处理，<code>date1904</code> 工作簿未做换算</li>
+<li>循环引用返回 <code>#CIRC!</code>，不会像 Excel 那样迭代求解</li>
+</ul>
+<hr />
+<h2 id="十九合并单元格与多格式导出">十九、合并单元格与多格式导出</h2>
+<h3 id="191-读取合并信息">19.1 读取合并信息</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSXPro::parse(&#39;demo.xlsx&#39;);</span>
+
+<span class="x">foreach ($xlsx-&gt;mergeCells(0) as $m) {</span>
+<span class="x">    printf(&quot;%s 起点(%d,%d) 尺寸 %dx%d\n&quot;, $m[&#39;ref&#39;], $m[&#39;x1&#39;], $m[&#39;y1&#39;], $m[&#39;w&#39;], $m[&#39;h&#39;]);</span>
+<span class="x">}</span>
+<span class="x">// B9:D9 起点(1,8) 尺寸 3x1</span>
+<span class="x">// A1:E1 起点(0,0) 尺寸 5x1</span>
+<span class="x">// E4:E5 起点(4,3) 尺寸 1x2</span>
+
+<span class="x">// 按坐标查某格是否被合并</span>
+<span class="x">$m = $xlsx-&gt;mergeAt(0, 4, 3);   // [&#39;ref&#39;=&gt;&#39;E4:E5&#39;,&#39;w&#39;=&gt;1,&#39;h&#39;=&gt;2,&#39;master&#39;=&gt;true]</span>
+</code></pre></div>
+
+<p><code>rowsPro()</code> 的每个单元格都带 <code>merge</code> 字段：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">[</span>
+<span class="x">  &#39;cell&#39;  =&gt; &#39;E4&#39;,</span>
+<span class="x">  &#39;value&#39; =&gt; &#39;合并备注（E4:E5）&#39;,</span>
+<span class="x">  &#39;merge&#39; =&gt; [&#39;ref&#39; =&gt; &#39;E4:E5&#39;, &#39;w&#39; =&gt; 1, &#39;h&#39; =&gt; 2, &#39;master&#39; =&gt; true],</span>
+<span class="x">]</span>
+</code></pre></div>
+
+<h3 id="192-三种处理策略">19.2 三种处理策略</h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>适用输出</th>
+<th>做法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>拆分复写</strong></td>
+<td>CSV / TSV / JSON</td>
+<td>把左上角的值复制到 x*y 区域内每一个格</td>
+</tr>
+<tr>
+<td><strong>保留合并</strong></td>
+<td>HTML</td>
+<td>主格输出 <code>colspan</code>/<code>rowspan</code>，被合并的格跳过</td>
+</tr>
+<tr>
+<td><strong>原样</strong></td>
+<td>需要还原编辑</td>
+<td>只保留左上角值，其余为空（<code>$fillMerged = false</code>）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="193-csv-tsv">19.3 CSV / TSV</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">// 拆分复写（默认）：A1:E1 的值会写满 5 个格</span>
+<span class="x">echo $xlsx-&gt;toCSV(0, true);        // 第二参数 = fillMerged</span>
+<span class="x">$xlsx-&gt;saveCSV(&#39;out.csv&#39;, 0, true);</span>
+
+<span class="x">// TSV</span>
+<span class="x">echo $xlsx-&gt;toTSV(0, true);</span>
+<span class="x">$xlsx-&gt;saveTSV(&#39;out.tsv&#39;, 0, true);</span>
+
+<span class="x">// 不加 BOM 的版本（Linux 管道处理更友好）</span>
+<span class="x">echo $xlsx-&gt;toCSV(0, true, false);</span>
+</code></pre></div>
+
+<p>实测 CSV（<code>demo.xlsx</code>，A1:E1 与 E4:E5 已拆分）：</p>
+<div class="codehilite"><pre><span></span><code>&quot;2024 年销售报表（含合并单元格与公式）&quot;,&quot;2024 年销售报表（含合并单元格与公式）&quot;,&quot;2024 年销售报表（含合并单元格与公式）&quot;,&quot;2024 年销售报表（含合并单元格与公式）&quot;,&quot;2024 年销售报表（含合并单元格与公式）&quot;,
+区域,一季度,二季度,合计,备注,浮动图片
+华东,120,150,270,增长最快,
+华北,90,110,200,合并备注（E4:E5）,
+华南,130,145,275,合并备注（E4:E5）,
+合计,340,405,745,,
+</code></pre></div>
+
+<h3 id="194-json">19.4 JSON</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">// 1) 纯值二维数组</span>
+<span class="x">echo $xlsx-&gt;toJSON(0);</span>
+
+<span class="x">// 2) 第一行做键 =&gt; 对象数组（header 也可以是行号，如 [&#39;header&#39; =&gt; 1] 用第二行）</span>
+<span class="x">echo $xlsx-&gt;toJSON(0, [&#39;header&#39; =&gt; true]);</span>
+
+<span class="x">// 3) 完整单元格：value + img + merge + formula + calculated</span>
+<span class="x">echo $xlsx-&gt;toJSON(0, [&#39;cells&#39; =&gt; true]);</span>
+
+<span class="x">// 4) 带元信息：工作表名 / 尺寸 / 合并区域 / 图片清单</span>
+<span class="x">echo $xlsx-&gt;toJSON(0, [&#39;meta&#39; =&gt; true]);</span>
+</code></pre></div>
+
+<p><code>['cells' =&gt; true]</code> 的输出示例：</p>
+<div class="codehilite"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;cell&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024 年销售报表（含合并单元格与公式）&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;merge&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A1:E1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;w&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;h&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;master&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;cell&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;B1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024 年销售报表（含合并单元格与公式）&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;merge&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A1:E1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;w&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;h&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;master&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;cell&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;D3&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">270</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;formula&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;B3+C3&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;calculated&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">270</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;cell&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;F3&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;img&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Img/sheet1_F3_1.png&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>选项一览：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fill_merged</code></td>
+<td><code>true</code></td>
+<td>合并单元格值拆分复写到每个格</td>
+</tr>
+<tr>
+<td><code>header</code></td>
+<td><code>false</code></td>
+<td><code>true</code> 用第一行做键；数字 = 指定行号</td>
+</tr>
+<tr>
+<td><code>cells</code></td>
+<td><code>false</code></td>
+<td>输出完整单元格对象而非纯值</td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td><code>false</code></td>
+<td>附带 sheet / dimension / merges / images</td>
+</tr>
+<tr>
+<td><code>pretty</code></td>
+<td><code>true</code></td>
+<td>格式化输出</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td><code>0</code></td>
+<td>追加的 <code>json_encode</code> 标志</td>
+</tr>
+</tbody>
+</table>
+<h3 id="195-html保留合并-图片">19.5 HTML：保留合并 + 图片</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">echo $xlsx-&gt;toHTMLMerged(0, [</span>
+<span class="x">    &#39;images&#39;     =&gt; true,    // 输出 &lt;img&gt;</span>
+<span class="x">    &#39;head&#39;       =&gt; true,    // 第一行用 &lt;th&gt;</span>
+<span class="x">    &#39;img_height&#39; =&gt; 60,      // 图片显示高度，0 = 原始尺寸</span>
+<span class="x">    &#39;class&#39;      =&gt; &#39;excel&#39;,</span>
+<span class="x">    &#39;limit&#39;      =&gt; 0,</span>
+<span class="x">]);</span>
+</code></pre></div>
+
+<p>对比原版 <code>toHTMLEx()</code>：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>toHTMLEx()</code></th>
+<th><code>toHTMLMerged()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>合并单元格</td>
+<td>拆成一堆空的 <code>&lt;td&gt;</code></td>
+<td>主格输出 <code>colspan=5 rowspan=2</code>，其余不输出</td>
+</tr>
+<tr>
+<td>图片</td>
+<td>无</td>
+<td><code>&lt;img src="Img/xxx.png"&gt;</code></td>
+</tr>
+<tr>
+<td>表头</td>
+<td>第一行固定 <code>&lt;th&gt;</code></td>
+<td>可关闭</td>
+</tr>
+<tr>
+<td>行数限制</td>
+<td>无</td>
+<td><code>limit</code> 选项</td>
+</tr>
+</tbody>
+</table>
+<h3 id="196-命令行批量转换">19.6 命令行批量转换</h3>
+<div class="codehilite"><pre><span></span><code>php<span class="w"> </span><span class="m">06</span>-cli_convert.php<span class="w"> </span>input.xlsx<span class="w">                        </span><span class="c1"># 默认 JSON</span>
+php<span class="w"> </span><span class="m">06</span>-cli_convert.php<span class="w"> </span>input.xlsx<span class="w"> </span>--format<span class="o">=</span>csv
+php<span class="w"> </span><span class="m">06</span>-cli_convert.php<span class="w"> </span>input.xlsx<span class="w"> </span>--format<span class="o">=</span>json<span class="w"> </span>--header<span class="o">=</span><span class="m">1</span><span class="w"> </span>--cells
+php<span class="w"> </span><span class="m">06</span>-cli_convert.php<span class="w"> </span>input.xlsx<span class="w"> </span>--format<span class="o">=</span>html<span class="w"> </span>-o<span class="o">=</span>out.html
+php<span class="w"> </span><span class="m">06</span>-cli_convert.php<span class="w"> </span>*.xlsx<span class="w"> </span>--format<span class="o">=</span>csv<span class="w"> </span>--outdir<span class="o">=</span>./out<span class="w"> </span>--img-dir<span class="o">=</span>./images
+</code></pre></div>
+
+<hr />
+<h2 id="二十图片提取img-目录">二十、图片提取（Img 目录）</h2>
+<h3 id="201-两种图片来源">20.1 两种图片来源</h3>
+<table>
+<thead>
+<tr>
+<th>来源</th>
+<th>特征</th>
+<th>定位方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>浮动图片</strong>（Excel / LibreOffice）</td>
+<td><code>xl/drawings/drawing1.xml</code></td>
+<td><code>twoCellAnchor</code> / <code>oneCellAnchor</code> 的 <code>&lt;from&gt;&lt;col&gt;&lt;row&gt;</code>，0-based</td>
+</tr>
+<tr>
+<td><strong>单元格内嵌图片</strong>（WPS）</td>
+<td><code>xl/cellimages.xml</code> + 单元格公式 <code>=DISPIMG("ID_xxx",1)</code></td>
+<td>按 <code>ID_xxx</code> 匹配到具体单元格</td>
+</tr>
+</tbody>
+</table>
+<p>两种都支持。</p>
+<h3 id="202-用法">20.2 用法</h3>
+<div class="codehilite"><pre><span></span><code><span class="x">$xlsx = SimpleXLSXPro::parse(&#39;demo.xlsx&#39;);</span>
+
+<span class="x">// 导出到 Img/（相对当前工作目录），返回 [sheet][row][col] =&gt; 路径</span>
+<span class="x">$map = $xlsx-&gt;extractImages(&#39;Img&#39;);</span>
+
+<span class="x">// 图片清单</span>
+<span class="x">foreach ($xlsx-&gt;imageList() as $img) {</span>
+<span class="x">    printf(&quot;%s  cell=%s  source=%s\n&quot;, $img[&#39;path&#39;], $img[&#39;cell&#39;], $img[&#39;source&#39;]);</span>
+<span class="x">}</span>
+<span class="x">// Img/sheet1_F3_1.png  cell=F3  source=xl/media/image1.png</span>
+<span class="x">// Img/sheet1_F8_2.png  cell=F8  source=xl/media/image2.png</span>
+
+<span class="x">// 按坐标取</span>
+<span class="x">echo $xlsx-&gt;imageAt(0, 5, 2);     // Img/sheet1_F3_1.png（col=5,row=2 即 F3）</span>
+
+<span class="x">// 第二个参数传 false 则记录绝对路径</span>
+<span class="x">$xlsx-&gt;extractImages(&#39;/var/www/uploads/Img&#39;, false);</span>
+</code></pre></div>
+
+<h3 id="203-文件命名规则">20.3 文件命名规则</h3>
+<div class="codehilite"><pre><span></span><code>Img/sheet{工作表名序号}_{列字母}{行号}_{序号}.{原扩展名}
+例：Img/sheet1_F3_1.png
+</code></pre></div>
+
+<p>同一张图片被多处引用时<strong>只落盘一次</strong>（内部有 media 缓存），多处返回同一个路径。</p>
+<h3 id="204-数据里记录-img-路径">20.4 数据里记录 img 路径</h3>
+<p><code>rowsPro()</code> / <code>toJSON(['cells'=&gt;true])</code> 都会在单元格上带 <code>img</code> 字段：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">foreach ($xlsx-&gt;readRowsPro(0) as $row) {</span>
+<span class="x">    foreach ($row as $c) {</span>
+<span class="x">        if ($c[&#39;img&#39;] !== &#39;&#39;) {</span>
+<span class="x">            // 直接入库：[&#39;cell&#39; =&gt; &#39;F3&#39;, &#39;img&#39; =&gt; &#39;Img/sheet1_F3_1.png&#39;]</span>
+<span class="x">            $db-&gt;insert(&#39;cell_images&#39;, [&#39;cell&#39; =&gt; $c[&#39;name&#39;], &#39;img&#39; =&gt; $c[&#39;img&#39;]]);</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</code></pre></div>
+
+<p>WPS 内嵌图片实测（<code>demo_wps.xlsx</code>）：</p>
+<div class="codehilite"><pre><span></span><code>F3  img = Img/sheet1_F3_1.png   f = (浮动)
+H3  img = Img/sheet1_F3_1.png   f = DISPIMG(&quot;ID_1&quot;,1)
+H4  img = Img/sheet1_F3_1.png   f = DISPIMG(&quot;ID_1&quot;,1)
+F8  img = Img/sheet1_F8_2.png   f = (浮动)
+</code></pre></div>
+
+<h3 id="205-注意事项">20.5 注意事项</h3>
+<ul>
+<li>提取成功后该 media entry 会被 <code>deleteEntry()</code> 释放，<strong>大图不会常驻内存</strong></li>
+<li>图片提取发生在 <code>extractImages()</code> 调用时，不调用就不落盘，也不占磁盘</li>
+<li><code>imageDir</code> 是相对当前工作目录的，Web 环境建议用绝对路径</li>
+<li>只处理 <code>xl/media/*</code> 内的位图；<code>legacyDrawing</code>（VML 批注图片）和外链图片（<code>r:link</code>）不处理</li>
+</ul>
+<hr />
+<h2 id="附录-axlsx-内部结构速查">附录 A：xlsx 内部结构速查</h2>
+<div class="codehilite"><pre><span></span><code>book.xlsx (ZIP)
+├── [Content_Types].xml                 每个部件的 MIME 类型
+├── _rels/.rels                         ★ 入口，指向 xl/workbook.xml
+├── docProps/
+│   ├── app.xml                         应用信息
+│   └── core.xml                        作者、创建时间等
+└── xl/
+    ├── workbook.xml                    ★ 工作表清单 &lt;sheet name r:id sheetId state&gt;
+    │                                     &lt;workbookPr date1904=&quot;1&quot;/&gt;  &lt;bookViews activeTab&gt;
+    ├── _rels/workbook.xml.rels         ★ rId → 实际路径
+    ├── sharedStrings.xml               ★ 所有文本（&lt;si&gt;&lt;t&gt;）
+    ├── styles.xml                      ★ numFmts / fonts / fills / borders / cellXfs
+    ├── theme/theme1.xml                主题色板 clrScheme
+    ├── calcChain.xml                   公式计算链（SimpleXLSX 忽略）
+    └── worksheets/
+        ├── sheet1.xml                  ★ &lt;dimension ref&gt; &lt;sheetData&gt;&lt;row r&gt;&lt;c r t s&gt;
+        │                                   &lt;cols&gt;&lt;col min max width customWidth hidden&gt;
+        │                                   &lt;hyperlinks&gt;&lt;hyperlink ref id location&gt;
+        ├── _rels/sheet1.xml.rels       超链接 / 批注 / 图形 的 rId 映射
+        └── comments1.xml               &lt;commentList&gt;&lt;comment ref&gt;&lt;text&gt;
+</code></pre></div>
+
+<h3 id="单元格-xml-形貌">单元格 XML 形貌</h3>
+<div class="codehilite"><pre><span></span><code><span class="cm">&lt;!-- 共享字符串 --&gt;</span>
+<span class="nt">&lt;c</span><span class="w"> </span><span class="na">r=</span><span class="s">&quot;A1&quot;</span><span class="w"> </span><span class="na">t=</span><span class="s">&quot;s&quot;</span><span class="nt">&gt;&lt;v&gt;</span>0<span class="nt">&lt;/v&gt;&lt;/c&gt;</span>
+
+<span class="cm">&lt;!-- 数字 --&gt;</span>
+<span class="nt">&lt;c</span><span class="w"> </span><span class="na">r=</span><span class="s">&quot;B2&quot;</span><span class="w"> </span><span class="na">s=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;&lt;v&gt;</span>1233.34<span class="nt">&lt;/v&gt;&lt;/c&gt;</span>
+
+<span class="cm">&lt;!-- 布尔 --&gt;</span>
+<span class="nt">&lt;c</span><span class="w"> </span><span class="na">r=</span><span class="s">&quot;C3&quot;</span><span class="w"> </span><span class="na">t=</span><span class="s">&quot;b&quot;</span><span class="nt">&gt;&lt;v&gt;</span>1<span class="nt">&lt;/v&gt;&lt;/c&gt;</span>
+
+<span class="cm">&lt;!-- 公式（带缓存值） --&gt;</span>
+<span class="nt">&lt;c</span><span class="w"> </span><span class="na">r=</span><span class="s">&quot;D4&quot;</span><span class="w"> </span><span class="na">s=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;&lt;f&gt;</span>B3*2<span class="nt">&lt;/f&gt;&lt;v&gt;</span>2466.68<span class="nt">&lt;/v&gt;&lt;/c&gt;</span>
+
+<span class="cm">&lt;!-- 错误值 --&gt;</span>
+<span class="nt">&lt;c</span><span class="w"> </span><span class="na">r=</span><span class="s">&quot;E5&quot;</span><span class="w"> </span><span class="na">t=</span><span class="s">&quot;e&quot;</span><span class="nt">&gt;&lt;v&gt;</span>#DIV/0!<span class="nt">&lt;/v&gt;&lt;/c&gt;</span>
+
+<span class="cm">&lt;!-- 内联字符串 --&gt;</span>
+<span class="nt">&lt;c</span><span class="w"> </span><span class="na">r=</span><span class="s">&quot;F6&quot;</span><span class="w"> </span><span class="na">t=</span><span class="s">&quot;inlineStr&quot;</span><span class="nt">&gt;&lt;is&gt;&lt;t&gt;</span>文本<span class="nt">&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;</span>
+</code></pre></div>
+
+<h3 id="对应关系simplexlsx-怎么看它">对应关系（SimpleXLSX 怎么看它）</h3>
+<table>
+<thead>
+<tr>
+<th>XML</th>
+<th>SimpleXLSX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;c r="B2"&gt;</code> 的 <code>r</code></td>
+<td><code>rowsEx()</code> 的 <code>name</code></td>
+</tr>
+<tr>
+<td><code>&lt;c t="s"&gt;</code> 的 <code>t</code></td>
+<td><code>rowsEx()</code> 的 <code>type</code></td>
+</tr>
+<tr>
+<td><code>&lt;v&gt;</code> 或 sharedStrings</td>
+<td><code>rowsEx()</code> 的 <code>value</code></td>
+</tr>
+<tr>
+<td><code>&lt;c s="3"&gt;</code> 的 <code>s</code></td>
+<td><code>rowsEx()</code> 的 <code>s</code> → <code>cellFormats[3]</code></td>
+</tr>
+<tr>
+<td><code>&lt;f&gt;</code></td>
+<td><code>rowsEx()</code> 的 <code>f</code></td>
+</tr>
+<tr>
+<td><code>&lt;col width hidden&gt;</code></td>
+<td><code>rowsEx()</code> 的 <code>width</code> / <code>hidden</code></td>
+</tr>
+<tr>
+<td><code>&lt;row ht customHeight hidden&gt;</code></td>
+<td><code>rowsEx()</code> 的 <code>height</code> / <code>hidden</code></td>
+</tr>
+<tr>
+<td><code>&lt;hyperlink ref id&gt;</code> + rels</td>
+<td><code>rowsEx()</code> 的 <code>href</code></td>
+</tr>
+<tr>
+<td><code>&lt;comment ref&gt;</code></td>
+<td><code>rowsEx()</code> 的 <code>comment</code></td>
+</tr>
+<tr>
+<td><code>styles.xml</code> 的 numFmts</td>
+<td><code>$xlsx-&gt;nf</code> / <code>cellFormats[n]['format']</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="附录-b内置数字格式表-cf">附录 B：内置数字格式表 $CF</h2>
+<p><code>SimpleXLSX::$CF</code> 是 Excel 内置（非自定义）的数字格式码表，源码里硬编码了 40 个：</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>格式码</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>General</code></td>
+<td>通用</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>0</code></td>
+<td>整数</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>0.00</code></td>
+<td>两位小数</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>#,##0</code></td>
+<td>千分位</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>#,##0.00</code></td>
+<td>千分位两位小数</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>0%</code></td>
+<td>百分比</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>0.00%</code></td>
+<td>百分比两位小数</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>0.00E+00</code></td>
+<td>科学计数</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code># ?/?</code></td>
+<td>分数</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code># ??/??</code></td>
+<td>分数</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>mm-dd-yy</code></td>
+<td>日期</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>d-mmm-yy</code></td>
+<td>日期</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>d-mmm</code></td>
+<td>日期</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>mmm-yy</code></td>
+<td>年月</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>h:mm AM/PM</code></td>
+<td>时间</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>h:mm:ss AM/PM</code></td>
+<td>时间</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>h:mm</code></td>
+<td>时间</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>h:mm:ss</code></td>
+<td>时间</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>m/d/yy h:mm</code></td>
+<td>日期时间</td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>#,##0 ;(#,##0)</code></td>
+<td>括号表负数</td>
+</tr>
+<tr>
+<td>38</td>
+<td><code>#,##0 ;[Red](#,##0)</code></td>
+<td>负数红色</td>
+</tr>
+<tr>
+<td>39</td>
+<td><code>#,##0.00;(#,##0.00)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>#,##0.00;[Red](#,##0.00)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>44</td>
+<td><code>_("$"* #,##0.00_)...</code></td>
+<td>货币</td>
+</tr>
+<tr>
+<td>45</td>
+<td><code>mm:ss</code></td>
+<td>分秒</td>
+</tr>
+<tr>
+<td>46</td>
+<td><code>[h]:mm:ss</code></td>
+<td>累计时长</td>
+</tr>
+<tr>
+<td>47</td>
+<td><code>mmss.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>##0.0E+0</code></td>
+<td>科学计数</td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>@</code></td>
+<td>文本</td>
+</tr>
+<tr>
+<td>27/30/36/50/57</td>
+<td><code>[$-404]e/m/d</code>、<code>m/d/yy</code></td>
+<td>区域日期</td>
+</tr>
+<tr>
+<td>59~70</td>
+<td><code>t0</code>、<code>t0.00</code>、<code>t#,##0</code>…</td>
+<td>东亚格式</td>
+</tr>
+</tbody>
+</table>
+<p>自定义格式（ID &gt;= 164）从 <code>styles.xml</code> 的 <code>numFmts</code> 读进 <code>$xlsx-&gt;nf</code>。</p>
+<p><strong>用途</strong>：判断某列是不是"日期/货币/百分比"时，可以用 <code>format</code> 字段配合这张表。</p>
+<hr />
+<h2 id="附录-capi-速查卡">附录 C：API 速查卡</h2>
+<div class="codehilite"><pre><span></span><code><span class="x">// ===== 打开 =====</span>
+<span class="x">SimpleXLSX::parse($file, $is_data = false, $debug = false) : SimpleXLSX|false</span>
+<span class="x">SimpleXLSX::parseFile($file, $debug = false)                : SimpleXLSX|false</span>
+<span class="x">SimpleXLSX::parseData($data, $debug = false)                : SimpleXLSX|false</span>
+<span class="x">new SimpleXLSX($file, $is_data = null, $debug = null)</span>
+
+<span class="x">// ===== 简单读取 =====</span>
+<span class="x">$xlsx-&gt;rows($sheet = 0, $limit = 0)      : array       // 二维数组</span>
+<span class="x">$xlsx-&gt;readRows($sheet = 0, $limit = 0)  : Generator   // 逐行（省内存）</span>
+<span class="x">$xlsx-&gt;toHTML($sheet = 0)                : string      // ⚠️ 无 limit 参数</span>
+
+<span class="x">// ===== 扩展读取（含样式） =====</span>
+<span class="x">$xlsx-&gt;rowsEx($sheet = 0, $limit = 0)    : array</span>
+<span class="x">$xlsx-&gt;readRowsEx($sheet = 0, $limit = 0): Generator</span>
+<span class="x">$xlsx-&gt;toHTMLEx($sheet = 0)              : string      // ⚠️ 无 limit 参数</span>
+
+<span class="x">// ===== 工作表元信息 =====</span>
+<span class="x">$xlsx-&gt;sheetsCount()              : int</span>
+<span class="x">$xlsx-&gt;sheetNames()               : array     // [0 =&gt; &#39;Sheet1&#39;, ...]</span>
+<span class="x">$xlsx-&gt;sheetName($i)              : string|false</span>
+<span class="x">$xlsx-&gt;sheetMeta($i = null)       : array|false   // name/sheetId/state/id</span>
+<span class="x">$xlsx-&gt;isHiddenSheet($i)          : bool</span>
+<span class="x">$xlsx-&gt;dimension($sheet = 0)      : array     // [列数, 行数]</span>
+<span class="x">$xlsx-&gt;activeSheet                : int       // 属性，激活表索引</span>
+
+<span class="x">// ===== 底层对象 =====</span>
+<span class="x">$xlsx-&gt;worksheet($i = 0)          : SimpleXMLElement|false</span>
+<span class="x">$xlsx-&gt;getSheets()                : SimpleXMLElement[]</span>
+<span class="x">$xlsx-&gt;getStyles()                : SimpleXMLElement</span>
+<span class="x">$xlsx-&gt;getPackage()               : array</span>
+
+<span class="x">// ===== 单元格 =====</span>
+<span class="x">$xlsx-&gt;getCell($sheet = 0, $cell = &#39;A1&#39;)   : mixed   // ⚠️ 很慢</span>
+<span class="x">$xlsx-&gt;getIndex(&#39;AB12&#39;)                    : array   // [27, 11]</span>
+<span class="x">$xlsx-&gt;value($cellNode)                    : mixed</span>
+
+<span class="x">// ===== 日期 =====</span>
+<span class="x">$xlsx-&gt;setDateTimeFormat(&#39;Y-m-d H:i:s&#39;)  // 或 null = 返回 Excel 原始序列号</span>
+<span class="x">$xlsx-&gt;unixstamp($excelFloat)            : int</span>
+<span class="x">$xlsx-&gt;datetimeFormat                    : string   // 属性</span>
+<span class="x">$xlsx-&gt;date1904                          : int      // 属性</span>
+
+<span class="x">// ===== 样式 =====</span>
+<span class="x">$xlsx-&gt;cellFormats     : array   // [s =&gt; [&#39;format&#39;=&gt;..,&#39;font&#39;=&gt;..,&#39;color&#39;=&gt;..,&#39;f-b&#39;=&gt;..,...]]</span>
+<span class="x">$xlsx-&gt;nf              : array   // [numFmtId =&gt; formatCode]</span>
+<span class="x">$xlsx-&gt;rowsExReader    : SimpleXLSXEx|null</span>
+<span class="x">SimpleXLSX::$CF        : array   // 内置数字格式表</span>
+
+<span class="x">// ===== 状态/错误 =====</span>
+<span class="x">$xlsx-&gt;success()              : bool</span>
+<span class="x">$xlsx-&gt;errno()                : int</span>
+<span class="x">$xlsx-&gt;error()                : string|false</span>
+<span class="x">SimpleXLSX::parseError()      : string|false   // ⚠️ 全局静态状态</span>
+<span class="x">SimpleXLSX::parseErrno()      : int|false</span>
+
+<span class="x">// ===== 静态工具 =====</span>
+<span class="x">SimpleXLSX::num2name(3)                // &#39;C&#39;</span>
+<span class="x">SimpleXLSX::boolean(&#39;true&#39;)            // true</span>
+<span class="x">SimpleXLSX::parseRichText($isNode)     // 富文本 → 字符串</span>
+<span class="x">SimpleXLSX::getTarget($base, $target)  // 路径规范化</span>
+<span class="x">SimpleXLSX::strlen/substr/strpos/strtoupper($s)</span>
+</code></pre></div>
+
+<h3 id="错误码速记">错误码速记</h3>
+<div class="codehilite"><pre><span></span><code>1 = 文件没找到    2 = 不是 ZIP      3 = XML 解析失败
+4 = XML 条目缺失  5 = 条目不存在    6 = 工作表不存在
+</code></pre></div>
+
+<hr />
+<h2 id="附录-dsimplexlsxpro-扩展-api-速查">附录 D：SimpleXLSXPro 扩展 API 速查</h2>
+<div class="codehilite"><pre><span></span><code><span class="x">use Shuchkin\SimpleXLSXPro;</span>
+<span class="x">$xlsx = SimpleXLSXPro::parse(&#39;a.xlsx&#39;);   // 失败返回 false</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimpleXLSXPro::parse($file, $is_data = false, $debug = false)</code></td>
+<td><code>self\|false</code></td>
+<td>同父类，返回 Pro 实例</td>
+</tr>
+<tr>
+<td><code>extractImages($dir = null, $returnRelative = true)</code></td>
+<td><code>array</code></td>
+<td>导出图片到 <code>$dir</code>，返回 <code>[sheet][row][col] =&gt; 路径</code></td>
+</tr>
+<tr>
+<td><code>imageList()</code></td>
+<td><code>array</code></td>
+<td>图片清单（path / sheet / cell / source / name）</td>
+</tr>
+<tr>
+<td><code>imageMap()</code></td>
+<td><code>array</code></td>
+<td>与 <code>extractImages()</code> 返回值相同</td>
+</tr>
+<tr>
+<td><code>imageAt($sheet, $col, $row)</code></td>
+<td><code>string</code></td>
+<td>按 0-based 坐标取图片路径，无图返回 <code>''</code></td>
+</tr>
+<tr>
+<td><code>mergeCells($sheet = 0)</code></td>
+<td><code>array</code></td>
+<td><code>[['ref','x1','y1','x2','y2','w','h'], ...]</code></td>
+</tr>
+<tr>
+<td><code>mergeAt($sheet, $col, $row)</code></td>
+<td><code>array\|null</code></td>
+<td>单格合并信息</td>
+</tr>
+<tr>
+<td><code>readRowsPro($sheet = 0, $limit = 0)</code></td>
+<td><code>Generator</code></td>
+<td><code>readRowsEx()</code> + <code>img</code> / <code>merge</code> / <code>calculated</code></td>
+</tr>
+<tr>
+<td><code>rowsPro($sheet = 0, $limit = 0)</code></td>
+<td><code>array</code></td>
+<td>上面那个的数组版</td>
+</tr>
+<tr>
+<td><code>calculateCell($coord, $sheet = null)</code></td>
+<td><code>mixed</code></td>
+<td>计算单元格公式</td>
+</tr>
+<tr>
+<td><code>calculate($formula, $sheet = 0)</code></td>
+<td><code>mixed</code></td>
+<td>计算任意公式串</td>
+</tr>
+<tr>
+<td><code>calculatedCells($sheet = 0)</code></td>
+<td><code>array</code></td>
+<td><code>[coord =&gt; ['formula','cached','value']]</code></td>
+</tr>
+<tr>
+<td><code>formula()</code></td>
+<td><code>XLSXFormula</code></td>
+<td>底层引擎实例，可调 <code>lenientUnknownFunctions</code> 等</td>
+</tr>
+<tr>
+<td><code>toArray($sheet = 0, $fillMerged = true, $limit = 0)</code></td>
+<td><code>array</code></td>
+<td>二维数组，合并值可拆分复写</td>
+</tr>
+<tr>
+<td><code>toCSV($sheet = 0, $fillMerged = true, $bom = true)</code></td>
+<td><code>string</code></td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>toTSV($sheet = 0, $fillMerged = true, $bom = false)</code></td>
+<td><code>string</code></td>
+<td>TSV</td>
+</tr>
+<tr>
+<td><code>saveCSV($path, $sheet = 0, $fillMerged = true)</code></td>
+<td><code>bool</code></td>
+<td>写文件</td>
+</tr>
+<tr>
+<td><code>saveTSV($path, $sheet = 0, $fillMerged = true)</code></td>
+<td><code>bool</code></td>
+<td>写文件</td>
+</tr>
+<tr>
+<td><code>toJSON($sheet = 0, $options = [])</code></td>
+<td><code>string</code></td>
+<td>JSON，选项见 19.4</td>
+</tr>
+<tr>
+<td><code>saveJSON($path, $sheet = 0, $options = [])</code></td>
+<td><code>bool</code></td>
+<td>写文件</td>
+</tr>
+<tr>
+<td><code>toCellsArray($sheet = 0, $fillMerged = true)</code></td>
+<td><code>array</code></td>
+<td>完整单元格二维数组</td>
+</tr>
+<tr>
+<td><code>toHTMLMerged($sheet = 0, $options = [])</code></td>
+<td><code>string</code></td>
+<td>保留合并 + 图片的 HTML</td>
+</tr>
+<tr>
+<td><code>fillMerged(array $rows, $sheet = 0)</code></td>
+<td><code>array</code></td>
+<td>只对已有二维数组做合并拆分</td>
+</tr>
+<tr>
+<td><code>SimpleXLSXPro::convert($file, $format, $options)</code></td>
+<td><code>mixed</code></td>
+<td>一步到位：<code>csv</code>/<code>tsv</code>/<code>json</code>/<code>html</code>/<code>html-merged</code>/<code>array</code></td>
+</tr>
+</tbody>
+</table>
+<p>可调属性：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$xlsx-&gt;imageDir</code></td>
+<td><code>'Img'</code></td>
+<td>默认图片输出目录</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;calculateFormulas</code></td>
+<td><code>true</code></td>
+<td>是否在 <code>readRowsPro()</code> / <code>toArray()</code> 里计算公式</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;preferCalculated</code></td>
+<td><code>true</code></td>
+<td>缓存值为空时用计算值回填 <code>value</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>XLSXFormula</code> 独立用法（不依赖 xlsx 文件）：</p>
+<div class="codehilite"><pre><span></span><code><span class="x">$f = new Shuchkin\XLSXFormula(function ($sheetIndex, $coord) {</span>
+<span class="x">    return [&#39;value&#39; =&gt; 10, &#39;formula&#39; =&gt; &#39;&#39;];     // 你的数据提供者</span>
+<span class="x">}, 0);</span>
+<span class="x">$f-&gt;setSheetNames([&#39;Sheet1&#39;, &#39;Sheet2&#39;]);</span>
+<span class="x">echo $f-&gt;calculate(&#39;SUM(A1:A3)*2&#39;);</span>
+</code></pre></div>
+
+<hr />
+<h2 id="写在最后">写在最后</h2>
+<p>SimpleXLSX 的价值在于<strong>恰到好处</strong>：它把"读 Excel"这件事做到了 80 分，代价是零依赖和一个 <code>rows()</code> 就能上手。剩下的 20 分（公式计算、图表、精确排版）如果你需要，那就该换 PhpSpreadsheet 了 —— 但大多数导入场景，你并不需要。</p>
+<p>使用中最容易出事的三个点，再说一遍：</p>
+<ol>
+<li><strong>数字格式</strong>：前导零、身份证号、长数字，一定要在 Excel 源头上设为文本；</li>
+<li><strong>公式</strong>：拿不到值很正常，库不计算公式；</li>
+<li><strong>安全</strong>：渲染用户上传的 xlsx 前，<code>href</code> 必须自己过滤，且版本要 &gt;= 1.1.19。</li>
+</ol>
+<hr />
+<p><em>文档基于 shuchkin/simplexlsx v1.1.19 源码通读 + PHP 8.3.6 实测编写。所有标"实测"的结论均在本地环境验证过。</em></p>
+  </main>
+</div>
+</body>
+</html>

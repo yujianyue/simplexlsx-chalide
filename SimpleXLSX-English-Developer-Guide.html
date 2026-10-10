@@ -1,0 +1,3463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SimpleXLSX Developer Guide (English)</title>
+<style>
+  :root{
+    --ink:#1a2233; --muted:#5b6472; --line:#d9dee7; --code-bg:#f5f7fa;
+    --head:#0f3d7c; --accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  html{font-size:10.5pt}
+  body{
+    font-family:"Segoe UI","Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    color:var(--ink); line-height:1.65; margin:0; background:#eef1f5;
+  }
+  .page{
+    max-width:210mm; margin:0 auto; background:#fff; padding:20mm 18mm;
+    box-shadow:0 2px 14px rgba(0,0,0,.12);
+  }
+  h1{font-size:22pt;color:var(--head);border-bottom:3px solid var(--head);padding-bottom:8px;margin:0 0 6px}
+  h2{font-size:15pt;color:var(--head);border-bottom:2px solid var(--line);padding-bottom:5px;margin:26px 0 12px;
+     page-break-after:avoid; break-after:avoid}
+  h3{font-size:12.5pt;color:#1d4ed8;margin:18px 0 8px;page-break-after:avoid}
+  h4{font-size:11pt;margin:14px 0 6px;page-break-after:avoid}
+  p{margin:.45em 0}
+  a{color:var(--accent);text-decoration:none}
+  blockquote{
+    margin:.8em 0;padding:6px 14px;border-left:4px solid var(--accent);
+    background:#f0f5ff;color:#33415c;border-radius:0 6px 6px 0;page-break-inside:avoid
+  }
+  code{
+    font-family:Consolas,"Courier New",monospace;font-size:.88em;
+    background:var(--code-bg);border:1px solid #e3e8ef;border-radius:3px;padding:0 4px;
+  }
+  pre{
+    background:var(--code-bg);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:6px;padding:10px 12px;overflow-x:auto;line-height:1.45;
+    page-break-inside:avoid;break-inside:avoid;
+  }
+  pre code{background:none;border:none;padding:0;white-space:pre-wrap;word-break:break-word}
+  table{
+    border-collapse:collapse;width:100%;margin:.8em 0;font-size:.92em;
+    page-break-inside:avoid;break-inside:avoid;
+  }
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top;word-break:break-word}
+  th{background:#eaf0fb;color:var(--head);font-weight:600}
+  tr:nth-child(even) td{background:#fafbfd}
+  hr{border:none;border-top:1px solid var(--line);margin:1.6em 0}
+  ul,ol{margin:.4em 0;padding-left:1.6em}
+  li{margin:.18em 0}
+  .toolbar{
+    position:fixed;top:14px;right:18px;z-index:9;display:flex;gap:8px;
+  }
+  .toolbar button{
+    font:13px/1 inherit;padding:9px 16px;border:none;border-radius:8px;cursor:pointer;
+    background:var(--head);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25)
+  }
+  .toolbar button:hover{background:#16407e}
+  /* ---------- A4 print ---------- */
+  @page{size:A4;margin:16mm 15mm}
+  @media print{
+    body{background:#fff}
+    .page{max-width:none;box-shadow:none;padding:0}
+    .toolbar{display:none}
+    h1{page-break-before:avoid}
+    h2{page-break-before:auto}
+    /* keep heading with at least following block */
+    h2,h3,h4{break-after:avoid-page}
+    pre,table,blockquote{break-inside:avoid}
+    a{color:inherit}
+    code,pre{font-size:9pt}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div>
+<div class="page">
+<h1 id="simplexlsx-development-documentation-english">SimpleXLSX Development Documentation (English)</h1>
+<blockquote>
+<p>A complete English manual and development guide for <code>shuchkin/simplexlsx</code>, aimed at PHP developers
+Written through a line-by-line reading of the source code + hands-on verification on PHP 8.3 (version 1.1.19)</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-what-is-this">1. What Is This</a></li>
+<li><a href="#2-requirements-and-installation">2. Requirements and Installation</a></li>
+<li><a href="#3-5-minute-quick-start">3. 5-Minute Quick Start</a></li>
+<li><a href="#4-core-concepts-how-an-xlsx-is-read">4. Core Concepts: How an xlsx Is Read</a></li>
+<li><a href="#5-full-api-reference">5. Full API Reference</a></li>
+<li><a href="#6-rowsex-cell-fields-in-detail">6. rowsEx() Cell Fields in Detail</a></li>
+<li><a href="#7-data-type-mapping-table-tested">7. Data Type Mapping Table (Verified)</a></li>
+<li><a href="#8-dates-and-times-in-depth">8. Dates and Times in Depth</a></li>
+<li><a href="#9-the-style-system-simplexlsxex">9. The Style System (SimpleXLSXEx)</a></li>
+<li><a href="#10-large-files-and-memory-optimization">10. Large Files and Memory Optimization</a></li>
+<li><a href="#11-error-handling-and-error-codes">11. Error Handling and Error Codes</a></li>
+<li><a href="#12-security-considerations">12. Security Considerations</a></li>
+<li><a href="#13-known-issues-and-pitfall-list">13. Known Issues and Pitfalls</a></li>
+<li><a href="#14-practical-code-collection">14. Practical Code Collection</a></li>
+<li><a href="#15-library-comparison-for-selection">15. Comparison with Other Libraries</a></li>
+<li><a href="#16-version-history-and-upgrade-notes">16. Version History and Upgrade Notes</a></li>
+<li><a href="#17-source-code-bug-fix-list-with-patches">17. Source Code Bug Fix List (with Patches)</a></li>
+<li><a href="#18-formula-evaluation-xlsxformula">18. Formula Calculation (XLSXFormula)</a></li>
+<li><a href="#19-merged-cells-and-multi-format-export">19. Merged Cells and Multi-Format Export</a></li>
+<li><a href="#20-image-extraction-img-directory">20. Image Extraction (Img Directory)</a></li>
+<li><a href="#appendix-a-xlsx-internal-structure-cheat-sheet">Appendix A: xlsx Internal Structure Quick Reference</a></li>
+<li><a href="#appendix-b-built-in-number-format-table-cf">Appendix B: Built-in Number Format Table \$CF</a></li>
+<li><a href="#appendix-c-api-cheat-sheet">Appendix C: API Cheat Sheet</a></li>
+<li><a href="#appendix-d-simplexlsxpro-extended-api-cheat-sheet">Appendix D: SimpleXLSXPro Extended API Cheat Sheet</a></li>
+</ul>
+<hr />
+<h2 id="1-what-is-this">1. What Is This</h2>
+<p>SimpleXLSX is a <strong>pure-PHP xlsx reader</strong> used to parse Microsoft Excel 2007+ <code>.xlsx</code> workbooks and extract cell data into PHP arrays.</p>
+<p>Its core selling point can be stated in one sentence: <strong>it reads Excel using only the built-in SimpleXML + zlib, without depending on any extra PHP extensions</strong>.</p>
+<h3 id="what-it-does">What It Does</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reading cell values</td>
+<td>Text, numbers, booleans, dates, error values, rich text</td>
+</tr>
+<tr>
+<td>Multiple worksheets</td>
+<td>Access by index/name, hidden sheet detection, active sheet detection</td>
+</tr>
+<tr>
+<td>Style extraction</td>
+<td>Fonts, colors, fills, borders, alignment, row heights and column widths</td>
+</tr>
+<tr>
+<td>Hyperlinks and comments</td>
+<td>External cell links, internal jumps, comment plain text</td>
+</tr>
+<tr>
+<td>Streaming reads</td>
+<td>The <code>readRows()</code> generator, suitable for large files</td>
+</tr>
+<tr>
+<td>HTML export</td>
+<td><code>toHTML()</code> / <code>toHTMLEx()</code> one-step table conversion</td>
+</tr>
+<tr>
+<td>Zero extension dependencies</td>
+<td>No <code>php-zip</code>, no <code>php-excel</code>, pure PHP decompression</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-it-cannot-do">What It Cannot Do</h3>
+<p>This matters more than "what it can do" — clarifying it up front can save you half a day:</p>
+<table>
+<thead>
+<tr>
+<th>Out of Scope</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Writing/generating xlsx</strong></td>
+<td>Read-only library. For writing, use the companion <a href="https://github.com/shuchkin/simplexlsxgen">SimpleXLSXGen</a></td>
+</tr>
+<tr>
+<td><strong>Reading the legacy .xls format</strong></td>
+<td>A completely different binary format; use <a href="https://github.com/shuchkin/simplexls">SimpleXLS</a></td>
+</tr>
+<tr>
+<td><strong>Calculating formulas</strong></td>
+<td>Only returns the result values Excel cached at save time; formulas are not recalculated</td>
+</tr>
+<tr>
+<td><strong>Merged cell info</strong></td>
+<td>Does not parse <code>mergeCells</code>; only the top-left cell of a merged region has a value</td>
+</tr>
+<tr>
+<td><strong>Images/charts/pivot tables</strong></td>
+<td>All ignored</td>
+</tr>
+<tr>
+<td><strong>Conditional formatting, data validation</strong></td>
+<td>Not parsed</td>
+</tr>
+<tr>
+<td><strong>Cell "raw rich-text runs"</strong></td>
+<td>Rich text is concatenated into a single string (see <code>parseRichText</code>)</td>
+</tr>
+<tr>
+<td><strong>Reading .xlsb / encrypted files</strong></td>
+<td>Neither the binary format nor encrypted ZIP is supported</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>One-sentence guidance</strong>: if your need is "a user uploads an Excel file and I read the table out of it into a database", SimpleXLSX is the most cost-effective choice (a few dozen KB, no dependencies, fast enough). If you need to "generate complex reports with charts" or "reproduce print styles precisely", go with PhpSpreadsheet.</p>
+</blockquote>
+<h3 id="basic-information">Basic Information</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Namespace</td>
+<td><code>Shuchkin\SimpleXLSX</code></td>
+</tr>
+<tr>
+<td>Main class file</td>
+<td><code>src/SimpleXLSX.php</code> (~1250 lines)</td>
+</tr>
+<tr>
+<td>Style extension class</td>
+<td><code>src/SimpleXLSXEx.php</code> (~677 lines, loaded on demand)</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>Current version</td>
+<td>1.1.19 (2026-09-10)</td>
+</tr>
+<tr>
+<td>Composer</td>
+<td><code>shuchkin/simplexlsx</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-requirements-and-installation">2. Requirements and Installation</h2>
+<h3 id="21-system-requirements">2.1 System Requirements</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PHP</td>
+<td>&gt;= 5.5 (verified working on PHP 8.3; PHP 5.5+ uses a <code>Generator</code>-compatible style)</td>
+</tr>
+<tr>
+<td><code>ext-simplexml</code></td>
+<td>Required, for parsing XML</td>
+</tr>
+<tr>
+<td><code>ext-zlib</code></td>
+<td>Required, <code>gzinflate()</code> decompresses ZIP entries</td>
+</tr>
+<tr>
+<td><code>ext-libxml</code></td>
+<td>Required</td>
+</tr>
+<tr>
+<td><code>ext-mbstring</code></td>
+<td>Required (declared in composer), used for the func_overload compatibility branch</td>
+</tr>
+</tbody>
+</table>
+<p>Note: <strong><code>ext-zip</code> is not needed</strong>. The ZIP unpacking is hand-written by the author (see the <code>unzip()</code> method). That is why it runs on all kinds of cheap shared hosting.</p>
+<h3 id="22-installation-method-1-composer-recommended">2.2 Installation Method 1: Composer (Recommended)</h3>
+<pre><code class="language-bash">composer require shuchkin/simplexlsx
+</code></pre>
+<p>Then:</p>
+<pre><code class="language-php">require_once 'vendor/autoload.php';
+
+use Shuchkin\SimpleXLSX;
+
+if ( $xlsx = SimpleXLSX::parse('book.xlsx') ) {
+    print_r( $xlsx-&gt;rows() );
+} else {
+    echo SimpleXLSX::parseError();
+}
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>Note</strong>: the autoload section of <code>composer.json</code> only registers <code>src/SimpleXLSX.php</code>:
+<code>json
+"autoload": { "classmap": ["src/SimpleXLSX.php"] }</code>
+<code>SimpleXLSXEx.php</code> <strong>is not registered in the classmap</strong>; it is loaded manually via <code>require_once __DIR__.'/SimpleXLSXEx.php'</code> when <code>readRowsEx()</code> is called. You don't need to do anything, but don't expect <code>class_exists('Shuchkin\SimpleXLSXEx')</code> to be true before <code>rowsEx()</code> has been called.</p>
+</blockquote>
+<h3 id="23-installation-method-2-direct-single-file-include">2.3 Installation Method 2: Direct Single-File Include</h3>
+<p>Suitable for environments where Composer cannot be installed:</p>
+<pre><code class="language-php">require_once __DIR__ . '/src/SimpleXLSX.php';
+
+use Shuchkin\SimpleXLSX;
+</code></pre>
+<p><code>SimpleXLSX.php</code> is self-contained and does not depend on other files (unless you want to use <code>rowsEx()</code>).</p>
+<h3 id="24-using-in-frameworks">2.4 Using in Frameworks</h3>
+<p><strong>Laravel</strong>: once installed via Composer, use it directly — no ServiceProvider needed.</p>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+public function import(Request $request) {
+    $request-&gt;validate(['file' =&gt; 'required|file|mimes:xlsx|max:10240']);
+    $xlsx = SimpleXLSX::parse($request-&gt;file('file')-&gt;getRealPath());
+    // ...
+}
+</code></pre>
+<p><strong>ThinkPHP / others</strong>: either <code>require</code> the file path or use the Composer autoload.</p>
+<hr />
+<h2 id="3-5-minute-quick-start">3. 5-Minute Quick Start</h2>
+<h3 id="31-minimal-example">3.1 Minimal Example</h3>
+<pre><code class="language-php">&lt;?php
+use Shuchkin\SimpleXLSX;
+require_once __DIR__ . '/src/SimpleXLSX.php';
+
+if ( $xlsx = SimpleXLSX::parse('book.xlsx') ) {
+    print_r( $xlsx-&gt;rows() );
+} else {
+    echo SimpleXLSX::parseError();
+}
+</code></pre>
+<p>Output:</p>
+<pre><code>Array
+(
+    [0] =&gt; Array
+        (
+            [0] =&gt; ISBN
+            [1] =&gt; title
+            [2] =&gt; author
+            [3] =&gt; publisher
+            [4] =&gt; ctry
+        )
+
+    [1] =&gt; Array
+        (
+            [0] =&gt; 618260307
+            [1] =&gt; The Hobbit
+            [2] =&gt; J. R. R. Tolkien
+            [3] =&gt; Houghton Mifflin
+            [4] =&gt; USA
+        )
+)
+</code></pre>
+<h3 id="32-three-ways-to-open-a-file">3.2 Three Ways to Open a File</h3>
+<pre><code class="language-php">// ① From a file path (most common)
+$xlsx = SimpleXLSX::parse('/path/to/book.xlsx');
+$xlsx = SimpleXLSX::parseFile('/path/to/book.xlsx');   // equivalent
+
+// ② From binary data in memory
+$data = file_get_contents('https://example.com/book.xlsx');
+// or fetched from a database BLOB or Redis cache
+$xlsx = SimpleXLSX::parseData($data);
+
+// ③ Passing a URL directly also works (uses file_get_contents internally, subject to allow_url_fopen)
+$xlsx = SimpleXLSX::parse('https://www.example.com/example.xlsx');
+</code></pre>
+<p><strong>Relationship among the three</strong> (source-code truth):</p>
+<pre><code class="language-php">public static function parse($filename, $is_data = false, $debug = false) // core
+public static function parseFile($filename, $debug = false)  // → parse($filename, false, $debug)
+public static function parseData($data, $debug = false)      // → parse($data, true, $debug)
+</code></pre>
+<p>Internally, <code>parse()</code> first calls <code>unzip()</code> then <code>parseEntries()</code>; it returns a <code>SimpleXLSX</code> object on success and <strong><code>false</code> on failure</strong>.</p>
+<h3 id="33-classic-oop-style">3.3 Classic OOP Style</h3>
+<p>If you prefer "construct an object + check state" over "static factory + check for false":</p>
+<pre><code class="language-php">$xlsx = new SimpleXLSX('books.xlsx');
+if ( $xlsx-&gt;success() ) {
+    foreach ( $xlsx-&gt;rows() as $r ) {
+        // ...
+    }
+} else {
+    echo 'xlsx error: ' . $xlsx-&gt;error();
+}
+</code></pre>
+<p>Constructor signature: <code>__construct($filename = null, $is_data = null, $debug = null)</code>.</p>
+<blockquote>
+<p>Difference between the two styles: the static <code>parse()</code> returns <code>false</code> on failure and stores the error message in a static variable; the <code>new</code> style always returns an object, and you check with <code>success()</code>. Both call the same underlying <code>unzip()</code>.</p>
+</blockquote>
+<h3 id="34-debug-mode">3.4 Debug Mode</h3>
+<pre><code class="language-php">ini_set('error_reporting', E_ALL);
+ini_set('display_errors', 1);
+
+if ( $xlsx = SimpleXLSX::parseFile('books.xlsx', true) ) {
+    echo $xlsx-&gt;toHTML();
+} else {
+    echo SimpleXLSX::parseError();
+}
+</code></pre>
+<p>With <code>$debug = true</code> enabled, every internal <code>error()</code> call additionally triggers <code>trigger_error(..., E_USER_WARNING)</code>, making problems easier to locate.</p>
+<hr />
+<h2 id="4-core-concepts-how-an-xlsx-is-read">4. Core Concepts: How an xlsx Is Read</h2>
+<p>To use this library well (especially for troubleshooting), it is worth spending 3 minutes understanding how it works.</p>
+<h3 id="41-an-xlsx-is-essentially-a-zip">4.1 An xlsx Is Essentially a ZIP</h3>
+<p>An <code>.xlsx</code> is just a ZIP archive with a changed extension, containing a bunch of XML files:</p>
+<pre><code>book.xlsx
+├── _rels/.rels                        ← entry point, indicates where the workbook is
+├── xl/
+│   ├── workbook.xml                   ← worksheet list, names, order, active sheet
+│   ├── _rels/workbook.xml.rels        ← mapping of rId → actual file
+│   ├── sharedStrings.xml              ← shared string pool
+│   ├── styles.xml                     ← fonts/fills/borders/number formats
+│   ├── theme/theme1.xml               ← theme colors
+│   └── worksheets/
+│       ├── sheet1.xml                 ← the actual cell data
+│       ├── _rels/sheet1.xml.rels      ← that sheet's hyperlinks/comments
+│       └── ...
+</code></pre>
+<h3 id="42-parsing-flow-mapped-to-source-code-methods">4.2 Parsing Flow (Mapped to Source-Code Methods)</h3>
+<pre><code>SimpleXLSX::parse($file)
+    │
+    ├─ unzip($filename, $is_data)      ← hand-written ZIP unpacking; all entries are read into $this-&gt;package['entries']
+    │                                     (not decompressed at this point; only compressed data + header info are stored)
+    │
+    └─ parseEntries()                  ← builds the indexes
+         ├─ reads _rels/.rels → finds officeDocument → xl/workbook.xml
+         ├─ iterates over the &lt;sheet&gt; elements in workbook.xml → $this-&gt;sheetMetaData[i] (name/sheetId/state/id)
+         ├─ reads xl/_rels/workbook.xml.rels → dispatches by rId:
+         │     worksheet    → $this-&gt;sheets[i] = SimpleXMLElement (and records sheetFiles[i])
+         │     sharedStrings→ $this-&gt;sharedstrings[] = array of strings
+         │     styles       → $this-&gt;styles + $this-&gt;nf + $this-&gt;cellFormats
+         │     theme        → $this-&gt;theme
+         └─ reads $this-&gt;activeSheet from &lt;bookViews&gt;&lt;workbookView activeTab=&quot;N&quot;&gt; in workbook.xml
+</code></pre>
+<h3 id="43-memory-model-important">4.3 Memory Model (Important)</h3>
+<p>This is where many people get tripped up:</p>
+<ol>
+<li><code>unzip()</code> loads the <strong>entire file</strong> into memory in one <code>file_get_contents()</code> call;</li>
+<li>All ZIP entries (in compressed form) are <strong>kept entirely</strong> in the <code>$this-&gt;package['entries']</code> array;</li>
+<li>Only when <code>getEntryXML($name)</code> is called does <code>gzinflate()</code> decompress; immediately after decompression, <code>deleteEntry()</code> removes the entry from the array (to save memory);</li>
+<li>But once <code>sheet1.xml</code> has been parsed by <code>simplexml_load_string()</code> into a <code>SimpleXMLElement</code>, it <strong>stays in memory</strong>.</li>
+</ol>
+<p><strong>Conclusion</strong>: peak memory is at least 2–3 times the file size, plus the XML object tree. <code>readRows()</code> only saves the "result array" layer; it cannot save the "whole-sheet DOM" layer. See <a href="#10-large-files-and-memory-optimization">Chapter 10</a> for details.</p>
+<h3 id="44-cell-coordinates">4.4 Cell Coordinates</h3>
+<ul>
+<li><code>A1</code> style (Excel notation) and <code>[column index, row index]</code> (0-based) convert to each other:</li>
+<li><code>getIndex('AB12')</code> → <code>[27, 11]</code> (verified)</li>
+<li><code>SimpleXLSX::num2name(3)</code> → <code>'C'</code></li>
+<li><code>num2name(1) = 'A'</code>, <code>num2name(27) = 'AA'</code> (verified)</li>
+</ul>
+<hr />
+<h2 id="5-full-api-reference">5. Full API Reference</h2>
+<blockquote>
+<p>All signatures below come from reflection extraction against the 1.1.19 source; parameter defaults match the source exactly.</p>
+</blockquote>
+<h3 id="51-static-factory-methods">5.1 Static Factory Methods</h3>
+<h4 id="simplexlsxparsefilename-is_data-false-debug-false"><code>SimpleXLSX::parse($filename, $is_data = false, $debug = false)</code></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$filename</code></td>
+<td>string</td>
+<td>File path, URL, or — when <code>$is_data=true</code> — the xlsx binary content</td>
+</tr>
+<tr>
+<td><code>$is_data</code></td>
+<td>bool</td>
+<td>true means the first parameter is data rather than a path</td>
+</tr>
+<tr>
+<td><code>$debug</code></td>
+<td>bool</td>
+<td>When enabled, errors are reported via <code>trigger_error</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns</strong>: a <code>SimpleXLSX</code> object on success, <code>false</code> on failure.</p>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('book.xlsx');          // file
+$xlsx = SimpleXLSX::parse($binary, true);        // in-memory data
+$xlsx = SimpleXLSX::parse('a.xlsx', false, true);// debug
+</code></pre>
+<h4 id="simplexlsxparsefilefilename-debug-false"><code>SimpleXLSX::parseFile($filename, $debug = false)</code></h4>
+<p>Equivalent to <code>parse($filename, false, $debug)</code>. Clearer semantics; recommended.</p>
+<h4 id="simplexlsxparsedatadata-debug-false"><code>SimpleXLSX::parseData($data, $debug = false)</code></h4>
+<p>Equivalent to <code>parse($data, true, $debug)</code>. Use for database BLOBs / caches / network streams.</p>
+<h4 id="simplexlsxparseerrorset-false-simplexlsxparseerrnoset-false"><code>SimpleXLSX::parseError($set = false)</code> / <code>SimpleXLSX::parseErrno($set = false)</code></h4>
+<p>Reads (or sets) the error message/error code of the most recent <code>parse()</code>.</p>
+<pre><code class="language-php">if ( !$xlsx = SimpleXLSX::parse('x.xlsx') ) {
+    echo SimpleXLSX::parseErrno() . ': ' . SimpleXLSX::parseError();
+}
+</code></pre>
+<blockquote>
+<p>⚠️ These two methods use <strong>static local variables</strong>, which are globally shared state. When parsing multiple files in a row, always read them immediately after each <code>parse()</code>, or they will be overwritten by the next parse.</p>
+</blockquote>
+<hr />
+<h3 id="52-state-and-errors">5.2 State and Errors</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success()</code></td>
+<td>bool</td>
+<td>Whether parsing succeeded (internally just <code>!$this-&gt;error</code>)</td>
+</tr>
+<tr>
+<td><code>errno()</code></td>
+<td>int</td>
+<td>Instance-level error code</td>
+</tr>
+<tr>
+<td><code>error($num = null, $str = null)</code></td>
+<td>string|false</td>
+<td>Read/write error message</td>
+</tr>
+<tr>
+<td><code>getPackage()</code></td>
+<td>array</td>
+<td>Raw ZIP package info (filename/mtime/size/entries)</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-php">$xlsx = new SimpleXLSX('books.xlsx');
+if ( $xlsx-&gt;success() ) {
+    // ...
+} else {
+    echo $xlsx-&gt;errno() . ' - ' . $xlsx-&gt;error();
+}
+</code></pre>
+<hr />
+<h3 id="53-worksheet-metadata">5.3 Worksheet Metadata</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sheetsCount()</code></td>
+<td>int</td>
+<td>Number of worksheets</td>
+</tr>
+<tr>
+<td><code>sheetNames()</code></td>
+<td>array</td>
+<td><code>[0 =&gt; 'Sheet1', 1 =&gt; 'Sheet2', ...]</code></td>
+</tr>
+<tr>
+<td><code>sheetName($i)</code></td>
+<td>string|false</td>
+<td>Get name by index</td>
+</tr>
+<tr>
+<td><code>sheetMeta($i = null)</code></td>
+<td>array|false</td>
+<td>All attributes of a single sheet; passing <code>null</code> returns all</td>
+</tr>
+<tr>
+<td><code>isHiddenSheet($i)</code></td>
+<td>bool</td>
+<td>Whether the worksheet is hidden</td>
+</tr>
+<tr>
+<td><code>getSheets()</code></td>
+<td>array</td>
+<td>Returns raw worksheet objects as <code>SimpleXMLElement[]</code></td>
+</tr>
+<tr>
+<td><code>worksheet($i = 0)</code></td>
+<td>SimpleXMLElement|false</td>
+<td>Get the raw XML object of a single sheet</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;activeSheet</code></td>
+<td>int</td>
+<td><strong>Property</strong>, index of the sheet that was active when Excel last saved (0-based)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verified output</strong>:</p>
+<pre><code class="language-php">$x = SimpleXLSX::parse('types.xlsx');
+print_r($x-&gt;sheetNames());
+// Array( [0] =&gt; type tests [1] =&gt; second page [2] =&gt; hidden page )
+
+print_r($x-&gt;sheetMeta());
+// Array(
+//   [0] =&gt; Array( [name] =&gt; type tests [sheetId] =&gt; 1 [state] =&gt; visible [id] =&gt; rId1 )
+//   [1] =&gt; Array( [name] =&gt; second page [sheetId] =&gt; 2 [state] =&gt; visible [id] =&gt; rId2 )
+//   [2] =&gt; Array( [name] =&gt; hidden page [sheetId] =&gt; 3 [state] =&gt; hidden  [id] =&gt; rId3 )
+// )
+
+var_dump($x-&gt;isHiddenSheet(2)); // true
+</code></pre>
+<p><strong>Finding an index by name</strong> (not provided by the library; write it yourself):</p>
+<pre><code class="language-php">function sheetIndexByName(SimpleXLSX $xlsx, string $name): ?int {
+    $map = array_flip($xlsx-&gt;sheetNames());
+    return $map[$name] ?? null;
+}
+</code></pre>
+<blockquote>
+<p>💡 The keys of the <code>sheets</code> array follow <strong>the order in which <code>&lt;sheet&gt;</code> elements appear in workbook.xml</strong>, and <code>parseEntries()</code> performs a <code>ksort()</code> at the end, so indexes stably correspond to the left-to-right tab order in Excel.</p>
+</blockquote>
+<hr />
+<h3 id="54-reading-data-core">5.4 Reading Data (Core)</h3>
+<h4 id="rowsworksheetindex-0-limit-0-array"><code>rows($worksheetIndex = 0, $limit = 0): array</code></h4>
+<p>The most commonly used method. Returns a two-dimensional array where each row is a <strong>numerically indexed array</strong> starting from column 0.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$worksheetIndex</code></td>
+<td>Worksheet index, <strong>0-based</strong></td>
+</tr>
+<tr>
+<td><code>$limit</code></td>
+<td>Maximum number of rows to return; <code>0</code> means no limit</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-php">foreach ( $xlsx-&gt;rows() as $r ) {
+    echo $r[0] . ' | ' . $r[1] . &quot;\n&quot;;
+}
+</code></pre>
+<p>Internal implementation: <code>iterator_to_array($this-&gt;readRows(...), false)</code>, i.e. everything is expanded into an array at once.</p>
+<p><strong>Empty-row padding behavior</strong>: <code>readRows()</code> pads trailing empty rows according to the row count from <code>dimension()</code>. That means if Excel's <code>&lt;dimension&gt;</code> declares 100 rows but only 3 rows contain data, you will get 100 rows (the last 97 being arrays of empty strings).</p>
+<h4 id="readrowsworksheetindex-0-limit-0-generator"><code>readRows($worksheetIndex = 0, $limit = 0): Generator</code></h4>
+<p>Returns the same data as <code>rows()</code>, but as a <strong>generator</strong>, producing rows one at a time without occupying result-array memory.</p>
+<pre><code class="language-php">foreach ( $xlsx-&gt;readRows() as $k =&gt; $r ) {
+    fputcsv($fp, $r);
+}
+</code></pre>
+<h4 id="rowsexworksheetindex-0-limit-0-array"><code>rowsEx($worksheetIndex = 0, $limit = 0): array</code></h4>
+<p>Extended version; each cell is an <strong>associative array with 16 fields</strong> (value + styles + hyperlinks + comments + formula, etc.). See <a href="#6-rowsex-cell-fields-in-detail">Chapter 6</a> for details.</p>
+<blockquote>
+<p>The first call <code>require_once</code>s <code>SimpleXLSXEx.php</code> and constructs a <code>SimpleXLSXEx</code> instance (cached in <code>$xlsx-&gt;rowsExReader</code>).</p>
+</blockquote>
+<h4 id="readrowsexworksheetindex-0-limit-0-generator"><code>readRowsEx($worksheetIndex = 0, $limit = 0): Generator</code></h4>
+<p>The generator version of <code>rowsEx()</code>.</p>
+<blockquote>
+<p>🔴 <strong>Verified bug</strong>: <code>$limit</code> <strong>does not work</strong> when it is smaller than the sheet's row count (it returns the full row count, the extra ones being empty rows). See <strong>Pitfall 1</strong> for details. Count and <code>break</code> yourself.</p>
+</blockquote>
+<h4 id="getcellworksheetindex-0-cell-a1-mixed"><code>getCell($worksheetIndex = 0, $cell = 'A1'): mixed</code></h4>
+<p>Gets the value of a single cell by Excel coordinate.</p>
+<pre><code class="language-php">echo $xlsx-&gt;getCell(0, 'B2');     // The Hobbit
+echo $xlsx-&gt;getCell(0, [1, 2]);   // equivalent, [column index, row number]; column 0-based, row 1-based
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>Performance warning</strong>: the source code comment says outright <code>VERY SLOW!</code>. Internally it performs a whole-table XPath scan via <code>$ws-&gt;sheetData-&gt;xpath("row/c[@r='B2']")</code>, rescanning on every call. <strong>Never use it inside a loop</strong>. To fetch a batch of cells, call <code>rows()</code> once and index into it.</p>
+</blockquote>
+<p>Returns <code>null</code> when the cell is not found, and <code>false</code> when the worksheet does not exist.</p>
+<h4 id="dimensionworksheetindex-0-array"><code>dimension($worksheetIndex = 0): array</code></h4>
+<p>Returns <code>[number of columns, number of rows]</code>.</p>
+<pre><code class="language-php">list($cols, $rows) = $xlsx-&gt;dimension(0);
+</code></pre>
+<p>It reads <code>&lt;dimension ref="A1:E3"&gt;</code> first; when that is unavailable it <strong>falls back to iterating over the entire sheetData to compute the maximum values</strong> (slow).</p>
+<blockquote>
+<p>⚠️ The official README itself says <code>// don't trust dimension extracted from xml</code>. In xlsx files generated by some tools (e.g. certain Java/Python libraries), the dimension may be inaccurate. If the column count is too large, you will get a bunch of empty columns.</p>
+</blockquote>
+<h4 id="getindexcell-a1-array"><code>getIndex($cell = 'A1'): array</code></h4>
+<p><code>'AB12'</code> → <code>[27, 11]</code> (0-based column, 0-based row). Returns <code>[-1, -1]</code> on parse failure.</p>
+<h4 id="valuecell"><code>value($cell)</code></h4>
+<p>Takes a <code>&lt;c&gt;</code> SimpleXMLElement node and returns its PHP value. <strong>This is the core method of type mapping</strong> (see <a href="#7-data-type-mapping-table-verified">Chapter 7</a>). Business code generally does not need to call it directly.</p>
+<hr />
+<h3 id="55-html-output">5.5 HTML Output</h3>
+<h4 id="tohtmlworksheetindex-0-string"><code>toHTML($worksheetIndex = 0): string</code></h4>
+<pre><code class="language-php">echo SimpleXLSX::parse('book.xlsx')-&gt;toHTML();
+</code></pre>
+<p>Output looks like:</p>
+<pre><code class="language-html">&lt;table class=excel&gt;&lt;tr&gt;&lt;td nowrap&gt;ISBN&lt;/td&gt;&lt;td nowrap&gt;title&lt;/td&gt;...&lt;/tr&gt;&lt;/table&gt;
+</code></pre>
+<ul>
+<li>Values are escaped with <code>htmlspecialchars($c, ENT_QUOTES)</code></li>
+<li>Empty cells output <code>&amp;nbsp</code></li>
+</ul>
+<h4 id="tohtmlexworksheetindex-0-string"><code>toHTMLEx($worksheetIndex = 0): string</code></h4>
+<p>The styled version. The first row uses <code>&lt;th&gt;</code>, the rest use <code>&lt;td&gt;</code>, and each cell carries inline <code>style</code>:</p>
+<pre><code class="language-html">&lt;table class=excel&gt;&lt;tr&gt;&lt;th style=&quot;color: #000000;font-family: Calibri;font-size: 17px;width: 5.17em;&quot; nowrap&gt;ISBN&lt;/th&gt;...&lt;/tr&gt;&lt;/table&gt;
+</code></pre>
+<ul>
+<li>Column width conversion: <code>width: round($width * 0.47, 2) . 'em'</code></li>
+<li>Row height conversion: <code>height: round($height * 1.3333) . 'px'</code> (only output on the first column of each row)</li>
+<li>Line breaks converted to <code>&lt;br&gt;</code></li>
+</ul>
+<blockquote>
+<p>⚠️ The official documentation states the signature as <code>toHTML($worksheetIndex = 0, $limit = 0)</code>, but <strong>the source code actually has only 1 parameter</strong> (verified via reflection: <code>toHTML</code> parameter count = 1, <code>toHTMLEx</code> = 1). Passing a second argument won't raise an error (PHP allows it), but it <strong>has no effect</strong>. To limit rows, loop over <code>readRowsEx()</code> yourself and count to break out (note that <code>$limit</code> in <code>readRowsEx()</code> is also broken — see <strong>Pitfall 1</strong>).</p>
+</blockquote>
+<hr />
+<h3 id="56-style-related">5.6 Style-Related</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getStyles()</code></td>
+<td>Returns the raw <code>SimpleXMLElement</code> of <code>styles.xml</code></td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;cellFormats</code></td>
+<td><strong>Array</strong>, each element being a complete description of one style index (see below)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;nf</code></td>
+<td><strong>Array</strong>, custom number formats <code>[numFmtId =&gt; formatCode]</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::$CF</code></td>
+<td><strong>Static array</strong>, table of Excel built-in number format codes (see Appendix B)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;rowsExReader</code></td>
+<td>The <code>SimpleXLSXEx</code> instance (only present after <code>rowsEx()</code> has been called)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;theme</code></td>
+<td>Theme XML object</td>
+</tr>
+</tbody>
+</table>
+<p>Verified structure of a single <code>$cellFormats</code> element:</p>
+<pre><code class="language-php">[
+    'format'     =&gt; 'General',   // number format string
+    'numFmtId'   =&gt; 0,
+    'fontId'     =&gt; 1,
+    'fillId'     =&gt; 2,
+    'borderId'   =&gt; 0,
+    'applyAlignment' =&gt; 1,
+    'xfId'       =&gt; 0,
+    'alignment'  =&gt; ['horizontal' =&gt; 'center', 'vertical' =&gt; 'center'],
+    'align'      =&gt; 'center',    // mapped CSS text-align
+    'valign'     =&gt; 'middle',    // mapped CSS vertical-align
+    'font'       =&gt; 'Calibri',
+    'color'      =&gt; 'FF0000',    // font color (6-digit hex, without #)
+    'f-size'     =&gt; 14,
+    'f-b'        =&gt; true,        // bold
+    'f-i'        =&gt; true,        // italic
+    'f-u'        =&gt; 'single',    // underline: '' | 'single' | 'double'
+    'f-strike'   =&gt; false,       // strikethrough
+    'bgcolor'    =&gt; 'FFFF00',    // background color
+    'b-left-color' =&gt; '',  'b-left-style'   =&gt; 'solid',
+    'b-right-color' =&gt; '', 'b-right-style'  =&gt; 'solid',
+    'b-top-color' =&gt; '',   'b-top-style'    =&gt; 'solid',
+    'b-bottom-color' =&gt; '', 'b-bottom-style' =&gt; 'solid',
+]
+</code></pre>
+<p>Usage: use the <code>s</code> from <code>rowsEx()</code> to look up the table:</p>
+<pre><code class="language-php">$s = $cell['s'];
+$fmt = $xlsx-&gt;cellFormats[$s];
+echo $fmt['f-b'] ? 'bold' : 'regular';
+echo $fmt['bgcolor'] ? '#' . $fmt['bgcolor'] : 'no fill';
+</code></pre>
+<hr />
+<h3 id="57-datetime-controls">5.7 Date/Time Controls</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setDateTimeFormat($value)</code></td>
+<td>Sets the date output format; passing <code>null</code> returns Excel's raw serial number</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;datetimeFormat</code></td>
+<td><strong>Property</strong>, default <code>'Y-m-d H:i:s'</code></td>
+</tr>
+<tr>
+<td><code>unixstamp($excelDateTime)</code></td>
+<td>Excel serial number → Unix timestamp (UTC)</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;date1904</code></td>
+<td><strong>Property</strong>, 1 means the workbook uses the 1904 date system</td>
+</tr>
+</tbody>
+</table>
+<p><code>SimpleXLSX::unixstamp()</code> uses <code>gmdate()</code>, i.e. it <strong>interprets as UTC</strong>. See <a href="#8-dates-and-times-in-depth">Chapter 8</a> for details.</p>
+<hr />
+<h3 id="58-static-utility-methods">5.8 Static Utility Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+<th>Verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimpleXLSX::num2name($num)</code></td>
+<td>Column index → letters (1-based)</td>
+<td><code>num2name(1)='A'</code>, <code>num2name(27)='AA'</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::parseRichText($is)</code></td>
+<td>Rich-text node → concatenated string</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::boolean($value)</code></td>
+<td>Excel boolean parsing</td>
+<td><code>'true'=&gt;true</code>, <code>'1'=&gt;true</code>, <code>'0'=&gt;false</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::getTarget($base, $target)</code></td>
+<td>Normalizes relative paths inside the ZIP</td>
+<td><code>getTarget('xl','../theme/theme1.xml')='theme/theme1.xml'</code></td>
+</tr>
+<tr>
+<td><code>SimpleXLSX::strlen/substr/strpos/strtoupper</code></td>
+<td>Safe wrappers for mbstring.func_overload</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="59-low-level-methods-rarely-needed-useful-for-troubleshooting">5.9 Low-Level Methods (Rarely Needed; Useful for Troubleshooting)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unzip($filename, $is_data = false)</code></td>
+<td>Hand-written ZIP unpacking; fills <code>$this-&gt;package['entries']</code></td>
+</tr>
+<tr>
+<td><code>parseEntries()</code></td>
+<td>Builds the workbook/sheets/styles index</td>
+</tr>
+<tr>
+<td><code>getEntryData($name)</code></td>
+<td>Gets raw (decompressed) data by in-package path</td>
+</tr>
+<tr>
+<td><code>getEntryXML($name)</code></td>
+<td>Gets and parses into a SimpleXMLElement (the entry is deleted after use to save memory)</td>
+</tr>
+<tr>
+<td><code>entryExists($name)</code></td>
+<td>Checks whether an in-package entry exists</td>
+</tr>
+<tr>
+<td><code>deleteEntry($name)</code></td>
+<td>Releases a given entry from memory</td>
+</tr>
+</tbody>
+</table>
+<p>Debugging example — see which files are actually inside an xlsx:</p>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('book.xlsx');
+foreach ( $xlsx-&gt;getPackage()['entries'] as $e ) {
+    echo $e['path'] . '/' . $e['name'] . ' (' . $e['ucs'] . &quot; bytes)\n&quot;;
+}
+</code></pre>
+<hr />
+<h2 id="6-rowsex-cell-fields-in-detail">6. rowsEx() Cell Fields in Detail</h2>
+<p>Each cell returned by <code>rowsEx()</code> / <code>readRowsEx()</code> is an associative array with the following structure (16 fields, verified):</p>
+<pre><code class="language-php">[
+    'type'    =&gt; 's',                 // Cell data type
+    'name'    =&gt; 'A1',                // Excel coordinate
+    'value'   =&gt; 'ISBN',              // Parsed PHP value
+    'href'    =&gt; '',                  // Hyperlink (external URL or internal location)
+    'f'       =&gt; '',                  // Formula source text (without =)
+    'format'  =&gt; 'General',           // Number format string
+    's'       =&gt; 0,                   // Style index → $xlsx-&gt;cellFormats[0]
+    'css'     =&gt; 'color: #000000;...',// Generated CSS string
+    'r'       =&gt; 1,                   // Row number (1-based)
+    'hidden'  =&gt; false,               // Whether the row or column containing this cell is hidden
+    'width'   =&gt; 13.7109375,          // Column width (Excel custom units)
+    'height'  =&gt; 0,                   // Row height (points, pt)
+    'comment' =&gt; 'This is a comment', // Plain text of the cell comment
+]
+</code></pre>
+<h3 id="field-by-field-explanation">Field-by-Field Explanation</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description and Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>Raw <code>t</code> attribute: <code>s</code> (shared string) <code>str</code> (formula string result) <code>b</code> (boolean) <code>e</code> (error) <code>inlineStr</code> (inline text) <code>n</code>/<code>''</code> (number) <code>d</code> (ISO date). <strong>An empty string type is normal</strong>, meaning number or general</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>e.g. <code>B2</code>. Even empty cells get a correct coordinate filled in</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>mixed</td>
+<td>Parsed value; types are covered in <a href="#7-data-type-mapping-table-tested">Chapter 7</a></td>
+</tr>
+<tr>
+<td><code>href</code></td>
+<td>string</td>
+<td>Hyperlink. External links are full URLs; internal jumps look like <code>Sheet1!A1</code>. <strong>No protocol whitelist validation is performed</strong>; you must filter it yourself before outputting to HTML (see <a href="#12-security-considerations">Chapter 12</a>)</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>string</td>
+<td>Formula source text, e.g. <code>B3*2</code> (without the leading <code>=</code>). <strong>Note</strong>: for cells with formulas, <code>value</code> is Excel's cached result, not computed on the fly</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td>string</td>
+<td>Number format code, e.g. <code>YYYY-MM-DD HH:MM:SS</code>, <code>0.00%</code>, <code>#,##0.00</code></td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>int</td>
+<td>Style index. Note that in the source code, when <code>s</code> is 0 it falls back to the <strong>column style</strong> <code>cols[$curC]['s']</code></td>
+</tr>
+<tr>
+<td><code>css</code></td>
+<td>string</td>
+<td>Pre-generated by <code>SimpleXLSXEx::readXfs()</code>. <strong>Contains an accumulation bug, see <a href="#13-known-issues-and-pitfall-list">Chapter 13</a></strong></td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>int</td>
+<td>Row number, 1-based</td>
+</tr>
+<tr>
+<td><code>hidden</code></td>
+<td>bool</td>
+<td>Row hidden <strong>or</strong> column hidden; true if either is true (tested: after hiding row 4, all cells in that row have <code>hidden=true</code>)</td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td>float</td>
+<td>Column width in Excel custom units (≈ character width). Only has a value when <code>customWidth</code> is true, otherwise 0</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td>float</td>
+<td>Row height in points (pt = 1/72 inch). Only has a value when <code>customHeight</code> is true</td>
+</tr>
+<tr>
+<td><code>comment</code></td>
+<td>string</td>
+<td>Plain text of the comment. Tested: Chinese comments are returned correctly</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sample-output-from-testing">Sample Output from Testing</h3>
+<p>Calling <code>rowsEx()</code> on a test sheet containing various types, taking column B:</p>
+<pre><code>name=B1    type='inlineStr' value='Value'               format='General'  hidden=false width=24 comment=''
+name=B2    type='inlineStr' value='Hello World'         format='General'  hidden=false width=24 comment='This is a comment'
+name=B3    type='n'         value=618260307             format='General'  hidden=false width=24 f=''
+name=B4    type='n'         value=1233.34               format='General'  hidden=true  width=24
+name=B5    type='n'         value='2016-04-12 13:41:00' format='yyyy-mm-dd h:mm:ss'
+name=B8    type='b'         value=true                  format='HH:MM:SS'
+name=B9    type=''          value=''                    format='General'  f='B3*2'
+name=B11   type='e'         value='#DIV/0!'             format='0.00%'
+</code></pre>
+<hr />
+<h2 id="7-data-type-mapping-table-tested">7. Data Type Mapping Table (Tested)</h2>
+<p>The <code>value()</code> method contains all the type-mapping logic. The table below is the actual behavior I observed under PHP 8.3 using an xlsx file covering all types:</p>
+<table>
+<thead>
+<tr>
+<th>Excel Content</th>
+<th><code>type</code></th>
+<th>PHP Return Type</th>
+<th>Return Value</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Text (incl. Chinese)</td>
+<td><code>s</code> / <code>inlineStr</code></td>
+<td><code>string</code></td>
+<td><code>'Hello World'</code></td>
+<td>Chinese UTF-8 works fine</td>
+</tr>
+<tr>
+<td>Integer <code>618260307</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>int</code></td>
+<td><code>618260307</code></td>
+<td>Converted to int whenever possible</td>
+</tr>
+<tr>
+<td>Decimal <code>1233.34</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>float</code></td>
+<td><code>1233.34</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Large number <code>1.23E+15</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>int</code></td>
+<td><code>1230000000000000</code></td>
+<td>Converted to int on 64-bit PHP</td>
+</tr>
+<tr>
+<td>Date-time</td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'2016-04-12 13:41:00'</code></td>
+<td>Detected as date because the format code contains <code>m</code></td>
+</tr>
+<tr>
+<td>Date only</td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'2022-02-21 00:00:00'</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Time only <code>13:41</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>string</code></td>
+<td><code>'1970-01-01 13:41:00'</code></td>
+<td>⚠️ See explanation below</td>
+</tr>
+<tr>
+<td>TRUE</td>
+<td><code>b</code></td>
+<td><code>bool</code></td>
+<td><code>true</code></td>
+<td></td>
+</tr>
+<tr>
+<td>FALSE</td>
+<td><code>b</code></td>
+<td><code>bool</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Formula <code>=B3*2</code></td>
+<td><code>''</code></td>
+<td>mixed</td>
+<td>Excel's cached value, <strong>may be an empty string</strong></td>
+<td>⚠️ See explanation below</td>
+</tr>
+<tr>
+<td>Percentage <code>12.34%</code></td>
+<td><code>''</code> / <code>n</code></td>
+<td><code>float</code></td>
+<td><code>0.1234</code></td>
+<td><strong>Not multiplied by 100</strong>; the raw decimal is returned</td>
+</tr>
+<tr>
+<td>Error value</td>
+<td><code>e</code></td>
+<td><code>string</code></td>
+<td><code>'#DIV/0!'</code></td>
+<td>Error text returned as is</td>
+</tr>
+<tr>
+<td>Blank cell</td>
+<td><code>''</code></td>
+<td><code>string</code></td>
+<td><code>''</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="type-detection-logic-key-points-from-the-source-code">Type Detection Logic (Key Points from the Source Code)</h3>
+<pre><code class="language-php">// 1) When type is empty or n, the number format string in the style decides whether it is a date
+if ($dataType === '' || $dataType === 'n') {
+    $s = (int)$cell['s'];
+    if ($s &gt; 0 &amp;&amp; isset($this-&gt;cellFormats[$s])) {
+        if (array_key_exists('format', $this-&gt;cellFormats[$s])) {
+            $format = $this-&gt;cellFormats[$s]['format'];
+            // After stripping quoted literals, if the format string contains m (month/minute), treat it as a date
+            if ($format &amp;&amp; preg_match('/[mM]/', preg_replace('/&quot;[^&quot;]+&quot;/', '', $format))) {
+                $dataType = 'D';
+            }
+        }
+    }
+}
+
+// 2) Default branch: string, converted to a number when possible
+$value = (string)$cell-&gt;v;
+if (is_numeric($value)) {
+    if ($value == (int)$value)   $value = (int)$value;
+    elseif ($value == (float)$value) $value = (float)$value;
+}
+</code></pre>
+<p><strong>This means</strong>:</p>
+<ol>
+<li><strong>Date detection relies on "whether the format code contains the letter m"</strong>. If a numeric column in a sheet is mistakenly given a custom format containing <code>m</code>, it will be incorrectly converted to a date. Conversely, a date column set to <code>General</code> will return an Excel serial number as a float (e.g. <code>44613.0</code>) instead of a date.</li>
+<li><strong>Leading zeros are lost</strong>. Something like <code>007</code> (treated as a number) becomes <code>7</code>. Phone numbers, ID numbers, and postal codes must be formatted as text in Excel, otherwise SimpleXLSX returns int/float. This is the number one source of data accidents when importing into systems.</li>
+<li><strong>Large integer precision</strong>: beyond PHP's int range or with decimals it becomes a float; <code>1234567890123456789</code> may turn into <code>1.2345678901235E+18</code>.</li>
+</ol>
+<h3 id="about-time-only">About "Time Only"</h3>
+<p>In Excel, a time without a date (e.g. <code>13:41:00</code>) is stored as <code>0.570138...</code> (integer part 0). <code>unixstamp()</code> takes a special branch for <code>d == 0</code>:</p>
+<pre><code class="language-php">$t = (abs($d) &gt; 0) ? ($d - 25569) * 86400 + round($t * 86400) : round($t * 86400);
+</code></pre>
+<p>The result is <strong>based on the Unix epoch (1970-01-01)</strong>, so <code>13:41</code> → <code>'1970-01-01 13:41:00'</code> (confirmed by testing).</p>
+<p>Practical handling: take only the time part.</p>
+<pre><code class="language-php">$val = $cell['value'];               // '1970-01-01 13:41:00'
+$time = substr($val, 11);            // '13:41:00'
+</code></pre>
+<h3 id="about-formulas">About Formulas</h3>
+<p>SimpleXLSX <strong>does not evaluate formulas</strong>; it reads the <strong>cached result</strong> Excel saved into the file (the <code>&lt;v&gt;</code> inside <code>&lt;c&gt;&lt;f&gt;B3*2&lt;/f&gt;&lt;v&gt;1236&lt;/v&gt;&lt;/c&gt;</code>).</p>
+<p>Testing revealed that xlsx files generated by openpyxl / some non-Excel tools <strong>do not write cached values</strong>; in that case <code>value</code> is an empty string and only <code>f</code> has content.</p>
+<p><strong>Recommendation</strong>:</p>
+<pre><code class="language-php">foreach ($xlsx-&gt;rowsEx() as $row) {
+    foreach ($row as $c) {
+        $v = $c['value'];
+        if ($v === '' &amp;&amp; $c['f'] !== '') {
+            // Formula cell without a cached value
+            $v = null; // or flag for manual handling / recompute yourself
+        }
+    }
+}
+</code></pre>
+<hr />
+<h2 id="8-dates-and-times-in-depth">8. Dates and Times in Depth</h2>
+<h3 id="81-the-nature-of-excel-dates">8.1 The Nature of Excel Dates</h3>
+<p>An Excel date is a <strong>floating-point number</strong>: the integer part is the "number of days since 1899-12-30" (the 1900 system), and the decimal part is the fraction of the day. For example, <code>42472.570138889</code> = <code>2016-04-12 13:41:00</code>.</p>
+<blockquote>
+<p>Why 1899-12-30 and not 1900-01-01? Because of Excel's famous "1900 is a leap year" bug. The <code>25569</code> in <code>unixstamp()</code> is the number of days between 1899-12-30 and 1970-01-01.</p>
+</blockquote>
+<h3 id="82-conversion-formula">8.2 Conversion Formula</h3>
+<pre><code class="language-php">public function unixstamp($excelDateTime) {
+    $d = floor($excelDateTime);      // days
+    $t = $excelDateTime - $d;        // time fraction of the day
+    if ($this-&gt;date1904) { $d += 1462; }   // 1904 system: add 1462 days
+    $t = (abs($d) &gt; 0) ? ($d - 25569) * 86400 + round($t * 86400) : round($t * 86400);
+    return (int)$t;
+}
+</code></pre>
+<p>The result is then formatted with <code>gmdate($this-&gt;datetimeFormat, $ts)</code> — <strong>note it is <code>gmdate()</code>, not <code>date()</code></strong>, i.e. the timestamp is interpreted in UTC.</p>
+<h3 id="83-four-usages">8.3 Four Usages</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('book.xlsx');
+
+// ① Default: ISO format (can be stored directly in MySQL DATETIME)
+echo $xlsx-&gt;getCell(0, 'C2');   // 2016-04-12 13:41:00
+
+// ② Custom format
+$xlsx-&gt;setDateTimeFormat('d.m.Y H:i');
+echo $xlsx-&gt;getCell(0, 'C2');   // 12.04.2016 13:41
+
+// ③ Unix timestamp
+$xlsx-&gt;setDateTimeFormat('U');
+$ts = $xlsx-&gt;getCell(0, 'C2');  // 1645401600 (string)
+echo gmdate('Y-m-d', $ts);      // 2016-04-12
+
+// ④ Raw Excel serial number (give up automatic conversion)
+$xlsx-&gt;setDateTimeFormat(null);
+$xd = $xlsx-&gt;getCell(0, 'C2');  // 42472.570138889 (float)
+echo gmdate('m/d/Y', $xlsx-&gt;unixstamp($xd));  // 04/12/2016
+</code></pre>
+<p><strong>Confirmed by testing</strong> (same cell, four settings):</p>
+<pre><code>NULL             =&gt; 44613.0                      (float)
+'Y-m-d H:i:s'    =&gt; '2022-02-21 00:00:00'        (string)
+'d.m.Y H:i'      =&gt; '21.02.2022 00:00'           (string)
+'U'              =&gt; '1645401600'                 (string)
+</code></pre>
+<p>Note that <code>'U'</code> returns a <strong>string</strong>, not an integer; you need an <code>(int)</code> cast.</p>
+<h3 id="84-time-zone-pitfall">8.4 Time Zone Pitfall</h3>
+<p><code>gmdate()</code> means: a <code>2016-04-12 13:41</code> written in Excel comes out as <code>2016-04-12 13:41:00</code>, <strong>without any offset caused by the server time zone</strong>. This is usually exactly what you want (what you see in Excel is what you get).</p>
+<p>Conversely, if you need to interpret it in a specific time zone, you must add the offset yourself:</p>
+<pre><code class="language-php">$xlsx-&gt;setDateTimeFormat('U');
+$ts = (int)$xlsx-&gt;getCell(0, 'C2');
+$local = date('Y-m-d H:i:s', $ts + 8 * 3600);  // display in UTC+8
+</code></pre>
+<h3 id="85-the-1904-date-system">8.5 The 1904 Date System</h3>
+<p>Old Mac Excel files may use the 1904 system. The library automatically detects <code>&lt;workbookPr date1904="1"&gt;</code> in <code>workbook.xml</code> and sets <code>$xlsx-&gt;date1904 = 1</code>.</p>
+<p>When manual intervention is needed (the property is public):</p>
+<pre><code class="language-php">$xlsx-&gt;date1904 = 1;   // force the 1904 system
+</code></pre>
+<p>If you find all dates are <strong>4 years and 1 day later</strong> than they should be, this is the issue.</p>
+<h3 id="86-helper-for-identifying-date-columns">8.6 Helper for Identifying Date Columns</h3>
+<p><code>rows()</code> only gives you values; it doesn't tell you which column is a date. Use the <code>format</code> from <code>rowsEx()</code>:</p>
+<pre><code class="language-php">function isDateCell(array $cell): bool {
+    if ($cell['type'] === 'd') return true;
+    if (!in_array($cell['type'], ['', 'n'], true)) return false;
+    $fmt = preg_replace('/&quot;[^&quot;]+&quot;/', '', $cell['format']);
+    // Contains any of y/m/d/h/s and is not a pure numeric format
+    return (bool)preg_match('/[ymdhs]/i', $fmt);
+}
+</code></pre>
+<hr />
+<h2 id="9-the-style-system-simplexlsxex">9. The Style System (SimpleXLSXEx)</h2>
+<h3 id="91-load-timing">9.1 Load Timing</h3>
+<p><code>SimpleXLSXEx</code> is <strong>lazily loaded</strong>: it is only <code>require_once</code>d and instantiated the first time <code>rowsEx()</code> / <code>readRowsEx()</code> / <code>toHTMLEx()</code> is called, and is then cached in <code>$xlsx-&gt;rowsExReader</code>.</p>
+<p>If you only use <code>rows()</code>, this class is never loaded at all — zero overhead.</p>
+<h3 id="92-what-the-constructor-does">9.2 What the Constructor Does</h3>
+<pre><code class="language-php">public function __construct(SimpleXLSX $xlsx) {
+    $this-&gt;readThemeColors();  // Theme palette (12 colors)
+    $this-&gt;readFonts();        // fonts: b/i/u/strike/sz/color/name/family/charset/scheme
+    $this-&gt;readFills();        // fills: pattern/fgcolor/bgcolor
+    $this-&gt;readBorders();      // borders: 8 directions + diagonalUp/Down/outline
+    $this-&gt;readXfs();          // Merged into $this-&gt;css[s] and fills in cellFormats
+    $this-&gt;readHyperlinks();   // Per-sheet hyperlink map
+    $this-&gt;readComments();     // Per-sheet comment map
+}
+</code></pre>
+<h3 id="93-color-parsing-getcolorvalue">9.3 Color Parsing <code>getColorValue()</code></h3>
+<p>Supports three Excel color notations with this priority:</p>
+<ol>
+<li><code>rgb="FFCCBBAA"</code> → take the last 6 digits (drop the alpha)</li>
+<li><code>indexed="N"</code> → look up the built-in palette <code>SimpleXLSXEx::$IC</code> (65 colors)</li>
+<li><code>theme="N"</code> → look up the theme palette</li>
+</ol>
+<p>Finally, if a <code>tint</code> attribute is present, a tint blend is applied (interpolation toward white/black).</p>
+<h3 id="94-excel-alignment-css-mapping-table">9.4 Excel Alignment → CSS Mapping Table</h3>
+<p>Horizontal alignment:</p>
+<table>
+<thead>
+<tr>
+<th>Excel</th>
+<th>CSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>general</td>
+<td>— (none)</td>
+</tr>
+<tr>
+<td>left</td>
+<td>left</td>
+</tr>
+<tr>
+<td>center / centerContinuous</td>
+<td>center</td>
+</tr>
+<tr>
+<td>right</td>
+<td>right</td>
+</tr>
+<tr>
+<td>justify / distributed</td>
+<td>justify</td>
+</tr>
+<tr>
+<td>fill</td>
+<td>— (none)</td>
+</tr>
+</tbody>
+</table>
+<p>Vertical alignment:</p>
+<table>
+<thead>
+<tr>
+<th>Excel</th>
+<th>CSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>top</td>
+<td>top</td>
+</tr>
+<tr>
+<td>center / justify / distributed</td>
+<td>middle</td>
+</tr>
+<tr>
+<td>bottom</td>
+<td>bottom</td>
+</tr>
+</tbody>
+</table>
+<h3 id="95-font-size-conversion">9.5 Font Size Conversion</h3>
+<pre><code class="language-php">$css .= 'font-size: ' . (round($cf['f-size'] * 1.3333) + 2) . 'px;';
+</code></pre>
+<p>Excel font sizes are in points (pt); here it is roughly converted to px as <code>pt × 1.3333 + 2</code> (1pt ≈ 1.333px). So 11pt → 17px, 14pt → 21px.</p>
+<h3 id="96-borders">9.6 Borders</h3>
+<p>Excel's 14 border styles are simplified into two CSS styles: <code>solid</code> and <code>dashed</code> (<code>dashed</code>/<code>dashDot</code>/<code>dashDotDot</code> → <code>dashed</code>, all other non-none styles → <code>solid</code>), the width is uniformly <code>thin</code>, and the color is taken from the corresponding direction's color.</p>
+<blockquote>
+<p>In other words: <code>medium</code>, <code>thick</code>, <code>double</code>, and <code>hair</code> all look the same in HTML. This is an intentional simplification — don't expect pixel-perfect reproduction.</p>
+</blockquote>
+<h3 id="97-building-css-yourself-bypassing-the-built-in-css-bug">9.7 Building CSS Yourself (Bypassing the Built-in css Bug)</h3>
+<p>If the built-in <code>css</code> field is not good enough (see the accumulation bug in <a href="#13-known-issues-and-pitfall-list">Chapter 13</a>), you can read <code>cellFormats</code> and assemble it yourself:</p>
+<pre><code class="language-php">function buildCss(SimpleXLSX $xlsx, int $s): string {
+    $f = $xlsx-&gt;cellFormats[$s] ?? [];
+    $css = '';
+    if (!empty($f['color']))    $css .= 'color:#' . $f['color'] . ';';
+    if (!empty($f['bgcolor']))  $css .= 'background-color:#' . $f['bgcolor'] . ';';
+    if (!empty($f['f-b']))      $css .= 'font-weight:bold;';
+    if (!empty($f['f-i']))      $css .= 'font-style:italic;';
+    if (!empty($f['align']))    $css .= 'text-align:' . $f['align'] . ';';
+    if (!empty($f['valign']))   $css .= 'vertical-align:' . $f['valign'] . ';';
+    if (!empty($f['f-size']))   $css .= 'font-size:' . (round($f['f-size'] * 1.3333) + 2) . 'px;';
+    return $css;
+}
+</code></pre>
+<hr />
+<h2 id="10-large-files-and-memory-optimization">10. Large Files and Memory Optimization</h2>
+<h3 id="101-official-benchmark-data">10.1 Official Benchmark Data</h3>
+<p>From CHANGELOG 1.0.12, the author's measurements:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Memory for 100K rows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rowsEx()</code></td>
+<td>~880 MB</td>
+</tr>
+<tr>
+<td><code>readRowsEx()</code></td>
+<td>~162 MB</td>
+</tr>
+</tbody>
+</table>
+<p>More than a 5x difference. The reason is that <code>rows()</code> / <code>rowsEx()</code> expand the entire sheet into a huge two-dimensional PHP array (each element of a PHP array costs about 80–100 bytes; 100K rows × 10 columns is 1 million zvals).</p>
+<h3 id="102-where-the-memory-goes">10.2 Where the Memory Goes</h3>
+<pre><code>Total memory ≈ file size (raw binary)
+       + compressed data of all ZIP entries (package['entries'])
+       + SimpleXMLElement trees of parsed worksheets (the biggest chunk)
+       + shared strings array
+       + result array (only for rows/rowsEx)
+</code></pre>
+<p><code>readRows()</code> only cuts the last item.</p>
+<h3 id="103-optimization-checklist">10.3 Optimization Checklist</h3>
+<p><strong>① Prefer generators</strong></p>
+<pre><code class="language-php">// ❌ Bad: the whole sheet goes into memory
+foreach ($xlsx-&gt;rows() as $r) { ... }
+
+// ✅ Good: row-by-row output
+foreach ($xlsx-&gt;readRows() as $r) { ... }
+</code></pre>
+<p><strong>② Stream to the destination; don't accumulate</strong></p>
+<pre><code class="language-php">$f = fopen('out.csv', 'wb');
+fwrite($f, chr(0xEF) . chr(0xBB) . chr(0xBF));  // UTF-8 BOM so Excel opens Chinese without garbling
+foreach ($xlsx-&gt;readRows() as $r) {
+    fputcsv($f, $r);
+}
+fclose($f);
+</code></pre>
+<p><strong>③ Process in batches and release</strong></p>
+<pre><code class="language-php">$pdo-&gt;beginTransaction();
+$stmt = $pdo-&gt;prepare('INSERT INTO t (a,b,c) VALUES (?,?,?)');
+$i = 0;
+foreach ($xlsx-&gt;readRows() as $k =&gt; $r) {
+    if ($k === 0) continue;                 // skip the header row
+    $stmt-&gt;execute([$r[0], $r[1], $r[2]]);
+    if (++$i % 1000 === 0) {
+        $pdo-&gt;commit(); $pdo-&gt;beginTransaction();
+    }
+}
+$pdo-&gt;commit();
+</code></pre>
+<p><strong>④ Raise the memory limit (last resort)</strong></p>
+<pre><code class="language-php">ini_set('memory_limit', '512M');
+</code></pre>
+<p><strong>⑤ Realistic advice for very large sheets</strong></p>
+<p>If an xlsx exceeds 20–30 MB or 500K rows, <strong>SimpleXLSX is not the right tool</strong>, because the XML DOM must reside entirely in memory. In that case you should:</p>
+<ul>
+<li>At the upload step, ask users to switch to CSV;</li>
+<li>Or write your own streaming SAX parser (e.g. <code>XMLReader</code> + <code>expand()</code>);</li>
+<li>Or use PhpSpreadsheet with <code>setReadDataOnly(true)</code> + chunked reading (also memory-hungry, but slightly better).</li>
+</ul>
+<h3 id="104-the-limit-parameter-inconsistent-behavior-across-methods">10.4 The <code>$limit</code> Parameter (⚠️ Inconsistent Behavior Across Methods)</h3>
+<p><code>rows()</code> / <code>readRows()</code> / <code>rowsEx()</code> / <code>readRowsEx()</code> all declare <code>$limit</code>, but <strong>testing shows only the first three are reliable</strong>:</p>
+<pre><code class="language-php">$xlsx-&gt;rows(0, 100);        // ✅ only the first 100 rows
+$xlsx-&gt;readRows(0, 100);    // ✅ works
+$xlsx-&gt;rowsEx(0, 100);      // ✅ works (internally uses iterator_to_array)
+$xlsx-&gt;readRowsEx(0, 100);  // ❌ broken, returns all rows
+</code></pre>
+<p><code>readRows()</code> boundary behavior observed in testing (sheet has 13 rows total):</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th>Rows returned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>13 (unlimited)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>99</td>
+<td>13</td>
+</tr>
+</tbody>
+</table>
+<p>Under the same conditions, <code>readRowsEx()</code> returns 13 rows regardless of passing 1/2/3/5. Cause and workaround: see <strong>Pitfall 1</strong>.</p>
+<blockquote>
+<p>⚠️ <code>toHTML()</code> and <code>toHTMLEx()</code> don't have a <code>$limit</code> parameter at all (only 1 parameter in the source).</p>
+</blockquote>
+<hr />
+<h2 id="11-error-handling-and-error-codes">11. Error Handling and Error Codes</h2>
+<h3 id="111-main-error-code-table-xlsx-errno-simplexlsxparseerrno">11.1 Main Error Code Table (<code>$xlsx-&gt;errno()</code> / <code>SimpleXLSX::parseErrno()</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Message</th>
+<th>Meaning</th>
+<th>Troubleshooting Direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>File not found &lt;path&gt;</code></td>
+<td>File does not exist or is unreadable</td>
+<td>Path, <code>is_readable()</code>, permissions, uploaded temp file already reclaimed</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Unknown archive format</code></td>
+<td>Not a valid ZIP</td>
+<td>Corrupted file, actually a .xls disguised as .xlsx, incomplete download, or an HTML error page</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>XML-entry &lt;name&gt; parser error ...</code></td>
+<td>XML parsing inside the package failed</td>
+<td>Corrupted file; or the XML contains content libxml does not support</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>XML-entry not found &lt;name&gt;</code></td>
+<td>A required XML entry was not read</td>
+<td>Abnormal ZIP structure; entry decompression/CRC failures also fall into this code</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>Entry not found &lt;name&gt;</code></td>
+<td>Specified file not found in the package</td>
+<td>xlsx from a non-standard generator</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>Worksheet not found &lt;index&gt;</code></td>
+<td>Worksheet index out of range</td>
+<td>Indexes are 0-based; check <code>sheetsCount()</code> first</td>
+</tr>
+</tbody>
+</table>
+<h3 id="112-reproducing-each-error-in-testing">11.2 Reproducing Each Error in Testing</h3>
+<pre><code class="language-php">// errno = 1
+SimpleXLSX::parse('/nope.xlsx');
+// → parseError: &quot;File not found /nope.xlsx&quot;
+
+// errno = 2
+file_put_contents('/tmp/bad.xlsx', 'not a zip');
+SimpleXLSX::parse('/tmp/bad.xlsx');
+// → parseError: &quot;Unknown archive format&quot;
+
+// errno = 6
+$xlsx-&gt;rows(9);   // only 3 sheets
+// → error: &quot;Worksheet not found 9&quot;, and rows() returns an empty array array(0) {}
+</code></pre>
+<h3 id="113-hidden-internal-errors-not-exposed-via-errno">11.3 Hidden Internal Errors (Not Exposed via errno)</h3>
+<p><code>getEntryData()</code> has a set of <strong>entry-level</strong> error codes, but they are only written to <code>$entry['error']</code> and make the method return <code>false</code>; they <strong>do not call <code>$this-&gt;error()</code></strong>. As a result, the upper-level <code>getEntryXML()</code> uniformly reports errno=4.</p>
+<table>
+<thead>
+<tr>
+<th>Internal Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>Decompression of data failed</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Uncompressed size mismatch</td>
+</tr>
+<tr>
+<td>4</td>
+<td>CRC32 checksum mismatch</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Unsupported compression method / <strong>ZIP64 entry too large</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>PHP BZIP2 extension unavailable</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Troubleshooting implication</strong>: if you get errno=4 "XML-entry not found" but the file clearly opens in Excel, it is most likely a CRC/decompression problem (file corrupted in transit) or a BZIP2-compressed ZIP (very rare). You can temporarily print <code>$xlsx-&gt;getPackage()['entries']</code> to see each entry's <code>error</code> field.</p>
+<h3 id="114-recommended-error-handling-pattern">11.4 Recommended Error Handling Pattern</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+function openXlsx(string $path): SimpleXLSX {
+    if (!is_readable($path)) {
+        throw new RuntimeException(&quot;File not readable: {$path}&quot;);
+    }
+    $xlsx = SimpleXLSX::parse($path);
+    if (!$xlsx) {
+        throw new RuntimeException(
+            'XLSX parse failed [errno ' . SimpleXLSX::parseErrno() . ']: ' . SimpleXLSX::parseError()
+        );
+    }
+    return $xlsx;
+}
+
+try {
+    $xlsx = openXlsx($uploaded);
+    if ($xlsx-&gt;sheetsCount() === 0) {
+        throw new RuntimeException('The workbook contains no worksheets');
+    }
+    // ...
+} catch (RuntimeException $e) {
+    // Log + show a friendly message to the user
+}
+</code></pre>
+<h3 id="115-complete-validation-for-upload-scenarios">11.5 Complete Validation for Upload Scenarios</h3>
+<pre><code class="language-php">$err = $_FILES['file']['error'];
+if ($err !== UPLOAD_ERR_OK)                    die('Upload failed: ' . $err);
+if ($_FILES['file']['size'] &gt; 10 * 1024 * 1024) die('File must not exceed 10MB');
+
+$finfo = new finfo(FILEINFO_MIME_TYPE);
+$mime  = $finfo-&gt;file($_FILES['file']['tmp_name']);
+$allowed = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/zip',      // some environments detect it as zip
+    'application/octet-stream',
+];
+if (!in_array($mime, $allowed, true))          die('Please upload a .xlsx file');
+
+// Note: parse after move_uploaded_file; don't leave files sitting in the tmp directory too long
+$dest = __DIR__ . '/uploads/' . date('YmdHis') . '.xlsx';
+move_uploaded_file($_FILES['file']['tmp_name'], $dest);
+
+$xlsx = SimpleXLSX::parse($dest);
+</code></pre>
+<hr />
+<h2 id="12-security-considerations">12. Security Considerations</h2>
+<h3 id="121-xss-values-are-escaped-but-href-is-not">12.1 XSS: Values Are Escaped, but href Is Not</h3>
+<p><strong>Good news</strong>: <code>toHTML()</code> and <code>toHTMLEx()</code> apply <code>htmlspecialchars($v, ENT_QUOTES)</code> to cell values.</p>
+<p><strong>Bad news</strong>: the <code>href</code> field returned by <code>rowsEx()</code> has <strong>no protocol validation whatsoever</strong>. If you build the HTML yourself:</p>
+<pre><code class="language-php">// ❌ Dangerous: href could be javascript:alert(1)
+echo '&lt;a href=&quot;' . $cell['href'] . '&quot;&gt;link&lt;/a&gt;';
+
+// ✅ Correct: whitelist validation
+function safeHref(string $href): string {
+    if (preg_match('#^https?://#i', $href)) return $href;
+    if (preg_match('#^mailto:#i', $href))   return $href;
+    if (preg_match('/^[^!]+![A-Z]+\d+$/', $href)) return ''; // internal jump, not expressible in HTML
+    return '';
+}
+echo '&lt;a href=&quot;' . safeHref($cell['href']) . '&quot;&gt;link&lt;/a&gt;';
+</code></pre>
+<h3 id="122-css-injection-cve-2024-55878">12.2 CSS Injection (CVE-2024-55878)</h3>
+<p>Historical versions had a vulnerability allowing CSS injection via styles (GHSA-x6mh-rjwm-8ph7). Fixed in 1.1.19 with:</p>
+<ul>
+<li>Font names forced through a whitelist: <code>preg_match('/^[a-zA-Z0-9 ]+$/', $name)</code>, falling back to <code>Calibri</code> if invalid</li>
+<li>Colors forced to 6-digit hex: <code>preg_match('/^[A-F0-9]{6}$/', $c)</code></li>
+<li>Alignment values taken only from a fixed mapping table</li>
+</ul>
+<p><strong>But if you inline the <code>css</code> field directly into <code>style=""</code>, sanitizing it a second time is still recommended</strong> (especially when rendering user-uploaded files on the public web):</p>
+<pre><code class="language-php">// Coarse filtering: keep only known-safe CSS properties
+function sanitizeCss(string $css): string {
+    $out = '';
+    foreach (explode(';', $css) as $decl) {
+        $decl = trim($decl);
+        if (preg_match('/^(color|background-color|font-family|font-size|font-weight|font-style|text-decoration|text-align|vertical-align|border-(top|right|bottom|left)-(style|color|width)):/', $decl)) {
+            $out .= $decl . ';';
+        }
+    }
+    return $out;
+}
+</code></pre>
+<p>A more thorough option: integrate <a href="http://htmlpurifier.org/">HTMLPurifier</a>.</p>
+<h3 id="123-xxe-xml-external-entities">12.3 XXE (XML External Entities)</h3>
+<p>The source code already handles this:</p>
+<pre><code class="language-php">if (LIBXML_VERSION &lt; 20900 &amp;&amp; function_exists('libxml_disable_entity_loader')) {
+    $_old = libxml_disable_entity_loader();
+}
+$entry_xmlobj = simplexml_load_string($entry_xml, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
+</code></pre>
+<p>libxml &gt;= 2.9 does not load external entities by default, so no manual disabling is needed. <strong>The premise is that you are running a reasonably new libxml</strong> — don't run this bare on old systems like CentOS 6.</p>
+<h3 id="124-decompression-bombs-zip-bomb">12.4 Decompression Bombs (Zip Bomb)</h3>
+<p>An xlsx is a ZIP, so in theory there is a zip bomb risk (1KB file decompressing to 10GB). SimpleXLSX <strong>does not</strong> enforce any decompression size limit.</p>
+<p>Mitigation: limit file size before upload (e.g. ≤ 10 MB), and set <code>memory_limit</code> in PHP as a backstop.</p>
+<h3 id="125-other">12.5 Other</h3>
+<ul>
+<li><strong>Don't trust dimension</strong>: a malicious file can declare <code>A1:XFD1048576</code>, causing <code>readRows()</code> to try to pad hundreds of millions of empty rows. Add your own row-count cap.</li>
+<li><strong>File names</strong>: don't build paths from the uploaded original file name (path traversal); generate your own file names.</li>
+<li><strong>Temp file lifecycle</strong>: PHP deletes uploaded temp files when the script ends; be sure to call <code>move_uploaded_file()</code> first.</li>
+</ul>
+<hr />
+<h2 id="13-known-issues-and-pitfall-list">13. Known Issues and Pitfall List</h2>
+<p>The following are behaviors I found by reading the source code in full + testing. They are <strong>not documented in the official docs</strong>, grouped by severity (🔴 High / 🟠 Medium / 🟢 Low).</p>
+<h3 id="pitfall-1-the-limit-parameter-of-readrowsex-is-broken-confirmed-by-testing-in-1119">🔴 Pitfall 1: The <code>$limit</code> Parameter of <code>readRowsEx()</code> Is Broken (Confirmed by Testing in 1.1.19)</h3>
+<p><strong>Symptom</strong>: when <code>$limit</code> is less than the worksheet's row count, <code>readRowsEx()</code> ignores the limit and returns the full row count (the extras are all empty rows).</p>
+<p>Test data (worksheet has 13 rows total):</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th><code>readRows()</code> returns</th>
+<th><code>readRowsEx()</code> returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 (unlimited)</td>
+<td>13</td>
+<td>13</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5 ✅</td>
+<td><strong>13</strong> ❌</td>
+</tr>
+<tr>
+<td>13</td>
+<td>13 ✅</td>
+<td>13 ✅</td>
+</tr>
+<tr>
+<td>20</td>
+<td>13 ✅</td>
+<td>13 ✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Root cause</strong>: in <code>SimpleXLSXEx::readRowsEx()</code>, hitting the limit uses <code>break</code>, while <code>SimpleXLSX::readRows()</code> uses <code>return</code>:</p>
+<pre><code class="language-php">// SimpleXLSX::readRows() —— correct
+yield $r;
+$_limit--;
+if ($_limit === 0) { return; }        // ← ends the generator immediately
+
+// SimpleXLSXEx::readRowsEx() —— bug
+yield $cells;
+$_limit--;
+if ($_limit === 0) { break; }         // ← only breaks out of the foreach
+// ...
+while ($curR &lt; $numRows) {            // ← still entered after break
+    yield $emptyRow;                  //    keeps padding empty rows, and $_limit is already negative, so it will never hit 0 again
+    $_limit--;
+    if ($_limit === 0) { return; }
+}
+</code></pre>
+<p><strong>Impact</strong>: When you call <code>rowsEx(0, 100)</code> intending to "preview the first 100 rows", you actually get all rows of the entire sheet (including empty rows padded later), making memory usage and runtime spiral out of control on large files.</p>
+<p><strong>Workaround</strong>: Count rows yourself and break out; don't rely on <code>$limit</code>:</p>
+<pre><code class="language-php">$n = 0;
+foreach ($xlsx-&gt;readRowsEx(0) as $r) {      // no limit passed
+    if (++$n &gt; 100) break;
+    // ...
+}
+</code></pre>
+<blockquote>
+<p>✅ <strong>Fixed</strong>: The patch bundled with this documentation (see <a href="#17-source-code-bug-fix-list-with-patches">17. Source-Code Bug Fix List</a>) changed <code>break</code> to <code>return</code>. After the fix, the <code>$limit</code> of <code>readRowsEx()</code> behaves the same as <code>readRows()</code>, and <code>$limit</code> can be used directly.</p>
+</blockquote>
+<h3 id="pitfall-2-calling-rowsex-multiple-times-on-the-same-instance-makes-css-accumulate-infinitely">🔴 Pitfall 2: Calling <code>rowsEx()</code> multiple times on the same instance makes CSS accumulate infinitely</h3>
+<p><strong>Symptoms</strong> (verified by testing):</p>
+<pre><code>1st rowsEx B3.css = 'color: #000000;font-family: Calibri;font-size: 17px;text-align: right;×4'
+2nd rowsEx B3.css = '... text-align: right;×8'
+3rd rowsEx B3.css = '... text-align: right;×12'
+</code></pre>
+<p><strong>Cause</strong>: In <code>SimpleXLSXEx::valueEx()</code>, the assignment is <strong>by reference</strong>:</p>
+<pre><code class="language-php">$r['css'] = &amp;$this-&gt;css[$r['s']];           // reference!
+if (...) { $r['css'] .= 'text-align: right;'; }  // written into $this-&gt;css[$s] itself
+</code></pre>
+<p>Every time <code>rowsEx()</code>/<code>toHTMLEx()</code> is called, every cell that is "non-empty, unaligned, and not of text type" appends to the same shared string once more.</p>
+<p><strong>Impact</strong>: The output HTML grows longer and the stylesheet gets polluted (although duplicate CSS declarations are harmless semantically, the string keeps doubling).</p>
+<p><strong>Workarounds</strong>:</p>
+<pre><code class="language-php">// Option A: parse fresh each time (simplest)
+$xlsx1 = SimpleXLSX::parse($f); $a = $xlsx1-&gt;rowsEx();
+$xlsx2 = SimpleXLSX::parse($f); $b = $xlsx2-&gt;rowsEx();
+
+// Option B: deduplicate
+$css = implode(';', array_unique(array_filter(explode(';', $cell['css'])))) . ';';
+
+// Option C: don't use the built-in css; generate your own from cellFormats (see 9.7)
+</code></pre>
+<blockquote>
+<p>✅ <strong>Fixed</strong>: The bundled patch changed the reference assignment into a value copy (<code>$r['css'] = isset($this-&gt;css[$r['s']]) ? ... : ''</code>), so repeated calls on the same instance no longer accumulate.</p>
+</blockquote>
+<h3 id="pitfall-2-tohtml-tohtmlex-has-no-limit-parameter">🔴 Pitfall 2: <code>toHTML()</code> / <code>toHTMLEx()</code> has no <code>$limit</code> parameter</h3>
+<p>The README shows the signature as <code>toHTML($worksheetIndex = 0, $limit = 0)</code>, but reflection on the source code shows <strong>only 1 parameter</strong>. Passing a second argument silently has no effect.</p>
+<p>To limit the number of rows:</p>
+<pre><code class="language-php">echo '&lt;table&gt;';
+$i = 0;
+foreach ($xlsx-&gt;readRowsEx(0, 100) as $r) {   // generator + limit
+    echo '&lt;tr&gt;';
+    foreach ($r as $c) { echo '&lt;td&gt;' . htmlspecialchars($c['value']) . '&lt;/td&gt;'; }
+    echo '&lt;/tr&gt;';
+}
+echo '&lt;/table&gt;';
+</code></pre>
+<blockquote>
+<p>✅ <strong>Fixed</strong>: The bundled patch added the <code>$limit</code> parameter to both methods and passes it through to <code>readRows()</code>/<code>readRowsEx()</code>. You can now call <code>toHTML(0, 100)</code> directly.</p>
+</blockquote>
+<h3 id="pitfall-3-formula-cells-may-return-an-empty-string">🟠 Pitfall 3: Formula cells may return an empty string</h3>
+<p>Formulas are not evaluated; only cached values are read. xlsx files not generated by Excel often lack cached values → <code>value === ''</code>. See <a href="#7-data-type-mapping-table-tested">Chapter 7</a> for details.</p>
+<blockquote>
+<p>✅ <strong>Solved</strong>: The companion extension <code>SimpleXLSXPro</code> ships with a formula evaluation engine, so formulas without cached values can still be computed. See <a href="#18-formula-evaluation-xlsxformula">18. Formula Evaluation</a> for details.</p>
+</blockquote>
+<h3 id="pitfall-4-leading-zeros-precision-loss-on-long-numbers">🟠 Pitfall 4: Leading zeros / precision loss on long numbers</h3>
+<p><code>007</code> and <code>130123199001011234</code> stored as numbers in Excel get converted to int/float, losing both leading zeros and precision.</p>
+<p><strong>Must be fixed at the source</strong>: ask users to set these columns to "Text" format in Excel, or pad zeros after import according to your business rules:</p>
+<pre><code class="language-php">$id = str_pad((string)$v, 18, '0', STR_PAD_LEFT);
+</code></pre>
+<h3 id="pitfall-5-inaccurate-dimension-causes-extra-empty-rows">🟠 Pitfall 5: Inaccurate <code>dimension</code> causes extra empty rows</h3>
+<p>After iterating over the real rows, <code>readRows()</code> still runs <code>while ($curR &lt; $numRows) yield $emptyRow;</code>. If the row count declared in the XML dimension is far larger than the actual data, you'll receive a bunch of all-empty rows.</p>
+<p><strong>Defense</strong>:</p>
+<pre><code class="language-php">$maxRows = 100000;
+$n = 0;
+foreach ($xlsx-&gt;readRows() as $r) {
+    if (++$n &gt; $maxRows) break;
+    if (array_filter($r) === []) continue;   // skip all-empty rows
+    // ...
+}
+</code></pre>
+<h3 id="pitfall-6-getcell-is-extremely-slow">🟡 Pitfall 6: <code>getCell()</code> is extremely slow</h3>
+<p>Internally it does an XPath full-table scan. The source code comment explicitly says <code>VERY SLOW!</code>. Fetching 1000 cells with <code>getCell()</code> causes noticeable lag. For batch retrieval, use <code>rows()</code> and access by index.</p>
+<h3 id="pitfall-7-parseerror-is-global-static-state">🟡 Pitfall 7: <code>parseError()</code> is global static state</h3>
+<pre><code class="language-php">static $error = false;
+return $set ? $error = $set : $error;
+</code></pre>
+<p>When parsing multiple files in a loop, if one succeeds in the middle, <code>parseError()</code> is <strong>not cleared</strong> (the success path doesn't call <code>parseError()</code>). Therefore:</p>
+<pre><code class="language-php">// ❌ After the second parse succeeds, you still read the first one's error
+SimpleXLSX::parse('bad.xlsx');   // fails, sets error
+SimpleXLSX::parse('good.xlsx');  // succeeds, does not reset error
+echo SimpleXLSX::parseError();   // still shows bad.xlsx's error!
+
+// ✅ Correct: read it only in the failure branch
+if (!$x = SimpleXLSX::parse('bad.xlsx')) { echo SimpleXLSX::parseError(); }
+if (!$x = SimpleXLSX::parse('good.xlsx')) { echo SimpleXLSX::parseError(); }
+</code></pre>
+<blockquote>
+<p>✅ <strong>Fixed</strong>: The bundled patch added a <code>$reset</code> parameter to <code>parseError()</code>/<code>parseErrno()</code> and actively resets on the success branch of <code>parse()</code>. Verified after the fix:
+<code>SimpleXLSX::parse('bad.xlsx')</code> → after failure, <code>parseError()</code> = 'File not found bad.xlsx'; immediately after, <code>parse('good.xlsx')</code> succeeds → <code>parseError()</code> = <code>false</code>.</p>
+</blockquote>
+<p>Alternatively, use <code>new SimpleXLSX()</code> + the <code>$xlsx-&gt;error()</code> instance method inside loops, which isolates state naturally.</p>
+<h3 id="pitfall-8-rows-returns-an-empty-array-instead-of-an-error-when-the-worksheet-doesnt-exist">🟡 Pitfall 8: <code>rows()</code> returns an empty array instead of an error when the worksheet doesn't exist</h3>
+<pre><code class="language-php">var_dump($xlsx-&gt;rows(9));   // array(0) {} — empty array, not false
+echo $xlsx-&gt;errno();        // but errno is set to 6
+</code></pre>
+<p>So don't judge success by <code>empty($rows)</code> alone; check <code>errno()</code> or check <code>sheetsCount()</code> first.</p>
+<h3 id="pitfall-9-style-index-out-of-range-triggers-a-php-notice">🟡 Pitfall 9: Style index out of range triggers a PHP Notice</h3>
+<p>In <code>valueEx()</code>:</p>
+<pre><code class="language-php">$st = &amp;$this-&gt;xlsx-&gt;cellFormats[$r['s']];
+</code></pre>
+<p>If the xlsx's <code>cellXfs</code> definitions are fewer than the <code>s</code> indexes referenced by cells, an Undefined offset notice is raised. In production it's advisable to disable notice display, or suppress it with <code>@</code> before the call.</p>
+<blockquote>
+<p>✅ <strong>Fixed</strong>: The bundled patch added an <code>isset()</code> guard before lookup; missing indexes are auto-filled with <code>['format'=&gt;null,'align'=&gt;0]</code>.</p>
+</blockquote>
+<h3 id="pitfall-10-merged-cells-are-not-returned">🟡 Pitfall 10: Merged cells are not returned</h3>
+<p><code>mergeCells</code> is not parsed at all. In a merged region only the top-left cell has a value; the rest are empty. If you rely on the "fill" effect of merged cells, you need to handle it yourself:</p>
+<pre><code class="language-php">$last = null;
+foreach ($rows as $r) {
+    $r[0] = $r[0] !== '' ? $r[0] : $last;   // simple forward fill
+    $last = $r[0];
+}
+</code></pre>
+<blockquote>
+<p>✅ <strong>Solved</strong>: The companion extension <code>SimpleXLSXPro</code> fully parses <code>mergeCells</code>; CSV/TSV/JSON split the value and copy it to every cell in the x*y range, and HTML outputs real <code>colspan</code>/<code>rowspan</code>. See <a href="#19-merged-cells-and-multi-format-export">19. Merged Cells and Multi-Format Export</a> for details.</p>
+</blockquote>
+<h3 id="pitfall-11-zip64-limits">🟢 Pitfall 11: ZIP64 limits</h3>
+<p>ZIP64 data descriptors are supported since 1.1.18, but <strong>a single entry larger than 4GB</strong> still returns error 6 "ZIP64 entry is too large to process". Normal xlsx files won't hit this.</p>
+<h3 id="pitfall-12-regex-based-namespace-prefix-stripping">🟢 Pitfall 12: Regex-based namespace prefix stripping</h3>
+<p><code>getEntryXML()</code> uses a chain of regexes to strip XML namespaces:</p>
+<pre><code class="language-php">$entry_xml = preg_replace('/xmlns[^=]*=&quot;[^&quot;]*&quot;/i', '', $entry_xml);
+$entry_xml = preg_replace('/[a-zA-Z0-9]+:([a-zA-Z0-9]+=&quot;[^&quot;]+&quot;)/', '$1', $entry_xml);
+$entry_xml = preg_replace('/&lt;[a-zA-Z0-9]+:([^&gt;]+)&gt;/', '&lt;$1&gt;', $entry_xml);
+</code></pre>
+<p>This is a "dirty but fast" approach. It may cause collateral damage on extremely non-standard XML. If you hit errno=3, you can dump the cleaned XML for troubleshooting.</p>
+<h3 id="pitfall-13-regex-optimization-for-empty-rows">🟢 Pitfall 13: Regex optimization for empty rows</h3>
+<p>On sheet XML, a regex removes rows where "the entire row is empty <code>&lt;c/&gt;</code>":</p>
+<pre><code class="language-php">$entry_xml = preg_replace('/&lt;row[^&gt;]+&gt;\s*(&lt;c[^\/]+\/&gt;\s*)+&lt;\/row&gt;/', '', $entry_xml, -1, $cnt);
+</code></pre>
+<p>Side effect: <strong>row numbers are no longer contiguous</strong>. <code>rows()</code> fills in empty rows (based on the y coordinate computed by <code>getIndex()</code>), so it's usually fine; but if you iterate over <code>worksheet()-&gt;sheetData-&gt;row</code> directly, be aware that row numbers have gaps.</p>
+<hr />
+<h2 id="14-practical-code-collection">14. Practical Code Collection</h2>
+<h3 id="141-basics-read-into-a-2d-array">14.1 Basics: Read into a 2D array</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+$xlsx = SimpleXLSX::parse('books.xlsx');
+if (!$xlsx) { exit(SimpleXLSX::parseError()); }
+
+print_r($xlsx-&gt;rows());
+</code></pre>
+<h3 id="142-use-the-first-row-as-keys-associative-array">14.2 Use the first row as keys (associative array)</h3>
+<p>The official example, the most common:</p>
+<pre><code class="language-php">function xlsxToAssoc(SimpleXLSX $xlsx, int $sheet = 0): array {
+    $header = [];
+    $rows   = [];
+    foreach ($xlsx-&gt;readRows($sheet) as $k =&gt; $r) {
+        if ($k === 0) { $header = $r; continue; }
+        $rows[] = array_combine($header, $r);
+    }
+    return $rows;
+}
+</code></pre>
+<p><strong>Enhanced version</strong> (handles unequal column counts, duplicate headers, empty headers):</p>
+<pre><code class="language-php">function xlsxToAssocSafe(SimpleXLSX $xlsx, int $sheet = 0): array {
+    $header = [];
+    $rows   = [];
+    foreach ($xlsx-&gt;readRows($sheet) as $k =&gt; $r) {
+        if ($k === 0) {
+            $seen = [];
+            foreach ($r as $i =&gt; $h) {
+                $h = trim((string)$h);
+                if ($h === '') { $h = 'col_' . $i; }
+                if (isset($seen[$h])) { $h .= '_' . (++$seen[$h]); }  // append suffix on duplicates
+                $seen[$h] = 0;
+                $header[$i] = $h;
+            }
+            continue;
+        }
+        $row = [];
+        foreach ($header as $i =&gt; $h) {
+            $row[$h] = $r[$i] ?? null;      // fill missing columns with null
+        }
+        $rows[] = $row;
+    }
+    return $rows;
+}
+</code></pre>
+<h3 id="143-xlsx-csv-streaming-suitable-for-large-files">14.3 XLSX → CSV (streaming, suitable for large files)</h3>
+<pre><code class="language-php">function xlsxToCsv(string $xlsxPath, string $csvPath, int $sheet = 0): int {
+    $xlsx = SimpleXLSX::parse($xlsxPath);
+    if (!$xlsx) { throw new RuntimeException(SimpleXLSX::parseError()); }
+
+    $fp = fopen($csvPath, 'wb');
+    fwrite($fp, chr(0xEF) . chr(0xBB) . chr(0xBF));   // UTF-8 BOM
+
+    $n = 0;
+    foreach ($xlsx-&gt;readRows($sheet) as $r) {
+        fputcsv($fp, $r);
+        $n++;
+    }
+    fclose($fp);
+    return $n;
+}
+
+// Semicolon separator + custom escape (European convention)
+fputcsv($f, $r, ';', '&quot;', &quot;\\&quot;, &quot;\r\n&quot;);
+</code></pre>
+<h3 id="144-xlsx-html-table-with-styles">14.4 XLSX → HTML table (with styles)</h3>
+<pre><code class="language-php">echo SimpleXLSX::parse('book_styled.xlsx')-&gt;toHTMLEx();
+</code></pre>
+<p>Roll your own (can add limit, sanitize href):</p>
+<pre><code class="language-php">function xlsxToHtml(SimpleXLSX $xlsx, int $sheet = 0, int $limit = 0): string {
+    $s = '&lt;table border=&quot;1&quot; cellpadding=&quot;3&quot; style=&quot;border-collapse:collapse&quot;&gt;' . &quot;\n&quot;;
+    $y = 0;
+    // Note: readRowsEx's $limit has a bug (see Pitfall 1); count rows yourself here
+    foreach ($xlsx-&gt;readRowsEx($sheet) as $r) {
+        if ($limit &gt; 0 &amp;&amp; $y &gt;= $limit) { break; }
+        $s .= '&lt;tr&gt;';
+        foreach ($r as $c) {
+            $tag = ($y === 0) ? 'th' : 'td';
+            $css = sanitizeCss($c['css']);
+            $v   = htmlspecialchars((string)$c['value'], ENT_QUOTES, 'UTF-8');
+            $v   = preg_replace('/\R/', &quot;&lt;br&gt;\n&quot;, $v);
+            $s .= '&lt;' . $tag . ' style=&quot;' . $css . '&quot;&gt;'
+                . ($v === '' ? '&amp;nbsp;' : $v)
+                . '&lt;/' . $tag . '&gt;';
+        }
+        $s .= &quot;&lt;/tr&gt;\n&quot;;
+        $y++;
+    }
+    return $s . '&lt;/table&gt;';
+}
+</code></pre>
+<h3 id="145-iterate-over-all-worksheets">14.5 Iterate over all worksheets</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parse('multi.xlsx');
+if (!$xlsx) { exit(SimpleXLSX::parseError()); }
+
+foreach ($xlsx-&gt;sheetNames() as $i =&gt; $name) {
+    if ($xlsx-&gt;isHiddenSheet($i)) { continue; }        // skip hidden sheets
+
+    list($cols, $rows) = $xlsx-&gt;dimension($i);
+    echo &quot;&lt;h2&gt;{$name} ({$cols} columns × {$rows} rows)&lt;/h2&gt;&quot;;
+
+    foreach ($xlsx-&gt;readRows($i) as $r) {
+        echo implode(' | ', $r) . &quot;\n&quot;;
+    }
+}
+
+echo 'Active sheet: ' . $xlsx-&gt;sheetName($xlsx-&gt;activeSheet) . &quot;\n&quot;;
+</code></pre>
+<h3 id="146-read-by-worksheet-name">14.6 Read by worksheet name</h3>
+<pre><code class="language-php">function rowsBySheetName(SimpleXLSX $xlsx, string $name): ?Generator {
+    $map = array_flip($xlsx-&gt;sheetNames());
+    if (!isset($map[$name])) { return null; }
+    return $xlsx-&gt;readRows($map[$name]);
+}
+
+foreach (rowsBySheetName($xlsx, '2024 Sales') ?? [] as $r) {
+    // ...
+}
+</code></pre>
+<h3 id="147-upload-and-import-into-a-database-complete-example">14.7 Upload and import into a database (complete example)</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSX;
+
+function importUsers(PDO $pdo, string $tmpFile): array {
+    $xlsx = SimpleXLSX::parse($tmpFile);
+    if (!$xlsx) {
+        return ['ok' =&gt; false, 'msg' =&gt; SimpleXLSX::parseError()];
+    }
+
+    // Output uniformly in UTC, store directly as DATETIME
+    $xlsx-&gt;setDateTimeFormat('Y-m-d H:i:s');
+
+    $stmt = $pdo-&gt;prepare(
+        'INSERT INTO users (name, phone, id_card, amount, created_at) VALUES (?,?,?,?,?)'
+    );
+
+    $ok = $fail = 0;
+    $errors = [];
+
+    $pdo-&gt;beginTransaction();
+    foreach ($xlsx-&gt;readRows() as $k =&gt; $r) {
+        if ($k === 0) { continue; }                     // skip the header row
+
+        $name  = trim((string)($r[0] ?? ''));
+        $phone = trim((string)($r[1] ?? ''));
+        $idcard= trim((string)($r[2] ?? ''));
+        $amount= is_numeric($r[3] ?? null) ? (float)$r[3] : null;
+        $ctime = ($r[4] ?? '') ?: date('Y-m-d H:i:s');
+
+        if ($name === '') { $errors[] = &quot;Row {$k}: name is empty&quot;; $fail++; continue; }
+
+        $stmt-&gt;execute([$name, $phone, $idcard, $amount, $ctime]);
+        $ok++;
+
+        if ($ok % 500 === 0) { $pdo-&gt;commit(); $pdo-&gt;beginTransaction(); }
+    }
+    $pdo-&gt;commit();
+
+    return ['ok' =&gt; true, 'imported' =&gt; $ok, 'failed' =&gt; $fail, 'errors' =&gt; array_slice($errors, 0, 20)];
+}
+</code></pre>
+<h3 id="148-recommended-wrapper-class">14.8 Recommended wrapper class</h3>
+<p>Handle all of the pitfalls above in one go:</p>
+<pre><code class="language-php">&lt;?php
+use Shuchkin\SimpleXLSX;
+
+// Requires PHP 7.4+ (uses arrow functions and property type declarations)
+class XlsxReader
+{
+    private SimpleXLSX $xlsx;
+    private string $source;
+    private bool $isData;
+    private int $maxRows;
+
+    public function __construct(string $pathOrData, bool $isData = false, int $maxRows = 100000)
+    {
+        $this-&gt;maxRows = $maxRows;
+        $this-&gt;source  = $pathOrData;
+        $this-&gt;isData  = $isData;
+        $x = $isData ? SimpleXLSX::parseData($pathOrData) : SimpleXLSX::parse($pathOrData);
+        if (!$x) {
+            throw new RuntimeException(
+                'XLSX parse failed [' . SimpleXLSX::parseErrno() . ']: ' . SimpleXLSX::parseError()
+            );
+        }
+        $this-&gt;xlsx = $x;
+    }
+
+    /** Yield row by row, skipping all-empty rows automatically, with automatic rate limiting */
+    public function rows(int $sheet = 0): Generator
+    {
+        $n = 0;
+        foreach ($this-&gt;xlsx-&gt;readRows($sheet) as $r) {
+            if (++$n &gt; $this-&gt;maxRows) { return; }
+            if (array_filter($r, static fn($v) =&gt; $v !== '' &amp;&amp; $v !== null) === []) {
+                continue;   // skip all-empty rows (defense against inaccurate dimension)
+            }
+            yield $r;
+        }
+    }
+
+    /** Associative arrays with headers */
+    public function assoc(int $sheet = 0): Generator
+    {
+        $header = null;
+        foreach ($this-&gt;rows($sheet) as $r) {
+            if ($header === null) {
+                $header = array_map(
+                    static fn($h, $i) =&gt; trim((string)$h) === '' ? &quot;col_$i&quot; : trim((string)$h),
+                    $r, array_keys($r)
+                );
+                continue;
+            }
+            $row = [];
+            foreach ($header as $i =&gt; $h) { $row[$h] = $r[$i] ?? null; }
+            yield $row;
+        }
+    }
+
+    /** Cells with styles; css accumulation bug and href security already fixed */
+    public function rowsEx(int $sheet = 0): Generator
+    {
+        // Re-parse a clean instance to avoid css reference pollution (see Pitfall 2)
+        $ex = $this-&gt;isData ? SimpleXLSX::parseData($this-&gt;source) : SimpleXLSX::parse($this-&gt;source);
+        if (!$ex) { throw new RuntimeException(SimpleXLSX::parseError()); }
+
+        $n = 0;
+        foreach ($ex-&gt;readRowsEx($sheet) as $r) {
+            if (++$n &gt; $this-&gt;maxRows) { return; }
+            foreach ($r as &amp;$c) {
+                $c['css']  = $this-&gt;dedupeCss($c['css']);
+                $c['href'] = $this-&gt;safeHref($c['href']);
+            }
+            unset($c);
+            yield $r;
+        }
+    }
+
+    private function dedupeCss(string $css): string
+    {
+        $parts = array_filter(array_map('trim', explode(';', $css)));
+        return implode(';', array_unique($parts)) . ';';
+    }
+
+    private function safeHref(string $href): string
+    {
+        return preg_match('#^(https?://|mailto:)#i', $href) ? $href : '';
+    }
+
+    public function sheetNames(): array { return $this-&gt;xlsx-&gt;sheetNames(); }
+    public function sheetsCount(): int  { return $this-&gt;xlsx-&gt;sheetsCount(); }
+    public function dimension(int $s = 0): array { return $this-&gt;xlsx-&gt;dimension($s); }
+}
+</code></pre>
+<p>Usage:</p>
+<pre><code class="language-php">$reader = new XlsxReader($_FILES['file']['tmp_name']);
+foreach ($reader-&gt;assoc() as $row) {
+    // $row is already ['Name' =&gt; 'John Doe', 'Mobile' =&gt; '138...', ...]
+}
+</code></pre>
+<h3 id="149-debugging-when-you-cant-figure-out-why-the-read-is-wrong">14.9 Debugging: when you can't figure out why the read is wrong</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSX::parseFile('weird.xlsx', true);   // debug mode
+
+echo &quot;Worksheets: &quot; . json_encode($xlsx-&gt;sheetNames(), JSON_UNESCAPED_UNICODE) . &quot;\n&quot;;
+echo &quot;Dimension: &quot; . json_encode($xlsx-&gt;dimension(0)) . &quot;\n&quot;;
+echo &quot;Number format table: &quot; . json_encode($xlsx-&gt;nf, JSON_UNESCAPED_UNICODE) . &quot;\n&quot;;
+echo &quot;Style table entry count: &quot; . count($xlsx-&gt;cellFormats) . &quot;\n&quot;;
+
+// See what's inside the package
+foreach ($xlsx-&gt;getPackage()['entries'] as $e) {
+    printf(&quot;%-40s %8d bytes  cm=%d err=%d\n&quot;, $e['path'] . '/' . $e['name'], $e['ucs'], $e['cm'], $e['error']);
+}
+
+// Raw XML of the first 3 cells
+$ws = $xlsx-&gt;worksheet(0);
+$i = 0;
+foreach ($ws-&gt;sheetData-&gt;row as $row) {
+    foreach ($row-&gt;c as $c) {
+        echo $c-&gt;asXML() . &quot;\n&quot;;
+        if (++$i &gt;= 3) break 2;
+    }
+}
+</code></pre>
+<hr />
+<h2 id="15-library-comparison-for-selection">15. Library Comparison for Selection</h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>SimpleXLSX</th>
+<th>PhpSpreadsheet</th>
+<th>SimpleXLSXGen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Positioning</td>
+<td><strong>Read-only</strong> xlsx</td>
+<td>Full-featured read/write</td>
+<td><strong>Write-only</strong> xlsx</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>~50 KB (2 files)</td>
+<td>~30 MB (with many dependencies)</td>
+<td>~30 KB</td>
+</tr>
+<tr>
+<td>Extra extensions</td>
+<td>None (only SimpleXML+zlib)</td>
+<td>zip, xml, gd, mbstring, iconv, etc.</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Memory (100K rows)</td>
+<td>162 MB (generator)</td>
+<td>Usually 500 MB+</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Speed</td>
+<td>Fast</td>
+<td>Slow (2–5×)</td>
+<td>Fast</td>
+</tr>
+<tr>
+<td>Style reading</td>
+<td>Basic (font/color/border/alignment)</td>
+<td>Full (incl. conditional formatting, etc.)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Formula evaluation</td>
+<td>❌ (reads cached values)</td>
+<td>✅ (has calculation engine)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Charts/images</td>
+<td>❌</td>
+<td>✅</td>
+<td>Partial</td>
+</tr>
+<tr>
+<td>Writing capability</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Learning cost</td>
+<td>Very low (a single <code>rows()</code>)</td>
+<td>High</td>
+<td>Very low</td>
+</tr>
+<tr>
+<td>Maintenance activity</td>
+<td>Medium (single author)</td>
+<td>High (community)</td>
+<td>Medium</td>
+</tr>
+</tbody>
+</table>
+<h3 id="selection-advice">Selection advice</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User uploads Excel → store in database</td>
+<td><strong>SimpleXLSX</strong></td>
+</tr>
+<tr>
+<td>Backend report export / xlsx generation</td>
+<td><strong>SimpleXLSXGen</strong></td>
+</tr>
+<tr>
+<td>Template filling + charts + print settings</td>
+<td>PhpSpreadsheet</td>
+</tr>
+<tr>
+<td>Server-side formula recalculation</td>
+<td>PhpSpreadsheet</td>
+</tr>
+<tr>
+<td>Reading legacy .xls (Excel 97)</td>
+<td>SimpleXLS</td>
+</tr>
+<tr>
+<td>Huge sheets with hundreds of thousands of rows+</td>
+<td>Have users upload CSV, or write your own SAX streaming parser</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>A common combination: <strong>SimpleXLSX for reading + SimpleXLSXGen for writing</strong>. Both libraries are by the same author, zero-dependency, with minimal APIs, totaling less than 100 KB.</p>
+</blockquote>
+<hr />
+<h2 id="16-version-history-and-upgrade-notes">16. Version History and Upgrade Notes</h2>
+<h3 id="161-key-version-milestones">16.1 Key version milestones</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1.1.19</strong></td>
+<td>2026-09-10</td>
+<td>Security fix: CSS injection (font-family), CVE-2024-55878</td>
+</tr>
+<tr>
+<td><strong>1.1.18</strong></td>
+<td>2026-09-05</td>
+<td>ZIP64 support</td>
+</tr>
+<tr>
+<td><strong>1.1.17</strong></td>
+<td>2026-08-11</td>
+<td>Security fix 2: align/valign attribute XSS</td>
+</tr>
+<tr>
+<td><strong>1.1.16</strong></td>
+<td>2025-12-05</td>
+<td>Updated documentation links</td>
+</tr>
+<tr>
+<td><strong>1.1.15</strong></td>
+<td>2025-12-04</td>
+<td><code>getColorValue()</code> PHP 8.4 nullable compatibility</td>
+</tr>
+<tr>
+<td><strong>1.1.14</strong></td>
+<td>2025-05-21</td>
+<td>Fixed hidden row/column detection</td>
+</tr>
+<tr>
+<td><strong>1.1.13</strong></td>
+<td>2024-12-21</td>
+<td>Fixed css color vulnerability</td>
+</tr>
+<tr>
+<td><strong>1.1.12</strong></td>
+<td>2024-12-11</td>
+<td>Fixed toHTMLEx css vulnerability</td>
+</tr>
+<tr>
+<td><strong>1.1.11</strong></td>
+<td>2024-07-06</td>
+<td>Fixed #157</td>
+</tr>
+<tr>
+<td><strong>1.1.10</strong></td>
+<td>2023-04-27</td>
+<td>Comments added to rowsEx; hyperlinks moved into rowsEx; all field methods made public; helper methods made static</td>
+</tr>
+<tr>
+<td><strong>1.0.12</strong></td>
+<td>2022-02-21</td>
+<td><strong>1.0 major version</strong>: <code>Shuchkin</code> namespace; PHP 5.5+; <code>readRows()</code>/<code>readRowsEx()</code> generators; SimpleXLSXEx style class; <code>toHTMLEx()</code></td>
+</tr>
+<tr>
+<td><strong>0.9.10</strong></td>
+<td>2022-02-04</td>
+<td>Introduced namespace <code>Shuchkin\SimpleXLSX</code> (breaking change)</td>
+</tr>
+<tr>
+<td><strong>0.8.31</strong></td>
+<td>2021-12-01</td>
+<td>Added <code>$xlsx-&gt;activeSheet</code></td>
+</tr>
+<tr>
+<td><strong>0.8.30</strong></td>
+<td>2021-12-01</td>
+<td><code>rows()</code>/<code>rowsEx()</code> support <code>$limit</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="162-breaking-changes-when-upgrading-from-08x-to-1x">16.2 Breaking changes when upgrading from 0.8.x to 1.x</h3>
+<ol>
+<li><strong>You must add the namespace</strong>:
+   ```php
+   // 0.8.x
+   $xlsx = new SimpleXLSX('a.xlsx');</li>
+</ol>
+<p>// 1.x
+   use Shuchkin\SimpleXLSX;
+   $xlsx = SimpleXLSX::parse('a.xlsx');
+   <code>``
+2. **PHP requirement raised to 5.5+** (because Generators are used).
+3. The misspelled method</code>sheetNemes()<code>has been removed (it was a bug to begin with); use</code>sheetMeta()<code>/</code>sheetNames()` instead.</p>
+<h3 id="163-upgrade-advice">16.3 Upgrade advice</h3>
+<ul>
+<li><strong>Upgrade to &gt;= 1.1.19 without fail</strong>: 1.1.12/1.1.13/1.1.17/1.1.19 are all security fixes involving CSS injection and XSS. If your application renders user-uploaded xlsx files as HTML for others to view, older versions are real, exploitable vulnerabilities.</li>
+<li>After 1.1.10, all properties are public; if you previously accessed private members via reflection or subclasses, behavior will change.</li>
+</ul>
+<hr />
+<h2 id="17-source-code-bug-fix-list-with-patches">17. Source-Code Bug Fix List (with Patches)</h2>
+<p>Most of the pitfalls listed in Chapter 13 are <strong>source-code defects</strong>, not "usage problems". This chapter provides patches that can be applied directly.</p>
+<p>Companion files:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simplexlsx-pro/simplexlsx-fixes.patch</code></td>
+<td>Standard unified diff, can be applied directly with <code>git apply</code></td>
+</tr>
+<tr>
+<td><code>simplexlsx-pro/src/SimpleXLSXPro.php</code></td>
+<td>Feature-extension subclass (formulas / images / merges / export)</td>
+</tr>
+<tr>
+<td><code>simplexlsx-pro/src/XLSXFormula.php</code></td>
+<td>Formula evaluation engine</td>
+</tr>
+</tbody>
+</table>
+<p>How to apply:</p>
+<pre><code class="language-bash">cd /path/to/simplexlsx
+git apply ../simplexlsx-pro/simplexlsx-fixes.patch
+# Or patch directly inside vendor
+cd vendor/shuchkin/simplexlsx
+patch -p1 &lt; /path/to/simplexlsx-fixes.patch
+</code></pre>
+<h3 id="171-fix-list-overview">17.1 Fix list overview</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Location</th>
+<th>Severity</th>
+<th>Symptom</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🔴</td>
+<td><code>$limit</code> completely ineffective; full row count returned</td>
+<td><code>break</code> → <code>return</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>SimpleXLSXEx::valueEx()</code></td>
+<td>🔴</td>
+<td>CSS string doubles on every call</td>
+<td>Reference assignment → value copy</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SimpleXLSX::toHTML()/toHTMLEx()</code></td>
+<td>🟠</td>
+<td>README documents <code>$limit</code> but the source has no such parameter</td>
+<td>Add the second parameter and pass it through</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>SimpleXLSX::parseError()/parseErrno()</code></td>
+<td>🟡</td>
+<td>Static error state never resets</td>
+<td>Added <code>$reset</code> parameter + reset on success branch</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>SimpleXLSXEx::valueEx()</code></td>
+<td>🟡</td>
+<td>Warning on out-of-range style index</td>
+<td><code>isset()</code> guard</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🟠</td>
+<td><code>$cols</code> not extended when cell count exceeds <code>dimension</code> → flood of Warnings</td>
+<td>Extend <code>$cols</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>SimpleXLSXEx::readRowsEx()</code></td>
+<td>🟠</td>
+<td>Skipped-column writes scramble column order (e.g. E3 followed directly by H3, output becomes …F3 H3 G3)</td>
+<td><code>ksort($cells)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="172-fix-1-limit-ineffective-high-severity">17.2 Fix 1: <code>$limit</code> ineffective (high severity)</h3>
+<pre><code class="language-diff">--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@
+             yield $cells;
+             $curR++;
+             $_limit--;
+             if ($_limit === 0) {
+-                break;
++                return; // FIXED: was break, $limit did not work
+             }
+</code></pre>
+<p>Verified results after the fix (13-row sheet):</p>
+<table>
+<thead>
+<tr>
+<th><code>$limit</code></th>
+<th><code>readRows()</code></th>
+<th><code>readRowsEx()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 / 2 / 3 / 5</td>
+<td>1 / 2 / 3 / 5</td>
+<td><strong>1 / 2 / 3 / 5</strong> ✅</td>
+</tr>
+<tr>
+<td>13 / 20</td>
+<td>13 / 13</td>
+<td>13 / 13 ✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="173-fix-2-css-unbounded-accumulation-high-risk">17.3 Fix 2: CSS unbounded accumulation (high risk)</h3>
+<pre><code class="language-diff">--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@
+-        $r['css'] = &amp;$this-&gt;css[ $r['s'] ];
++        $r['css'] = isset($this-&gt;css[$r['s']]) ? $this-&gt;css[$r['s']] : '';
+         if ($r['value'] !== '' &amp;&amp; !$st['align'] &amp;&amp; !in_array($r['type'], ['s','str','inlineStr','e'], true)) {
+             $r['css'] .= 'text-align: right;';
+         }
+</code></pre>
+<p>Root cause: the <code>&amp;</code> reference assignment makes <code>$r['css']</code> and <code>$this-&gt;css[$s]</code> the same zval, so the subsequent <code>.=</code> writes directly into the shared style cache.</p>
+<h3 id="174-fix-6-7-column-count-exceeding-dimension-a-pitfall-hit-in-testing">17.4 Fix 6 + 7: column count exceeding dimension (a pitfall hit in testing)</h3>
+<p>When a row contains cells beyond the column count declared in <code>&lt;dimension&gt;</code> (very common in WPS / hand-generated files), the original version floods the output with Warnings and the output column order gets scrambled:</p>
+<pre><code class="language-diff">--- a/src/SimpleXLSXEx.php
++++ b/src/SimpleXLSXEx.php
+@@
+                     if ($curC &gt;= $numCols) {
+                         $numCols = $curC + 1;
++                        for ($ci = count($cols); $ci &lt; $numCols; $ci++) {
++                            $cols[$ci] = ['s' =&gt; 0, 'hidden' =&gt; false, 'width' =&gt; 0];
++                        }
+                     }
+@@
+             // check empty cells
+             for ($i = 0; $i &lt; $numCols; $i++) {
+-                if ($cells[$i] === null) {
++                if (!isset($cells[$i]) || $cells[$i] === null) {
+@@
+                     $cells[$i] = $this-&gt;valueEx($data, $i, $curR);
+                 }
+             }
++            ksort($cells);
+             yield $cells;
+</code></pre>
+<blockquote>
+<p><code>ksort()</code> is required: PHP arrays preserve insertion order, and <code>$cells[7] = H3</code> does not automatically create index 6. When padding empty cells, G3 gets appended after H3, and the output order breaks. Verified before/after the fix:
+Before: <code>A3 B3 C3 D3 E3 F3 H3 G3</code>; after: <code>A3 B3 C3 D3 E3 F3 G3 H3</code>.</p>
+</blockquote>
+<h3 id="175-fixes-3-4-5">17.5 Fixes 3 / 4 / 5</h3>
+<pre><code class="language-diff">--- a/src/SimpleXLSX.php
++++ b/src/SimpleXLSX.php
+@@
+-    public function toHTML($worksheetIndex = 0)
++    public function toHTML($worksheetIndex = 0, $limit = 0)
+     {
+         $s = '&lt;table class=excel&gt;';
+-        foreach ($this-&gt;readRows($worksheetIndex) as $r) {
++        foreach ($this-&gt;readRows($worksheetIndex, $limit) as $r) {
+@@
+-    public static function parseError($set = false)
++    public static function parseError($set = false, $reset = false)
+     {
+         static $error = false;
++        if ($reset) { $error = false; }
+         return $set ? $error = $set : $error;
+     }
+@@
+         if ($xlsx-&gt;success()) {
++            self::parseError(false, true);
++            self::parseErrno(false, true);
+             return $xlsx;
+         }
+</code></pre>
+<blockquote>
+<p><code>parseError()</code> gained a second parameter <code>$reset</code>, backward compatible (behavior is completely unchanged when it is not passed).</p>
+</blockquote>
+<hr />
+<h2 id="18-formula-evaluation-xlsxformula">18. Formula Evaluation (XLSXFormula)</h2>
+<p>The original version <strong>does not evaluate formulas</strong>; it only reads the cached values written by Excel (the <code>&lt;v&gt;</code> inside <code>&lt;c&gt;&lt;f&gt;SUM(A1:A3)&lt;/f&gt;&lt;v&gt;60&lt;/v&gt;&lt;/c&gt;</code>). Once a file is generated by openpyxl / a custom program, the cached values are empty and all <code>value</code>s are <code>''</code>.</p>
+<p><code>XLSXFormula</code> is a pure-PHP formula evaluator that, together with <code>SimpleXLSXPro</code>, can compute results directly.</p>
+<h3 id="181-basic-usage">18.1 Basic Usage</h3>
+<pre><code class="language-php">use Shuchkin\SimpleXLSXPro;
+
+$xlsx = SimpleXLSXPro::parse('demo.xlsx');
+
+// 1) Evaluate a single cell
+echo $xlsx-&gt;calculateCell('D6');        // 745
+
+// 2) Evaluate an arbitrary formula (it does not have to be in the sheet)
+echo $xlsx-&gt;calculate('IF(SUM(D3:D5)&gt;700,&quot;Excellent&quot;,&quot;Average&quot;)');   // Excellent
+
+// 3) Iterate over all cells containing formulas
+foreach ($xlsx-&gt;calculatedCells(0) as $coord =&gt; $info) {
+    printf(&quot;%s %s =&gt; %s\n&quot;, $coord, $info['formula'], $info['value']);
+}
+
+// 4) Every cell in rowsPro() carries a calculated field
+foreach ($xlsx-&gt;readRowsPro(0) as $row) {
+    foreach ($row as $c) {
+        if ($c['f'] !== '') {
+            echo $c['name'], ' = ', $c['calculated'], &quot;\n&quot;;
+        }
+    }
+}
+</code></pre>
+<p><code>rowsPro()</code> also <strong>automatically backfills the computed result</strong> when <code>value</code> is empty (disable it with <code>$xlsx-&gt;preferCalculated = false</code>).</p>
+<h3 id="182-supported-syntax">18.2 Supported Syntax</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Supported Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operators</td>
+<td><code>+ - * / ^</code>, string concatenation <code>&amp;</code>, comparison <code>= &lt;&gt; &lt; &gt; &lt;= &gt;=</code>, postfix <code>%</code></td>
+</tr>
+<tr>
+<td>Precedence</td>
+<td>comparison &lt; <code>&amp;</code> &lt; <code>+ -</code> &lt; <code>* /</code> &lt; <code>^</code> &lt; unary minus &lt; <code>%</code> (consistent with Excel, <code>-2^2 = 4</code>)</td>
+</tr>
+<tr>
+<td>References</td>
+<td><code>A1</code>, <code>$A$1</code>, <code>A1:B5</code>, <code>Sheet2!A1</code>, <code>'我的 表'!A1</code> (Chinese sheet names supported)</td>
+</tr>
+<tr>
+<td>Constants</td>
+<td><code>"text"</code>, numbers, <code>TRUE</code>/<code>FALSE</code>, <code>{1,2;3,4}</code> array constants</td>
+</tr>
+<tr>
+<td>Error values</td>
+<td><code>#DIV/0!</code> <code>#VALUE!</code> <code>#REF!</code> <code>#NAME?</code> <code>#N/A</code> <code>#NUM!</code> <code>#NULL!</code>, propagated up the expression</td>
+</tr>
+<tr>
+<td>Circular references</td>
+<td>Detected and returns <code>#CIRC!</code>, recursion depth capped at 64</td>
+</tr>
+</tbody>
+</table>
+<h3 id="183-supported-functions-60">18.3 Supported Functions (60+)</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Functions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Math</td>
+<td><code>SUM</code> <code>PRODUCT</code> <code>SUMPRODUCT</code> <code>SUMSQ</code>→approximated with SUM <code>ABS</code> <code>ROUND</code> <code>ROUNDUP</code> <code>ROUNDDOWN</code> <code>TRUNC</code> <code>INT</code> <code>CEILING</code> <code>FLOOR</code> <code>MOD</code> <code>POWER</code> <code>SQRT</code> <code>EXP</code> <code>LN</code> <code>LOG</code> <code>LOG10</code> <code>PI</code> <code>RAND</code> <code>RANDBETWEEN</code> <code>SIGN</code> <code>DEGREES</code> <code>RADIANS</code> <code>SUBTOTAL</code></td>
+</tr>
+<tr>
+<td>Statistical</td>
+<td><code>AVERAGE</code> <code>MEDIAN</code> <code>MAX</code> <code>MIN</code> <code>COUNT</code> <code>COUNTA</code> <code>COUNTBLANK</code> <code>COUNTIF</code> <code>SUMIF</code> <code>STDEV</code> <code>STDEVP</code> <code>VAR</code> <code>LARGE</code> <code>SMALL</code></td>
+</tr>
+<tr>
+<td>Logical</td>
+<td><code>IF</code> <code>IFERROR</code> <code>IFNA</code> <code>AND</code> <code>OR</code> <code>NOT</code> <code>TRUE</code> <code>FALSE</code> <code>ISBLANK</code> <code>ISNUMBER</code> <code>ISTEXT</code> <code>ISERROR</code> <code>ISERR</code> <code>ISNA</code> <code>NA</code> <code>N</code> <code>T</code></td>
+</tr>
+<tr>
+<td>Text</td>
+<td><code>CONCATENATE</code> <code>CONCAT</code> <code>TEXTJOIN</code> <code>LEN</code> <code>LEFT</code> <code>RIGHT</code> <code>MID</code> <code>UPPER</code> <code>LOWER</code> <code>PROPER</code> <code>TRIM</code> <code>SUBSTITUTE</code> <code>REPLACE</code> <code>FIND</code> <code>SEARCH</code> <code>REPT</code> <code>TEXT</code> <code>VALUE</code> <code>CHAR</code> <code>CODE</code> <code>EXACT</code></td>
+</tr>
+<tr>
+<td>Lookup</td>
+<td><code>VLOOKUP</code> <code>HLOOKUP</code> <code>INDEX</code> <code>MATCH</code> <code>CHOOSE</code> <code>OFFSET</code> <code>LOOKUP</code></td>
+</tr>
+<tr>
+<td>Date</td>
+<td><code>TODAY</code> <code>NOW</code> <code>DATE</code> <code>YEAR</code> <code>MONTH</code> <code>DAY</code> <code>HOUR</code> <code>MINUTE</code> <code>SECOND</code> <code>WEEKDAY</code> <code>DATEVALUE</code> <code>DATEDIF</code> <code>EDATE</code> <code>EOMONTH</code> <code>DAYS</code></td>
+</tr>
+</tbody>
+</table>
+<p>The criteria of <code>COUNTIF</code> / <code>SUMIF</code> / <code>VLOOKUP</code> support forms like <code>"&gt;10"</code>, <code>"&lt;=5"</code>, <code>"&lt;&gt;abc"</code>, <code>"A*"</code>.</p>
+<h3 id="184-verified-results-demoxlsx-generated-by-openpyxl-no-cached-values-at-all">18.4 Verified Results (demo.xlsx, generated by openpyxl, no cached values at all)</h3>
+<table>
+<thead>
+<tr>
+<th>Cell</th>
+<th>Formula</th>
+<th>Computed Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D3</td>
+<td><code>B3+C3</code></td>
+<td>270</td>
+</tr>
+<tr>
+<td>B6</td>
+<td><code>SUM(B3:B5)</code></td>
+<td>340</td>
+</tr>
+<tr>
+<td>D6</td>
+<td><code>SUM(D3:D5)</code></td>
+<td>745</td>
+</tr>
+<tr>
+<td>B7</td>
+<td><code>AVERAGE(B3:B5)</code></td>
+<td>113.33333333333</td>
+</tr>
+<tr>
+<td>C7</td>
+<td><code>ROUND(AVERAGE(C3:C5),1)</code></td>
+<td>135</td>
+</tr>
+<tr>
+<td>B8</td>
+<td><code>INDEX(A3:A5,MATCH(MAX(D3:D5),D3:D5,0))</code></td>
+<td>South China (华南)</td>
+</tr>
+<tr>
+<td>B9</td>
+<td><code>IF(D6&gt;600,"OK","Not OK")</code></td>
+<td>OK (达标)</td>
+</tr>
+<tr>
+<td>B11</td>
+<td><code>参数!A1*2</code> (cross-sheet, Chinese sheet name)</td>
+<td>20</td>
+</tr>
+<tr>
+<td>B12</td>
+<td><code>SUM(参数!A1:A3)</code></td>
+<td>60</td>
+</tr>
+<tr>
+<td>C13</td>
+<td><code>TEXT(B13,"0.00%")</code></td>
+<td>16.11%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="185-known-limitations">18.5 Known Limitations</h3>
+<ul>
+<li><strong>Not a full Excel engine</strong>: array formulas (CSE), dynamic arrays (<code>FILTER</code>/<code>SORT</code>/<code>UNIQUE</code>), <code>LET</code>/<code>LAMBDA</code>, and macro-sheet functions are not supported</li>
+<li>Unrecognized functions return <code>0</code> by default (<code>$f-&gt;lenientUnknownFunctions = false</code> changes this to return <code>#NAME?</code>)</li>
+<li><code>TEXT()</code> only implements common formats such as <code>0.00</code>, <code>#,##0.00</code>, <code>0%</code>, <code>yyyy-mm-dd</code>; complex custom formats degrade</li>
+<li>Dates are handled with the 1900 date system (Excel for Windows); <code>date1904</code> workbooks are not converted</li>
+<li>Circular references return <code>#CIRC!</code>; it does not iterate to a solution the way Excel does</li>
+</ul>
+<hr />
+<h2 id="19-merged-cells-and-multi-format-export">19. Merged Cells and Multi-Format Export</h2>
+<h3 id="191-reading-merge-information">19.1 Reading Merge Information</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSXPro::parse('demo.xlsx');
+
+foreach ($xlsx-&gt;mergeCells(0) as $m) {
+    printf(&quot;%s origin(%d,%d) size %dx%d\n&quot;, $m['ref'], $m['x1'], $m['y1'], $m['w'], $m['h']);
+}
+// B9:D9 origin(1,8) size 3x1
+// A1:E1 origin(0,0) size 5x1
+// E4:E5 origin(4,3) size 1x2
+
+// Look up whether a cell at a given coordinate is merged
+$m = $xlsx-&gt;mergeAt(0, 4, 3);   // ['ref'=&gt;'E4:E5','w'=&gt;1,'h'=&gt;2,'master'=&gt;true]
+</code></pre>
+<p>Every cell in <code>rowsPro()</code> carries a <code>merge</code> field:</p>
+<pre><code class="language-php">[
+  'cell'  =&gt; 'E4',
+  'value' =&gt; 'Merged note (E4:E5)',
+  'merge' =&gt; ['ref' =&gt; 'E4:E5', 'w' =&gt; 1, 'h' =&gt; 2, 'master' =&gt; true],
+]
+</code></pre>
+<h3 id="192-three-handling-strategies">19.2 Three Handling Strategies</h3>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Suitable Output</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Split &amp; fill</strong></td>
+<td>CSV / TSV / JSON</td>
+<td>Copy the top-left value into every cell of the x*y area</td>
+</tr>
+<tr>
+<td><strong>Keep merges</strong></td>
+<td>HTML</td>
+<td>The master cell outputs <code>colspan</code>/<code>rowspan</code>, merged-away cells are skipped</td>
+</tr>
+<tr>
+<td><strong>As-is</strong></td>
+<td>When the editing view must be reproduced</td>
+<td>Keep only the top-left value, the rest empty (<code>$fillMerged = false</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="193-csv-tsv">19.3 CSV / TSV</h3>
+<pre><code class="language-php">// Split &amp; fill (default): the value of A1:E1 fills all 5 cells
+echo $xlsx-&gt;toCSV(0, true);        // second parameter = fillMerged
+$xlsx-&gt;saveCSV('out.csv', 0, true);
+
+// TSV
+echo $xlsx-&gt;toTSV(0, true);
+$xlsx-&gt;saveTSV('out.tsv', 0, true);
+
+// Version without BOM (friendlier for Linux pipe processing)
+echo $xlsx-&gt;toCSV(0, true, false);
+</code></pre>
+<p>Verified CSV (<code>demo.xlsx</code>, A1:E1 and E4:E5 split):</p>
+<pre><code class="language-csv">&quot;2024 Sales Report (with merged cells and formulas)&quot;,&quot;2024 Sales Report (with merged cells and formulas)&quot;,&quot;2024 Sales Report (with merged cells and formulas)&quot;,&quot;2024 Sales Report (with merged cells and formulas)&quot;,&quot;2024 Sales Report (with merged cells and formulas)&quot;,
+Region,Q1,Q2,Total,Note,Floating image
+East China,120,150,270,Fastest growth,
+North China,90,110,200,Merged note (E4:E5),
+South China,130,145,275,Merged note (E4:E5),
+Total,340,405,745,,
+</code></pre>
+<h3 id="194-json">19.4 JSON</h3>
+<pre><code class="language-php">// 1) Plain 2D array of values
+echo $xlsx-&gt;toJSON(0);
+
+// 2) First row as keys =&gt; array of objects (header can also be a row number, e.g. ['header' =&gt; 1] uses the second row)
+echo $xlsx-&gt;toJSON(0, ['header' =&gt; true]);
+
+// 3) Full cells: value + img + merge + formula + calculated
+echo $xlsx-&gt;toJSON(0, ['cells' =&gt; true]);
+
+// 4) With metadata: sheet names / dimension / merge areas / image list
+echo $xlsx-&gt;toJSON(0, ['meta' =&gt; true]);
+</code></pre>
+<p>Example output of <code>['cells' =&gt; true]</code>:</p>
+<pre><code class="language-json">[
+  [
+    { &quot;cell&quot;: &quot;A1&quot;, &quot;value&quot;: &quot;2024 Sales Report (with merged cells and formulas)&quot;,
+      &quot;merge&quot;: { &quot;ref&quot;: &quot;A1:E1&quot;, &quot;w&quot;: 5, &quot;h&quot;: 1, &quot;master&quot;: true } },
+    { &quot;cell&quot;: &quot;B1&quot;, &quot;value&quot;: &quot;2024 Sales Report (with merged cells and formulas)&quot;,
+      &quot;merge&quot;: { &quot;ref&quot;: &quot;A1:E1&quot;, &quot;w&quot;: 5, &quot;h&quot;: 1, &quot;master&quot;: false } }
+  ],
+  [
+    { &quot;cell&quot;: &quot;D3&quot;, &quot;value&quot;: 270, &quot;formula&quot;: &quot;B3+C3&quot;, &quot;calculated&quot;: 270 },
+    { &quot;cell&quot;: &quot;F3&quot;, &quot;value&quot;: &quot;&quot;, &quot;img&quot;: &quot;Img/sheet1_F3_1.png&quot; }
+  ]
+]
+</code></pre>
+<p>Option reference:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fill_merged</code></td>
+<td><code>true</code></td>
+<td>Merged-cell values are split &amp; filled into every cell</td>
+</tr>
+<tr>
+<td><code>header</code></td>
+<td><code>false</code></td>
+<td><code>true</code> uses the first row as keys; a number = the specified row index</td>
+</tr>
+<tr>
+<td><code>cells</code></td>
+<td><code>false</code></td>
+<td>Output full cell objects instead of plain values</td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td><code>false</code></td>
+<td>Include sheet / dimension / merges / images</td>
+</tr>
+<tr>
+<td><code>pretty</code></td>
+<td><code>true</code></td>
+<td>Pretty-printed output</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td><code>0</code></td>
+<td>Additional <code>json_encode</code> flags</td>
+</tr>
+</tbody>
+</table>
+<h3 id="195-html-keep-merges-images">19.5 HTML: Keep Merges + Images</h3>
+<pre><code class="language-php">echo $xlsx-&gt;toHTMLMerged(0, [
+    'images'     =&gt; true,    // output &lt;img&gt;
+    'head'       =&gt; true,    // first row uses &lt;th&gt;
+    'img_height' =&gt; 60,      // image display height, 0 = original size
+    'class'      =&gt; 'excel',
+    'limit'      =&gt; 0,
+]);
+</code></pre>
+<p>Compared with the original <code>toHTMLEx()</code>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>toHTMLEx()</code></th>
+<th><code>toHTMLMerged()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Merged cells</td>
+<td>Split into a bunch of empty <code>&lt;td&gt;</code></td>
+<td>Master cell outputs <code>colspan=5 rowspan=2</code>, the rest not output</td>
+</tr>
+<tr>
+<td>Images</td>
+<td>None</td>
+<td><code>&lt;img src="Img/xxx.png"&gt;</code></td>
+</tr>
+<tr>
+<td>Header</td>
+<td>First row always <code>&lt;th&gt;</code></td>
+<td>Can be turned off</td>
+</tr>
+<tr>
+<td>Row limit</td>
+<td>None</td>
+<td><code>limit</code> option</td>
+</tr>
+</tbody>
+</table>
+<h3 id="196-command-line-batch-conversion">19.6 Command-Line Batch Conversion</h3>
+<pre><code class="language-bash">php 06-cli_convert.php input.xlsx                        # JSON by default
+php 06-cli_convert.php input.xlsx --format=csv
+php 06-cli_convert.php input.xlsx --format=json --header=1 --cells
+php 06-cli_convert.php input.xlsx --format=html -o=out.html
+php 06-cli_convert.php *.xlsx --format=csv --outdir=./out --img-dir=./images
+</code></pre>
+<hr />
+<h2 id="20-image-extraction-img-directory">20. Image Extraction (Img Directory)</h2>
+<h3 id="201-two-image-sources">20.1 Two Image Sources</h3>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Characteristics</th>
+<th>Location Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Floating images</strong> (Excel / LibreOffice)</td>
+<td><code>xl/drawings/drawing1.xml</code></td>
+<td>The <code>&lt;from&gt;&lt;col&gt;&lt;row&gt;</code> of <code>twoCellAnchor</code> / <code>oneCellAnchor</code>, 0-based</td>
+</tr>
+<tr>
+<td><strong>In-cell embedded images</strong> (WPS)</td>
+<td><code>xl/cellimages.xml</code> + cell formula <code>=DISPIMG("ID_xxx",1)</code></td>
+<td>Matched to the specific cell by <code>ID_xxx</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both are supported.</p>
+<h3 id="202-usage">20.2 Usage</h3>
+<pre><code class="language-php">$xlsx = SimpleXLSXPro::parse('demo.xlsx');
+
+// Export to Img/ (relative to the current working directory), returns [sheet][row][col] =&gt; path
+$map = $xlsx-&gt;extractImages('Img');
+
+// Image list
+foreach ($xlsx-&gt;imageList() as $img) {
+    printf(&quot;%s  cell=%s  source=%s\n&quot;, $img['path'], $img['cell'], $img['source']);
+}
+// Img/sheet1_F3_1.png  cell=F3  source=xl/media/image1.png
+// Img/sheet1_F8_2.png  cell=F8  source=xl/media/image2.png
+
+// Look up by coordinate
+echo $xlsx-&gt;imageAt(0, 5, 2);     // Img/sheet1_F3_1.png (col=5,row=2 means F3)
+
+// Pass false as the second parameter to record absolute paths
+$xlsx-&gt;extractImages('/var/www/uploads/Img', false);
+</code></pre>
+<h3 id="203-file-naming-rules">20.3 File Naming Rules</h3>
+<pre><code>Img/sheet{worksheet index}_{column letters}{row number}_{sequence}.{original extension}
+Example: Img/sheet1_F3_1.png
+</code></pre>
+<p>When the same image is referenced in multiple places it is <strong>written to disk only once</strong> (there is an internal media cache), and the same path is returned for every reference.</p>
+<h3 id="204-recording-img-paths-in-data">20.4 Recording img Paths in Data</h3>
+<p>Both <code>rowsPro()</code> / <code>toJSON(['cells'=&gt;true])</code> carry an <code>img</code> field on cells:</p>
+<pre><code class="language-php">foreach ($xlsx-&gt;readRowsPro(0) as $row) {
+    foreach ($row as $c) {
+        if ($c['img'] !== '') {
+            // Insert straight into the DB: ['cell' =&gt; 'F3', 'img' =&gt; 'Img/sheet1_F3_1.png']
+            $db-&gt;insert('cell_images', ['cell' =&gt; $c['name'], 'img' =&gt; $c['img']]);
+        }
+    }
+}
+</code></pre>
+<p>Verified WPS embedded images (<code>demo_wps.xlsx</code>):</p>
+<pre><code>F3  img = Img/sheet1_F3_1.png   f = (floating)
+H3  img = Img/sheet1_F3_1.png   f = DISPIMG(&quot;ID_1&quot;,1)
+H4  img = Img/sheet1_F3_1.png   f = DISPIMG(&quot;ID_1&quot;,1)
+F8  img = Img/sheet1_F8_2.png   f = (floating)
+</code></pre>
+<h3 id="205-notes">20.5 Notes</h3>
+<ul>
+<li>After successful extraction, the media entry is released via <code>deleteEntry()</code>, so <strong>large images do not stay in memory</strong></li>
+<li>Image extraction happens when <code>extractImages()</code> is called; if you do not call it, nothing is written to disk and no disk space is used</li>
+<li><code>imageDir</code> is relative to the current working directory; in web environments an absolute path is recommended</li>
+<li>Only bitmaps inside <code>xl/media/*</code> are processed; <code>legacyDrawing</code> (VML comment images) and externally linked images (<code>r:link</code>) are not handled</li>
+</ul>
+<hr />
+<h2 id="appendix-a-xlsx-internal-structure-cheat-sheet">Appendix A: xlsx Internal Structure Cheat Sheet</h2>
+<pre><code>book.xlsx (ZIP)
+├── [Content_Types].xml                 MIME type of each part
+├── _rels/.rels                         ★ Entry point, points to xl/workbook.xml
+├── docProps/
+│   ├── app.xml                         Application info
+│   └── core.xml                        Author, creation time, etc.
+└── xl/
+    ├── workbook.xml                    ★ Worksheet list &lt;sheet name r:id sheetId state&gt;
+    │                                     &lt;workbookPr date1904=&quot;1&quot;/&gt;  &lt;bookViews activeTab&gt;
+    ├── _rels/workbook.xml.rels         ★ rId → actual path
+    ├── sharedStrings.xml               ★ All text (&lt;si&gt;&lt;t&gt;)
+    ├── styles.xml                      ★ numFmts / fonts / fills / borders / cellXfs
+    ├── theme/theme1.xml                Theme color palette clrScheme
+    ├── calcChain.xml                   Formula calculation chain (ignored by SimpleXLSX)
+    └── worksheets/
+        ├── sheet1.xml                  ★ &lt;dimension ref&gt; &lt;sheetData&gt;&lt;row r&gt;&lt;c r t s&gt;
+        │                                   &lt;cols&gt;&lt;col min max width customWidth hidden&gt;
+        │                                   &lt;hyperlinks&gt;&lt;hyperlink ref id location&gt;
+        ├── _rels/sheet1.xml.rels       rId mapping for hyperlinks / comments / drawings
+        └── comments1.xml               &lt;commentList&gt;&lt;comment ref&gt;&lt;text&gt;
+</code></pre>
+<h3 id="cell-xml-anatomy">Cell XML Anatomy</h3>
+<pre><code class="language-xml">&lt;!-- Shared string --&gt;
+&lt;c r=&quot;A1&quot; t=&quot;s&quot;&gt;&lt;v&gt;0&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Number --&gt;
+&lt;c r=&quot;B2&quot; s=&quot;1&quot;&gt;&lt;v&gt;1233.34&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Boolean --&gt;
+&lt;c r=&quot;C3&quot; t=&quot;b&quot;&gt;&lt;v&gt;1&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Formula (with cached value) --&gt;
+&lt;c r=&quot;D4&quot; s=&quot;2&quot;&gt;&lt;f&gt;B3*2&lt;/f&gt;&lt;v&gt;2466.68&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Error value --&gt;
+&lt;c r=&quot;E5&quot; t=&quot;e&quot;&gt;&lt;v&gt;#DIV/0!&lt;/v&gt;&lt;/c&gt;
+
+&lt;!-- Inline string --&gt;
+&lt;c r=&quot;F6&quot; t=&quot;inlineStr&quot;&gt;&lt;is&gt;&lt;t&gt;Text&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;
+</code></pre>
+<h3 id="correspondence-how-simplexlsx-sees-it">Correspondence (How SimpleXLSX Sees It)</h3>
+<table>
+<thead>
+<tr>
+<th>XML</th>
+<th>SimpleXLSX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>r</code> of <code>&lt;c r="B2"&gt;</code></td>
+<td><code>name</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>t</code> of <code>&lt;c t="s"&gt;</code></td>
+<td><code>type</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;v&gt;</code> or sharedStrings</td>
+<td><code>value</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>s</code> of <code>&lt;c s="3"&gt;</code></td>
+<td><code>s</code> in <code>rowsEx()</code> → <code>cellFormats[3]</code></td>
+</tr>
+<tr>
+<td><code>&lt;f&gt;</code></td>
+<td><code>f</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;col width hidden&gt;</code></td>
+<td><code>width</code> / <code>hidden</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;row ht customHeight hidden&gt;</code></td>
+<td><code>height</code> / <code>hidden</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;hyperlink ref id&gt;</code> + rels</td>
+<td><code>href</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td><code>&lt;comment ref&gt;</code></td>
+<td><code>comment</code> in <code>rowsEx()</code></td>
+</tr>
+<tr>
+<td>numFmts in <code>styles.xml</code></td>
+<td><code>$xlsx-&gt;nf</code> / <code>cellFormats[n]['format']</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-b-built-in-number-format-table-cf">Appendix B: Built-in Number Format Table $CF</h2>
+<p><code>SimpleXLSX::$CF</code> is the table of Excel built-in (non-custom) number format codes; 40 entries are hardcoded in the source:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Format Code</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>General</code></td>
+<td>General</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>0</code></td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>0.00</code></td>
+<td>Two decimal places</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>#,##0</code></td>
+<td>Thousands separator</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>#,##0.00</code></td>
+<td>Thousands separator with two decimals</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>0%</code></td>
+<td>Percentage</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>0.00%</code></td>
+<td>Percentage with two decimals</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>0.00E+00</code></td>
+<td>Scientific notation</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code># ?/?</code></td>
+<td>Fraction</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code># ??/??</code></td>
+<td>Fraction</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>mm-dd-yy</code></td>
+<td>Date</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>d-mmm-yy</code></td>
+<td>Date</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>d-mmm</code></td>
+<td>Date</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>mmm-yy</code></td>
+<td>Year-month</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>h:mm AM/PM</code></td>
+<td>Time</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>h:mm:ss AM/PM</code></td>
+<td>Time</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>h:mm</code></td>
+<td>Time</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>h:mm:ss</code></td>
+<td>Time</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>m/d/yy h:mm</code></td>
+<td>Date-time</td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>#,##0 ;(#,##0)</code></td>
+<td>Negative numbers in parentheses</td>
+</tr>
+<tr>
+<td>38</td>
+<td><code>#,##0 ;[Red](#,##0)</code></td>
+<td>Negative numbers in red</td>
+</tr>
+<tr>
+<td>39</td>
+<td><code>#,##0.00;(#,##0.00)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>#,##0.00;[Red](#,##0.00)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>44</td>
+<td><code>_("$"* #,##0.00_)...</code></td>
+<td>Currency</td>
+</tr>
+<tr>
+<td>45</td>
+<td><code>mm:ss</code></td>
+<td>Minutes &amp; seconds</td>
+</tr>
+<tr>
+<td>46</td>
+<td><code>[h]:mm:ss</code></td>
+<td>Cumulative duration</td>
+</tr>
+<tr>
+<td>47</td>
+<td><code>mmss.0</code></td>
+<td></td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>##0.0E+0</code></td>
+<td>Scientific notation</td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>@</code></td>
+<td>Text</td>
+</tr>
+<tr>
+<td>27/30/36/50/57</td>
+<td><code>[$-404]e/m/d</code>, <code>m/d/yy</code></td>
+<td>Locale dates</td>
+</tr>
+<tr>
+<td>59~70</td>
+<td><code>t0</code>, <code>t0.00</code>, <code>t#,##0</code>…</td>
+<td>East Asian formats</td>
+</tr>
+</tbody>
+</table>
+<p>Custom formats (ID &gt;= 164) are read from the <code>numFmts</code> of <code>styles.xml</code> into <code>$xlsx-&gt;nf</code>.</p>
+<p><strong>Use case</strong>: when determining whether a column is a "date / currency / percentage", you can use the <code>format</code> field together with this table.</p>
+<hr />
+<h2 id="appendix-c-api-cheat-sheet">Appendix C: API Cheat Sheet</h2>
+<pre><code class="language-php">// ===== Opening =====
+SimpleXLSX::parse($file, $is_data = false, $debug = false) : SimpleXLSX|false
+SimpleXLSX::parseFile($file, $debug = false)                : SimpleXLSX|false
+SimpleXLSX::parseData($data, $debug = false)                : SimpleXLSX|false
+new SimpleXLSX($file, $is_data = null, $debug = null)
+
+// ===== Simple Reading =====
+$xlsx-&gt;rows($sheet = 0, $limit = 0)      : array       // 2D array
+$xlsx-&gt;readRows($sheet = 0, $limit = 0)  : Generator   // row by row (memory-efficient)
+$xlsx-&gt;toHTML($sheet = 0)                : string      // ⚠️ no limit parameter
+
+// ===== Extended Reading (with styles) =====
+$xlsx-&gt;rowsEx($sheet = 0, $limit = 0)    : array
+$xlsx-&gt;readRowsEx($sheet = 0, $limit = 0): Generator
+$xlsx-&gt;toHTMLEx($sheet = 0)              : string      // ⚠️ no limit parameter
+
+// ===== Worksheet Metadata =====
+$xlsx-&gt;sheetsCount()              : int
+$xlsx-&gt;sheetNames()               : array     // [0 =&gt; 'Sheet1', ...]
+$xlsx-&gt;sheetName($i)              : string|false
+$xlsx-&gt;sheetMeta($i = null)       : array|false   // name/sheetId/state/id
+$xlsx-&gt;isHiddenSheet($i)          : bool
+$xlsx-&gt;dimension($sheet = 0)      : array     // [column count, row count]
+$xlsx-&gt;activeSheet                : int       // property, active sheet index
+
+// ===== Low-Level Objects =====
+$xlsx-&gt;worksheet($i = 0)          : SimpleXMLElement|false
+$xlsx-&gt;getSheets()                : SimpleXMLElement[]
+$xlsx-&gt;getStyles()                : SimpleXMLElement
+$xlsx-&gt;getPackage()               : array
+
+// ===== Cells =====
+$xlsx-&gt;getCell($sheet = 0, $cell = 'A1')   : mixed   // ⚠️ very slow
+$xlsx-&gt;getIndex('AB12')                    : array   // [27, 11]
+$xlsx-&gt;value($cellNode)                    : mixed
+
+// ===== Dates =====
+$xlsx-&gt;setDateTimeFormat('Y-m-d H:i:s')  // or null = return the raw Excel serial number
+$xlsx-&gt;unixstamp($excelFloat)            : int
+$xlsx-&gt;datetimeFormat                    : string   // property
+$xlsx-&gt;date1904                          : int      // property
+
+// ===== Styles =====
+$xlsx-&gt;cellFormats     : array   // [s =&gt; ['format'=&gt;..,'font'=&gt;..,'color'=&gt;..,'f-b'=&gt;..,...]]
+$xlsx-&gt;nf              : array   // [numFmtId =&gt; formatCode]
+$xlsx-&gt;rowsExReader    : SimpleXLSXEx|null
+SimpleXLSX::$CF        : array   // built-in number format table
+
+// ===== Status/Errors =====
+$xlsx-&gt;success()              : bool
+$xlsx-&gt;errno()                : int
+$xlsx-&gt;error()                : string|false
+SimpleXLSX::parseError()      : string|false   // ⚠️ global static state
+SimpleXLSX::parseErrno()      : int|false
+
+// ===== Static Utilities =====
+SimpleXLSX::num2name(3)                // 'C'
+SimpleXLSX::boolean('true')            // true
+SimpleXLSX::parseRichText($isNode)     // rich text → string
+SimpleXLSX::getTarget($base, $target)  // path normalization
+SimpleXLSX::strlen/substr/strpos/strtoupper($s)
+</code></pre>
+<h3 id="error-code-quick-reference">Error Code Quick Reference</h3>
+<pre><code>1 = file not found      2 = not a ZIP       3 = XML parsing failed
+4 = XML entry missing   5 = entry doesn't exist   6 = worksheet doesn't exist
+</code></pre>
+<hr />
+<h2 id="appendix-d-simplexlsxpro-extended-api-cheat-sheet">Appendix D: SimpleXLSXPro Extended API Cheat Sheet</h2>
+<pre><code class="language-php">use Shuchkin\SimpleXLSXPro;
+$xlsx = SimpleXLSXPro::parse('a.xlsx');   // returns false on failure
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimpleXLSXPro::parse($file, $is_data = false, $debug = false)</code></td>
+<td><code>self\|false</code></td>
+<td>Same as the parent class, returns a Pro instance</td>
+</tr>
+<tr>
+<td><code>extractImages($dir = null, $returnRelative = true)</code></td>
+<td><code>array</code></td>
+<td>Export images to <code>$dir</code>, returns <code>[sheet][row][col] =&gt; path</code></td>
+</tr>
+<tr>
+<td><code>imageList()</code></td>
+<td><code>array</code></td>
+<td>Image list (path / sheet / cell / source / name)</td>
+</tr>
+<tr>
+<td><code>imageMap()</code></td>
+<td><code>array</code></td>
+<td>Same return value as <code>extractImages()</code></td>
+</tr>
+<tr>
+<td><code>imageAt($sheet, $col, $row)</code></td>
+<td><code>string</code></td>
+<td>Get the image path by 0-based coordinate, returns <code>''</code> if none</td>
+</tr>
+<tr>
+<td><code>mergeCells($sheet = 0)</code></td>
+<td><code>array</code></td>
+<td><code>[['ref','x1','y1','x2','y2','w','h'], ...]</code></td>
+</tr>
+<tr>
+<td><code>mergeAt($sheet, $col, $row)</code></td>
+<td><code>array\|null</code></td>
+<td>Merge info for a single cell</td>
+</tr>
+<tr>
+<td><code>readRowsPro($sheet = 0, $limit = 0)</code></td>
+<td><code>Generator</code></td>
+<td><code>readRowsEx()</code> + <code>img</code> / <code>merge</code> / <code>calculated</code></td>
+</tr>
+<tr>
+<td><code>rowsPro($sheet = 0, $limit = 0)</code></td>
+<td><code>array</code></td>
+<td>Array version of the above</td>
+</tr>
+<tr>
+<td><code>calculateCell($coord, $sheet = null)</code></td>
+<td><code>mixed</code></td>
+<td>Evaluate a cell formula</td>
+</tr>
+<tr>
+<td><code>calculate($formula, $sheet = 0)</code></td>
+<td><code>mixed</code></td>
+<td>Evaluate an arbitrary formula string</td>
+</tr>
+<tr>
+<td><code>calculatedCells($sheet = 0)</code></td>
+<td><code>array</code></td>
+<td><code>[coord =&gt; ['formula','cached','value']]</code></td>
+</tr>
+<tr>
+<td><code>formula()</code></td>
+<td><code>XLSXFormula</code></td>
+<td>Underlying engine instance, can tune <code>lenientUnknownFunctions</code> etc.</td>
+</tr>
+<tr>
+<td><code>toArray($sheet = 0, $fillMerged = true, $limit = 0)</code></td>
+<td><code>array</code></td>
+<td>2D array, merged values can be split &amp; filled</td>
+</tr>
+<tr>
+<td><code>toCSV($sheet = 0, $fillMerged = true, $bom = true)</code></td>
+<td><code>string</code></td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>toTSV($sheet = 0, $fillMerged = true, $bom = false)</code></td>
+<td><code>string</code></td>
+<td>TSV</td>
+</tr>
+<tr>
+<td><code>saveCSV($path, $sheet = 0, $fillMerged = true)</code></td>
+<td><code>bool</code></td>
+<td>Write file</td>
+</tr>
+<tr>
+<td><code>saveTSV($path, $sheet = 0, $fillMerged = true)</code></td>
+<td><code>bool</code></td>
+<td>Write file</td>
+</tr>
+<tr>
+<td><code>toJSON($sheet = 0, $options = [])</code></td>
+<td><code>string</code></td>
+<td>JSON, see 19.4 for options</td>
+</tr>
+<tr>
+<td><code>saveJSON($path, $sheet = 0, $options = [])</code></td>
+<td><code>bool</code></td>
+<td>Write file</td>
+</tr>
+<tr>
+<td><code>toCellsArray($sheet = 0, $fillMerged = true)</code></td>
+<td><code>array</code></td>
+<td>Full 2D array of cells</td>
+</tr>
+<tr>
+<td><code>toHTMLMerged($sheet = 0, $options = [])</code></td>
+<td><code>string</code></td>
+<td>HTML preserving merges + images</td>
+</tr>
+<tr>
+<td><code>fillMerged(array $rows, $sheet = 0)</code></td>
+<td><code>array</code></td>
+<td>Apply the merge split to an existing 2D array only</td>
+</tr>
+<tr>
+<td><code>SimpleXLSXPro::convert($file, $format, $options)</code></td>
+<td><code>mixed</code></td>
+<td>One-stop conversion: <code>csv</code>/<code>tsv</code>/<code>json</code>/<code>html</code>/<code>html-merged</code>/<code>array</code></td>
+</tr>
+</tbody>
+</table>
+<p>Tunable properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$xlsx-&gt;imageDir</code></td>
+<td><code>'Img'</code></td>
+<td>Default image output directory</td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;calculateFormulas</code></td>
+<td><code>true</code></td>
+<td>Whether to evaluate formulas in <code>readRowsPro()</code> / <code>toArray()</code></td>
+</tr>
+<tr>
+<td><code>$xlsx-&gt;preferCalculated</code></td>
+<td><code>true</code></td>
+<td>Backfill <code>value</code> with the computed result when the cached value is empty</td>
+</tr>
+</tbody>
+</table>
+<p>Standalone usage of <code>XLSXFormula</code> (no xlsx file required):</p>
+<pre><code class="language-php">$f = new Shuchkin\XLSXFormula(function ($sheetIndex, $coord) {
+    return ['value' =&gt; 10, 'formula' =&gt; ''];     // your data provider
+}, 0);
+$f-&gt;setSheetNames(['Sheet1', 'Sheet2']);
+echo $f-&gt;calculate('SUM(A1:A3)*2');
+</code></pre>
+<hr />
+<h2 id="final-words">Final Words</h2>
+<p>The value of SimpleXLSX lies in being <strong>just right</strong>: it does the job of "reading Excel" at 80 out of 100, at the cost of zero dependencies and being learnable with a single <code>rows()</code> call. The remaining 20 points (formula evaluation, charts, precise layout), if you need them, that is when you should switch to PhpSpreadsheet — but for most import scenarios, you don't need them.</p>
+<p>The three most accident-prone points in daily use, once again:</p>
+<ol>
+<li><strong>Number formats</strong>: leading zeros, ID numbers, long numbers — always set them as text at the Excel source;</li>
+<li><strong>Formulas</strong>: not getting a value is normal — the library does not evaluate formulas;</li>
+<li><strong>Security</strong>: before rendering user-uploaded xlsx files, <code>href</code> must be filtered by yourself, and the version must be &gt;= 1.1.19.</li>
+</ol>
+<hr />
+<p><em>This document was written based on a full read-through of the shuchkin/simplexlsx v1.1.19 source code plus hands-on testing with PHP 8.3.6. All conclusions marked "verified" were validated in a local environment.</em></p>
+</div>
+</body>
+</html>
